@@ -1,0 +1,20 @@
+[
+  {
+    "title": "提示词工作台",
+    "description": "把需求写成一份可验证的迷你规格书：填写任务、目的、边界和验收标准，右侧即时生成可直接发送的提示词。支持中英双语。",
+    "tags": ["Prompt Engineering", "工具"],
+    "url": "projects/prompt-builder/index.html"
+  },
+  {
+    "title": "示例项目二",
+    "description": "另一个项目的简短说明，可以包含用到的技术和成果。",
+    "tags": ["Python", "数据分析"],
+    "url": "https://github.com/yourname/project-two"
+  },
+  {
+    "title": "示例项目三",
+    "description": "第三个项目的介绍，展示你的技能广度。",
+    "tags": ["设计", "前端"],
+    "url": ""
+  }
+]

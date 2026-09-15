@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Kiya — 个人主页</title>
+<meta name="description" content="个人主页与作品集">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav container">
+    <a href="#home" class="logo">Kiya</a>
+    <button class="nav-toggle" id="navToggle" aria-label="打开菜单" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#about">关于</a></li>
+      <li><a href="#projects">作品</a></li>
+      <li><a href="#skills">技能</a></li>
+      <li><a href="#contact">联系</a></li>
+    </ul>
+    <button class="theme-toggle" id="themeToggle" aria-label="切换主题" title="切换深/浅色">
+      <span class="icon-sun">☀</span><span class="icon-moon">☾</span>
+    </button>
+  </nav>
+</header>
+
+<main>
+
+  <section id="home" class="hero container">
+    <p class="eyebrow">你好，我是</p>
+    <h1>Kiya</h1>
+    <p class="hero-tagline">在这里写一句自我介绍 / 职位 / 一句话定位</p>
+    <div class="hero-actions">
+      <a href="#projects" class="btn btn-primary">查看作品</a>
+      <a href="#contact" class="btn btn-ghost">联系我</a>
+    </div>
+  </section>
+
+  <section id="about" class="section container">
+    <h2 class="section-title"><span class="section-index">01</span> 关于我</h2>
+    <div class="about-grid">
+      <p class="about-text">
+        在这里介绍你的背景、经历和兴趣方向。可以是一到三段文字，
+        说明你做什么、擅长什么、以及你在关注的领域。
+      </p>
+      <ul class="about-facts">
+        <li><strong>方向</strong><span>你的领域，例如数据 / AI / 产品</span></li>
+        <li><strong>坐标</strong><span>你的所在地</span></li>
+        <li><strong>状态</strong><span>目前在做的事情</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="projects" class="section container">
+    <h2 class="section-title"><span class="section-index">02</span> 作品 / 项目</h2>
+    <div class="project-grid" id="projectGrid">
+      <!-- 由 js/main.js 从 assets/data/projects.json 动态渲染 -->
+    </div>
+  </section>
+
+  <section id="skills" class="section container">
+    <h2 class="section-title"><span class="section-index">03</span> 技能</h2>
+    <div class="skills-grid" id="skillsGrid">
+      <!-- 由 js/main.js 动态渲染 -->
+    </div>
+  </section>
+
+  <section id="contact" class="section container">
+    <h2 class="section-title"><span class="section-index">04</span> 联系</h2>
+    <p class="contact-text">欢迎通过以下方式联系我，或看看我在别处的主页。</p>
+    <div class="contact-links">
+      <a href="mailto:you@example.com">Email</a>
+      <a href="https://github.com/yourname" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://linkedin.com/in/yourname" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer container">
+  <p>&copy; <span id="year"></span> Kiya. Built with plain HTML/CSS/JS, hosted on GitHub Pages.</p>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>
