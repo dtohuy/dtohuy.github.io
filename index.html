@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Kiya — 个人主页</title>
-<meta name="description" content="个人主页与作品集">
+<title>Kiya Hsieh — 數據架構師</title>
+<meta name="description" content="Kiya Hsieh 的個人主頁與作品集：數據架構、大數據平台與 AI 自動化。">
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="css/style.css">
 </head>
@@ -12,17 +12,22 @@
 
 <header class="site-header">
   <nav class="nav container">
-    <a href="#home" class="logo">Kiya</a>
-    <button class="nav-toggle" id="navToggle" aria-label="打开菜单" aria-expanded="false">
+    <a href="#home" class="logo">Kiya Hsieh</a>
+    <button class="nav-toggle" id="navToggle" data-i18n-aria="nav.menu" aria-label="打開選單" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
     <ul class="nav-links" id="navLinks">
-      <li><a href="#about">关于</a></li>
-      <li><a href="#projects">作品</a></li>
-      <li><a href="#skills">技能</a></li>
-      <li><a href="#contact">联系</a></li>
+      <li><a href="#about" data-i18n="nav.about">關於</a></li>
+      <li><a href="#projects" data-i18n="nav.projects">作品</a></li>
+      <li><a href="#skills" data-i18n="nav.skills">技能</a></li>
+      <li><a href="#contact" data-i18n="nav.contact">聯絡</a></li>
     </ul>
-    <button class="theme-toggle" id="themeToggle" aria-label="切换主题" title="切换深/浅色">
+    <select class="lang-select" id="langSelect" aria-label="Language">
+      <option value="zh-Hant">繁</option>
+      <option value="zh-Hans">简</option>
+      <option value="en">EN</option>
+    </select>
+    <button class="theme-toggle" id="themeToggle" data-i18n-aria="theme" data-i18n-title="theme" aria-label="切換主題" title="切換深/淺色">
       <span class="icon-sun">☀</span><span class="icon-moon">☾</span>
     </button>
   </nav>
@@ -31,58 +36,42 @@
 <main>
 
   <section id="home" class="hero container">
-    <p class="eyebrow">你好，我是</p>
-    <h1>Kiya</h1>
-    <p class="hero-tagline">在这里写一句自我介绍 / 职位 / 一句话定位</p>
+    <p class="eyebrow" data-i18n="hero.eyebrow">你好，我是</p>
+    <h1 data-i18n="hero.name">Kiya Hsieh</h1>
+    <p class="hero-tagline" data-i18n="hero.tagline">數據架構師 · 大數據平台 · AI 自動化</p>
     <div class="hero-actions">
-      <a href="#projects" class="btn btn-primary">查看作品</a>
-      <a href="#contact" class="btn btn-ghost">联系我</a>
+      <a href="#projects" class="btn btn-primary" data-i18n="hero.viewWork">查看作品</a>
+      <a href="#contact" class="btn btn-ghost" data-i18n="hero.contact">聯絡我</a>
     </div>
   </section>
 
   <section id="about" class="section container">
-    <h2 class="section-title"><span class="section-index">01</span> 关于我</h2>
-    <div class="about-grid">
-      <p class="about-text">
-        在这里介绍你的背景、经历和兴趣方向。可以是一到三段文字，
-        说明你做什么、擅长什么、以及你在关注的领域。
-      </p>
-      <ul class="about-facts">
-        <li><strong>方向</strong><span>你的领域，例如数据 / AI / 产品</span></li>
-        <li><strong>坐标</strong><span>你的所在地</span></li>
-        <li><strong>状态</strong><span>目前在做的事情</span></li>
-      </ul>
-    </div>
+    <h2 class="section-title"><span class="section-index">01</span> <span data-i18n="about.title">關於我</span></h2>
+    <p class="about-text" data-i18n="about.text">數據架構師，專注於大數據平台、即時分析與 AI 自動化。這裡整理我公開的開源作品與小工具；想了解完整經歷，歡迎到 LinkedIn 找我。</p>
   </section>
 
   <section id="projects" class="section container">
-    <h2 class="section-title"><span class="section-index">02</span> 作品 / 项目</h2>
-    <div class="project-grid" id="projectGrid">
-      <!-- 由 js/main.js 从 assets/data/projects.json 动态渲染 -->
-    </div>
+    <h2 class="section-title"><span class="section-index">02</span> <span data-i18n="projects.title">作品 / 專案</span></h2>
+    <div class="project-grid" id="projectGrid"></div>
   </section>
 
   <section id="skills" class="section container">
-    <h2 class="section-title"><span class="section-index">03</span> 技能</h2>
-    <div class="skills-grid" id="skillsGrid">
-      <!-- 由 js/main.js 动态渲染 -->
-    </div>
+    <h2 class="section-title"><span class="section-index">03</span> <span data-i18n="skills.title">技能</span></h2>
+    <div class="skills-grid" id="skillsGrid"></div>
   </section>
 
   <section id="contact" class="section container">
-    <h2 class="section-title"><span class="section-index">04</span> 联系</h2>
-    <p class="contact-text">欢迎通过以下方式联系我，或看看我在别处的主页。</p>
+    <h2 class="section-title"><span class="section-index">04</span> <span data-i18n="contact.title">聯絡</span></h2>
+    <p class="contact-text" data-i18n="contact.text">歡迎透過 LinkedIn 聯絡我。</p>
     <div class="contact-links">
-      <a href="mailto:you@example.com">Email</a>
-      <a href="https://github.com/yourname" target="_blank" rel="noopener">GitHub</a>
-      <a href="https://linkedin.com/in/yourname" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="https://linkedin.com/in/kiya326" target="_blank" rel="noopener">LinkedIn</a>
     </div>
   </section>
 
 </main>
 
 <footer class="site-footer container">
-  <p>&copy; <span id="year"></span> Kiya. Built with plain HTML/CSS/JS, hosted on GitHub Pages.</p>
+  <p>&copy; <span id="year"></span> Kiya Hsieh. <span data-i18n="footer">以純 HTML/CSS/JS 打造，託管於 GitHub Pages。</span></p>
 </footer>
 
 <script src="js/main.js"></script>

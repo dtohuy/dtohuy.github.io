@@ -1,10 +1,30 @@
 [
-  "JavaScript",
-  "Python",
-  "SQL",
-  "数据分析",
-  "机器学习",
-  "React",
-  "设计思维",
-  "写作"
+  {
+    "group": { "zh-Hant": "AI 與分析", "zh-Hans": "AI 与分析", "en": "AI & Analytics" },
+    "items": ["n8n", "Spring AI", "LiteLLM", "vLLM", "PyTorch", { "zh-Hant": "機器學習", "zh-Hans": "机器学习", "en": "Machine Learning" }, "Metabase", "Claude Code"]
+  },
+  {
+    "group": { "zh-Hant": "大數據", "zh-Hans": "大数据", "en": "Big Data" },
+    "items": ["Hadoop", "Spark", "Spark Streaming", "Flink", "StarRocks", "Hudi", "Paimon", "Kafka", "Zookeeper", "CDH", "Impala"]
+  },
+  {
+    "group": { "zh-Hant": "任務編排", "zh-Hans": "任务编排", "en": "Orchestration" },
+    "items": ["Airflow", "DolphinScheduler", "Azkaban", "Oozie", "dbt"]
+  },
+  {
+    "group": { "zh-Hant": "資料儲存", "zh-Hans": "数据存储", "en": "Storage" },
+    "items": ["MySQL", "PostgreSQL", "Redis", "Elasticsearch", "HBase"]
+  },
+  {
+    "group": { "zh-Hant": "軟體工程", "zh-Hans": "软件工程", "en": "Engineering" },
+    "items": ["Java", "Scala", "Spring Boot", "MyBatis", "JavaScript", "AngularJS"]
+  },
+  {
+    "group": "DevOps",
+    "items": ["Docker", "Kubernetes", "GitLab CI", "Jenkins", "Ansible", "Artifactory"]
+  },
+  {
+    "group": { "zh-Hant": "雲端與系統", "zh-Hans": "云与系统", "en": "Cloud & OS" },
+    "items": ["AWS", "Azure", "GCP", "Linux", "macOS", "Windows"]
+  }
 ]
