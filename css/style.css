@@ -228,12 +228,6 @@ a:hover { text-decoration: underline; }
   font-size: 1.5rem;
   margin: 0 0 28px;
 }
-.section-index {
-  font-size: .85rem;
-  font-weight: 700;
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
-}
 
 /* About */
 .about-grid {
