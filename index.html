@@ -52,6 +52,19 @@
 
   <section id="projects" class="section container">
     <h2 class="section-title"><span class="section-index">02</span> <span data-i18n="projects.title">作品 / 專案</span></h2>
+    <div class="project-tools" id="projectTools" hidden>
+      <div class="project-search">
+        <input type="search" id="projectSearch" class="search-input" autocomplete="off" spellcheck="false"
+               data-i18n-placeholder="projects.search" data-i18n-aria="projects.search" placeholder="搜尋作品、標籤…" aria-label="搜尋作品、標籤…">
+        <kbd aria-hidden="true">/</kbd>
+      </div>
+      <div class="chip-row" id="categoryChips" role="group" data-i18n-aria="projects.category" aria-label="分類"></div>
+      <div class="chip-row chip-row-tags" id="tagChips" role="group" data-i18n-aria="projects.tags" aria-label="標籤"></div>
+      <div class="project-status">
+        <span id="projectCount" aria-live="polite"></span>
+        <button type="button" class="link-button" id="projectClear" data-i18n="projects.clear" hidden>清除篩選</button>
+      </div>
+    </div>
     <div class="project-grid" id="projectGrid"></div>
   </section>
 

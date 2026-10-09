@@ -1,0 +1,5 @@
+[
+  { "id": "tool", "label": { "zh-Hant": "工具", "zh-Hans": "工具", "en": "Tools" } },
+  { "id": "viz", "label": { "zh-Hant": "視覺化", "zh-Hans": "可视化", "en": "Visualization" } },
+  { "id": "experiment", "label": { "zh-Hant": "實驗", "zh-Hans": "实验", "en": "Experiments" } }
+]

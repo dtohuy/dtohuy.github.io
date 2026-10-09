@@ -1,5 +1,9 @@
 [
   {
+    "id": "prompt-builder",
+    "category": "tool",
+    "date": "2026-09-15",
+    "featured": true,
     "title": {
       "zh-Hant": "提示詞工作台",
       "zh-Hans": "提示词工作台",
@@ -16,13 +20,7 @@
       "en": "Turn a request into a small, verifiable spec — fill in the task, purpose, boundaries and acceptance criteria, and get a ready-to-send prompt live on the right. Chinese and English supported."
     },
     "tags": [
-      "Prompt Engineering",
-      {
-        "zh-Hant": "工具",
-        "zh-Hans": "工具",
-        "en": "Tool"
-      }
-    ],
-    "url": "projects/prompt-builder/index.html"
+      "Prompt Engineering"
+    ]
   }
 ]

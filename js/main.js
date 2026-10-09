@@ -70,6 +70,17 @@
       "about.text": "數據架構師，專注於大數據平台、即時分析與 AI 自動化。這裡整理我公開的開源作品與小工具；想了解完整經歷，歡迎到 LinkedIn 找我。",
       "projects.title": "作品 / 專案",
       "projects.view": "查看",
+      "projects.external": "外部網站，於新分頁開啟",
+      "projects.search": "搜尋作品、標籤…",
+      "projects.all": "全部",
+      "projects.category": "分類",
+      "projects.tags": "標籤",
+      "projects.total": "共 {total} 件",
+      "projects.count": "{n} / {total} 件",
+      "projects.empty": "沒有符合條件的作品。",
+      "projects.clear": "清除篩選",
+      "projects.moreTags": "更多標籤",
+      "projects.lessTags": "收合",
       "skills.title": "技能",
       "contact.title": "聯絡",
       "contact.text": "歡迎透過 LinkedIn 聯絡我。",
@@ -93,6 +104,17 @@
       "about.text": "数据架构师，专注于大数据平台、实时分析与 AI 自动化。这里整理我公开的开源作品与小工具；想了解完整经历，欢迎到 LinkedIn 找我。",
       "projects.title": "作品 / 项目",
       "projects.view": "查看",
+      "projects.external": "外部网站，在新标签页打开",
+      "projects.search": "搜索作品、标签…",
+      "projects.all": "全部",
+      "projects.category": "分类",
+      "projects.tags": "标签",
+      "projects.total": "共 {total} 件",
+      "projects.count": "{n} / {total} 件",
+      "projects.empty": "没有符合条件的作品。",
+      "projects.clear": "清除筛选",
+      "projects.moreTags": "更多标签",
+      "projects.lessTags": "收起",
       "skills.title": "技能",
       "contact.title": "联系",
       "contact.text": "欢迎通过 LinkedIn 联系我。",
@@ -116,6 +138,17 @@
       "about.text": "Data architect focused on big data platforms, real-time analytics and AI automation. This page collects my open-source work and small tools — for my full background, find me on LinkedIn.",
       "projects.title": "Work / Projects",
       "projects.view": "View",
+      "projects.external": "External site, opens in a new tab",
+      "projects.search": "Search work, tags…",
+      "projects.all": "All",
+      "projects.category": "Category",
+      "projects.tags": "Tags",
+      "projects.total": "{total} projects",
+      "projects.count": "{n} of {total}",
+      "projects.empty": "Nothing matches these filters.",
+      "projects.clear": "Clear filters",
+      "projects.moreTags": "More tags",
+      "projects.lessTags": "Fewer",
       "skills.title": "Skills",
       "contact.title": "Contact",
       "contact.text": "The best way to reach me is on LinkedIn.",
@@ -150,6 +183,7 @@
     document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
     document.querySelectorAll("[data-i18n-aria]").forEach((el) => { el.setAttribute("aria-label", t(el.dataset.i18nAria)); });
     document.querySelectorAll("[data-i18n-title]").forEach((el) => { el.setAttribute("title", t(el.dataset.i18nTitle)); });
+    document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => { el.setAttribute("placeholder", t(el.dataset.i18nPlaceholder)); });
   }
 
   /* ---------- Render projects & skills from JSON data ---------- */
@@ -164,24 +198,218 @@
     }
   }
 
+  /* ---------- Projects: search, category & tag filters ---------- */
+  const TAG_LIMIT = 12; // tag chips shown before the "more" toggle
+  const projectTools = document.getElementById("projectTools");
+  const projectSearch = document.getElementById("projectSearch");
+  const categoryChips = document.getElementById("categoryChips");
+  const tagChips = document.getElementById("tagChips");
+  const projectCount = document.getElementById("projectCount");
+  const projectClear = document.getElementById("projectClear");
+  const projectGrid = document.getElementById("projectGrid");
+
+  // Filter state lives in the URL (?q=&cat=&tag=) so a filtered view can be shared
+  const urlParams = new URLSearchParams(location.search);
+  const filter = {
+    q: urlParams.get("q") ?? "",
+    cat: urlParams.get("cat") ?? "",
+    tags: new Set(urlParams.getAll("tag")),
+  };
+  let tagsExpanded = false;
+  let categoryOrder = []; // category ids in categories.json order
+
+  const norm = (s) => String(s).normalize("NFKC").toLowerCase();
+  // Every language variant of a field, so a query matches whichever script it is typed in
+  const variants = (v) => (v && typeof v === "object") ? Object.values(v) : (v ? [v] : []);
+  // Language-independent identity of a tag (tags may be a string or an i18n object)
+  const tagKey = (tag) => (tag && typeof tag === "object")
+    ? (tag.en ?? tag["zh-Hant"] ?? tag["zh-Hans"] ?? "")
+    : String(tag ?? "");
+  // Host of a work hosted on another site ("" for anything under this site's own domain)
+  const SITE_HOSTS = ["dtohuy.github.io", location.hostname];
+  const externalHost = (url) => {
+    if (!/^https?:\/\//i.test(url ?? "")) return "";
+    try {
+      const host = new URL(url).hostname;
+      return SITE_HOSTS.includes(host) ? "" : host.replace(/^www\./, "");
+    } catch (e) { return ""; }
+  };
+  const fill = (key, vars) => t(key).replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? "");
+
+  function prepareProjects(raw, categories) {
+    const labels = new Map((Array.isArray(categories) ? categories : []).map((c) => [c.id, c.label]));
+    categoryOrder = [...labels.keys()];
+    return raw.map((p) => {
+      const tags = (Array.isArray(p.tags) ? p.tags : []).filter(tagKey);
+      return {
+        ...p,
+        tags,
+        tagKeys: tags.map(tagKey),
+        categoryLabel: labels.get(p.category) ?? p.category,
+        url: p.url || (p.id ? `projects/${p.id}/` : ""),
+        externalHost: externalHost(p.url),
+        haystack: norm([p.id, p.title, p.meta, p.description, labels.get(p.category), externalHost(p.url), ...tags]
+          .flatMap(variants).join("\n")),
+      };
+    }).sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0)
+      || String(b.date ?? "").localeCompare(String(a.date ?? "")));
+  }
+
+  function filteredProjects(projects) {
+    const terms = norm(filter.q).split(/\s+/).filter(Boolean);
+    return projects.filter((p) => (!filter.cat || p.category === filter.cat)
+      && [...filter.tags].every((key) => p.tagKeys.includes(key))
+      && terms.every((term) => p.haystack.includes(term)));
+  }
+
+  const chip = (attr, key, label, count) => `
+    <button type="button" class="chip" ${attr}="${escapeAttr(key)}" aria-pressed="false">${escapeHtml(label)}${
+      count == null ? "" : `<span class="chip-count">${count}</span>`}</button>`;
+
+  function renderFilters(projects) {
+    if (!projectTools || !Array.isArray(projects)) return;
+    projectTools.hidden = false;
+
+    const cats = new Map();
+    const tags = new Map();
+    projects.forEach((p) => {
+      if (p.category) {
+        const c = cats.get(p.category) ?? { label: p.categoryLabel, count: 0 };
+        c.count += 1;
+        cats.set(p.category, c);
+      }
+      p.tags.forEach((tag) => {
+        const entry = tags.get(tagKey(tag)) ?? { tag, count: 0 };
+        entry.count += 1;
+        tags.set(tagKey(tag), entry);
+      });
+    });
+
+    // Drop filters from the URL that no longer match any data
+    if (!cats.has(filter.cat)) filter.cat = "";
+    filter.tags.forEach((key) => { if (!tags.has(key)) filter.tags.delete(key); });
+
+    categoryChips.hidden = cats.size < 2;
+    categoryChips.innerHTML = chip("data-cat", "", t("projects.all"), projects.length)
+      + [...new Set([...categoryOrder, ...cats.keys()])].filter((id) => cats.has(id))
+        .map((id) => chip("data-cat", id, pick(cats.get(id).label), cats.get(id).count)).join("");
+
+    const sortedTags = [...tags].sort((a, b) => b[1].count - a[1].count
+      || pick(a[1].tag).localeCompare(pick(b[1].tag)));
+    tagChips.hidden = sortedTags.length === 0;
+    tagChips.classList.toggle("collapsed", !tagsExpanded);
+    tagChips.innerHTML = sortedTags.map(([key, e]) => chip("data-tag", key, pick(e.tag))).join("")
+      + (sortedTags.length > TAG_LIMIT
+        ? `<button type="button" class="link-button" id="tagMore" aria-expanded="${tagsExpanded}">${
+            escapeHtml(t(tagsExpanded ? "projects.lessTags" : "projects.moreTags"))}</button>`
+        : "");
+  }
+
   function renderProjects(projects) {
-    const grid = document.getElementById("projectGrid");
-    if (!grid || !Array.isArray(projects)) return;
-    grid.innerHTML = projects.map((p) => {
-      const tags = Array.isArray(p.tags) ? p.tags.map(pick).filter(Boolean) : [];
+    if (!projectGrid || !Array.isArray(projects)) return;
+    const shown = filteredProjects(projects);
+    const active = Boolean(filter.q.trim() || filter.cat || filter.tags.size);
+
+    projectGrid.innerHTML = shown.length ? shown.map((p) => {
+      const meta = [pick(p.categoryLabel), pick(p.meta), String(p.date ?? "").slice(0, 7)].filter(Boolean);
       return `
       <article class="project-card">
         <h3>${escapeHtml(pick(p.title))}</h3>
-        ${p.meta ? `<div class="project-meta">${escapeHtml(pick(p.meta))}</div>` : ""}
+        ${meta.length ? `<div class="project-meta">${escapeHtml(meta.join(" · "))}</div>` : ""}
         <p>${escapeHtml(pick(p.description))}</p>
-        ${tags.length ? `
+        ${p.tags.length ? `
           <div class="project-tags">
-            ${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}
+            ${p.tags.map((tag) => `<button type="button" class="tag" data-tag="${escapeAttr(tagKey(tag))}" aria-pressed="${filter.tags.has(tagKey(tag))}">${escapeHtml(pick(tag))}</button>`).join("")}
           </div>` : ""}
-        ${p.url ? `<a class="project-link" href="${escapeAttr(p.url)}" target="_blank" rel="noopener">${escapeHtml(t("projects.view"))} &rarr;</a>` : ""}
+        ${p.url ? (p.externalHost
+          ? `<a class="project-link" href="${escapeAttr(p.url)}" target="_blank" rel="noopener noreferrer" title="${escapeAttr(t("projects.external"))}">${escapeHtml(t("projects.view"))} &nearr; <span class="project-host">${escapeHtml(p.externalHost)}</span></a>`
+          : `<a class="project-link" href="${escapeAttr(p.url)}" target="_blank" rel="noopener">${escapeHtml(t("projects.view"))} &rarr;</a>`) : ""}
       </article>`;
-    }).join("");
+    }).join("") : `<p class="project-empty">${escapeHtml(t("projects.empty"))}</p>`;
+
+    if (projectCount) {
+      projectCount.textContent = active
+        ? fill("projects.count", { n: shown.length, total: projects.length })
+        : fill("projects.total", { total: projects.length });
+    }
+    if (projectClear) projectClear.hidden = !active;
+    categoryChips?.querySelectorAll("[data-cat]").forEach((el) => {
+      el.setAttribute("aria-pressed", String(el.dataset.cat === filter.cat));
+    });
+    tagChips?.querySelectorAll("[data-tag]").forEach((el) => {
+      el.setAttribute("aria-pressed", String(filter.tags.has(el.dataset.tag)));
+    });
   }
+
+  function syncUrl() {
+    const params = new URLSearchParams(location.search);
+    ["q", "cat", "tag"].forEach((key) => params.delete(key));
+    if (filter.q.trim()) params.set("q", filter.q.trim());
+    if (filter.cat) params.set("cat", filter.cat);
+    filter.tags.forEach((key) => params.append("tag", key));
+    const qs = params.toString();
+    history.replaceState(null, "", location.pathname + (qs ? `?${qs}` : "") + location.hash);
+  }
+
+  function applyFilter() {
+    renderProjects(data.projects);
+    syncUrl();
+  }
+
+  function toggleTag(key) {
+    if (!filter.tags.delete(key)) filter.tags.add(key);
+    applyFilter();
+  }
+
+  let searchTimer;
+  projectSearch?.addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      filter.q = projectSearch.value;
+      applyFilter();
+    }, 80);
+  });
+
+  categoryChips?.addEventListener("click", (e) => {
+    const el = e.target.closest("[data-cat]");
+    if (!el) return;
+    filter.cat = el.dataset.cat;
+    applyFilter();
+  });
+
+  tagChips?.addEventListener("click", (e) => {
+    if (e.target.closest("#tagMore")) {
+      tagsExpanded = !tagsExpanded;
+      renderFilters(data.projects);
+      renderProjects(data.projects);
+      document.getElementById("tagMore")?.focus();
+      return;
+    }
+    const el = e.target.closest("[data-tag]");
+    if (el) toggleTag(el.dataset.tag);
+  });
+
+  projectGrid?.addEventListener("click", (e) => {
+    const el = e.target.closest("[data-tag]");
+    if (el) toggleTag(el.dataset.tag);
+  });
+
+  projectClear?.addEventListener("click", () => {
+    filter.q = "";
+    filter.cat = "";
+    filter.tags.clear();
+    if (projectSearch) projectSearch.value = "";
+    applyFilter();
+    projectSearch?.focus();
+  });
+
+  // "/" jumps to the search box from anywhere on the page
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey || !projectSearch || projectTools?.hidden) return;
+    if (e.target.closest?.("input, textarea, select, [contenteditable]")) return;
+    e.preventDefault();
+    projectSearch.focus();
+  });
 
   function renderSkills(skills) {
     const grid = document.getElementById("skillsGrid");
@@ -209,6 +437,7 @@
 
   function renderAll() {
     applyStaticText();
+    renderFilters(data.projects);
     renderProjects(data.projects);
     renderSkills(data.skills);
   }
@@ -227,11 +456,16 @@
   applyStaticText();
 
   (async () => {
-    const [projects, skills] = await Promise.all([
+    const [projects, categories, skills] = await Promise.all([
       loadData("assets/data/projects.json"),
+      loadData("assets/data/categories.json"),
       loadData("assets/data/skills.json"),
     ]);
-    data = { projects, skills };
+    data = { projects: Array.isArray(projects) ? prepareProjects(projects, categories) : null, skills };
+    if (projectSearch) projectSearch.value = filter.q;
+    const linkedToFilter = Boolean(filter.q || filter.cat || filter.tags.size);
     renderAll();
+    // A shared filter link should land on the results, not the hero
+    if (linkedToFilter && !location.hash) document.getElementById("projects")?.scrollIntoView();
   })();
 })();
