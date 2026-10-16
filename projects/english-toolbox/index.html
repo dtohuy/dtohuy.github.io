@@ -180,6 +180,7 @@ h2{font-family:var(--f-display);font-size:24px;margin:34px 0 4px}
       <button type="button" class="rec-btn" id="recDl" disabled>下載</button>
     </div>
     <div class="rec-msg" id="recMsg">只保留最新的一段，新錄的會覆蓋舊的。</div>
+    <button type="button" class="rec-btn" id="recCopy" hidden>複製紀錄</button>
     <pre class="rec-log" id="recLog" hidden></pre>
   </div>
 </section>
@@ -295,7 +296,23 @@ document.addEventListener("click", e=>{
   /* ?debug=1 shows a running log of the recorder, for diagnosing browsers we can't test on */
   const logEl = document.getElementById("recLog"), DEBUG = /[?&]debug=1/.test(location.search);
   let take = 0, t00 = Date.now();
-  function log(){ if(!DEBUG) return; logEl.hidden = false; logEl.textContent += ((Date.now()-t00)/1000).toFixed(1) + " " + [].join.call(arguments, " ") + "\n"; logEl.scrollTop = 1e9; }
+  const copyBtn = document.getElementById("recCopy");
+  function log(){ if(!DEBUG) return; logEl.hidden = copyBtn.hidden = false; logEl.textContent += ((Date.now()-t00)/1000).toFixed(1) + " " + [].join.call(arguments, " ") + "\n"; logEl.scrollTop = 1e9; }
+  /* clipboard API first; iOS falls back to selecting a hidden textarea */
+  copyBtn.addEventListener("click", async ()=>{
+    const text = logEl.textContent;
+    let ok = false;
+    try{ await navigator.clipboard.writeText(text); ok = true; }
+    catch(e){
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.setAttribute("readonly", ""); ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;font-size:16px";
+      document.body.appendChild(ta); ta.focus(); ta.setSelectionRange(0, text.length);
+      try{ ok = document.execCommand("copy"); }catch(e2){}
+      ta.remove();
+    }
+    copyBtn.textContent = ok ? "已複製" : "複製失敗，請長按紀錄選取";
+    setTimeout(()=>{ copyBtn.textContent = "複製紀錄"; }, 2000);
+  });
   if(DEBUG){ log("ua", navigator.userAgent.replace(/^Mozilla\/5\.0 /, "")); ["loadedmetadata","durationchange","canplay","play","playing","pause","ended","seeked","waiting","stalled","emptied","error"].forEach(ev=>audio.addEventListener(ev, ()=>log("audio", ev, "t="+audio.currentTime.toFixed(2), "d="+audio.duration, "rs="+audio.readyState, ev==="error" && audio.error ? "code="+audio.error.code+" "+(audio.error.message||"") : "", probing ? "probing" : ""))); }
   /* one recording session at a time: idle -> starting -> recording -> stopping -> idle */
   let state = "idle", session = null, url = null, knownDur = 0, seeking = false, probing = false, clipBlob = null, clipAt = 0;
