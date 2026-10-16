@@ -340,7 +340,10 @@ document.addEventListener("click", e=>{
   function supported(){ return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder); }
   function pickType(){
     if(!window.MediaRecorder || !MediaRecorder.isTypeSupported) return "";
-    return ["audio/webm;codecs=opus","audio/webm","audio/mp4","audio/ogg"].find(t=>MediaRecorder.isTypeSupported(t)) || "";
+    /* WebKit's webm recorder (new in iOS 18.4) can come back empty on repeat takes; its native mp4 one is solid */
+    const apple = navigator.vendor === "Apple Computer, Inc.";
+    const order = apple ? ["audio/mp4","audio/webm;codecs=opus","audio/webm"] : ["audio/webm;codecs=opus","audio/webm","audio/mp4","audio/ogg"];
+    return order.find(t=>MediaRecorder.isTypeSupported(t)) || "";
   }
   function errorText(e){
     const n = e && e.name;
@@ -367,7 +370,7 @@ document.addEventListener("click", e=>{
     mic.getAudioTracks().forEach(t=>t.addEventListener("ended", ()=>{ if(session && session.rec.state !== "inactive") session.rec.stop(); }));
     return {stream:mic, fresh:true};
   }
-  function releaseMic(){ clearTimeout(idleTimer); if(mic){ mic.getTracks().forEach(t=>t.stop()); mic = null; } }
+  function releaseMic(){ clearTimeout(idleTimer); if(mic){ mic.getTracks().forEach(t=>t.stop()); mic = null; } if(ctx && ctx.state === "running") ctx.suspend().catch(()=>{}); }
   function releaseLater(){ clearTimeout(idleTimer); idleTimer = setTimeout(()=>{ if(state === "idle") releaseMic(); }, IDLE_MS); }
   /* but each recording gets a brand-new stream: WebKit (Safari and every iOS browser) writes an unplayable file
      when a second MediaRecorder runs on a stream that already recorded. Web Audio makes a new one per take. */
@@ -385,7 +388,7 @@ document.addEventListener("click", e=>{
         const src = ctx.createMediaStreamSource(stream), dst = ctx.createMediaStreamDestination();
         src.connect(dst);
         log("tap webaudio", "ctx="+ctx.state, ctx.sampleRate);
-        return {stream:dst.stream, close(){ try{ src.disconnect(); }catch(e){} dst.stream.getTracks().forEach(t=>t.stop()); ctx.suspend().catch(()=>{}); }};
+        return {stream:dst.stream, close(){ try{ src.disconnect(); }catch(e){} dst.stream.getTracks().forEach(t=>t.stop()); }};
       }catch(e){}
     }
     const c = stream.clone();
@@ -426,7 +429,13 @@ document.addEventListener("click", e=>{
       s.tap.close();
       if(document.hidden) releaseMic(); else releaseLater();
       if(session === s) session = null;
-      if(s.chunks.length){
+      const bytes = s.chunks.reduce((a,c)=>a+c.size, 0);
+      /* a take that ran but carries no audio (only a few header bytes): keep the previous clip, start the next take on a fresh mic */
+      if(bytes && bytes < 512 && Date.now() - s.t0 > 1000){
+        log("empty take", "bytes="+bytes);
+        releaseMic();
+        msg.textContent = "這次沒錄到聲音" + (url ? "，上一段錄音還在" : "") + "。再按一次開始錄音。";
+      } else if(s.chunks.length){
         const blob = new Blob(s.chunks, {type: s.rec.mimeType || type || "audio/webm"});
         const at = Date.now(), dur = (at - s.t0) / 1000;
         log("stop", "chunks="+s.chunks.length, "bytes="+blob.size, "sec="+dur.toFixed(1));
