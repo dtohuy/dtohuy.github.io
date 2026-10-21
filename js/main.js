@@ -311,7 +311,7 @@
     const active = Boolean(filter.q.trim() || filter.cat || filter.tags.size);
 
     projectGrid.innerHTML = shown.length ? shown.map((p) => {
-      const meta = [pick(p.categoryLabel), pick(p.meta), String(p.date ?? "").slice(0, 7)].filter(Boolean);
+      const meta = [pick(p.categoryLabel), pick(p.meta), String(p.date ?? "").slice(0, 7), p.version ? `v${p.version}` : ""].filter(Boolean);
       return `
       <article class="project-card">
         <h3>${escapeHtml(pick(p.title))}</h3>
