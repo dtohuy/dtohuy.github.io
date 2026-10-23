@@ -116,63 +116,14 @@ textarea{min-height:90px;resize:vertical}
 .word .dd{color:var(--muted);font-variant-numeric:tabular-nums;font-size:12px}
 .x{border:none;background:none;color:var(--muted);font-size:18px;line-height:1;padding:4px}
 .empty{color:var(--muted);font-style:italic;padding:14px 0}
-.recbox{margin-top:12px;display:grid;gap:10px}
-.take{border:1px solid var(--line);border-radius:10px;background:var(--paper);padding:10px 12px;display:grid;gap:8px}
-.take.recording{border-color:var(--rec)}
-.take-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.take-h .tl{font-weight:600}
-.take-h .ts{font-size:12px;color:var(--muted)}
-.take-h .tt{margin-left:auto;font-family:var(--f-display);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
-.take.recording .tt{color:var(--rec)}
-.take-c{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto auto;gap:8px;align-items:center}
 .rbtn{border:1px solid var(--green);background:none;color:var(--green);border-radius:8px;padding:6px 12px;font-size:14px;font-weight:500;white-space:nowrap}
 .rbtn:disabled{opacity:.4;cursor:default}
 .rbtn.go{background:var(--green);color:var(--on-green)}
-.take.recording .rbtn.go{background:var(--rec);border-color:var(--rec);color:#fff}
 .rbtn .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor;margin-right:6px;vertical-align:1px}
-.take.recording .rbtn.go .dot{animation:pulse 1s infinite}
 @keyframes pulse{50%{opacity:.3}}
-.take input[type=range]{width:100%;margin:0;accent-color:var(--green);min-width:0}
 .rpos{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .rmsg{font-size:13px;color:var(--muted)}
 .rmsg.warn{color:var(--accent)}
-.offline-note{font-size:13px;color:var(--muted);background:var(--hl);border-radius:8px;padding:8px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-@media (max-width:560px){.take-c{grid-template-columns:auto auto minmax(0,1fr)}.take-c .rpos{grid-column:1/3}.take-c .rdl{grid-column:3;justify-self:end}}
-.recline{margin-top:12px;display:grid;gap:8px}
-.recline-s{font-size:14px}
-.recline-s span{font-weight:600;font-variant-numeric:tabular-nums}
-.recline-b{display:flex;gap:8px;flex-wrap:wrap}
-.recf{position:fixed;z-index:30;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(300px,calc(100% - 32px));background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(20,30,24,.22);touch-action:none}
-.recf.recording{border-color:var(--rec)}
-.recf-h{display:flex;align-items:center;gap:8px;padding:9px 10px 9px 14px;cursor:grab;user-select:none;border-bottom:1px solid var(--line)}
-.recf-h:active{cursor:grabbing}
-.recf-h b{flex:1;font-size:14px}
-.recf-h .dot{width:9px;height:9px;border-radius:50%;background:var(--muted)}
-.recf.recording .recf-h .dot{background:var(--rec);animation:pulse 1s infinite}
-.recf-x{background:none;border:0;color:var(--muted);font-size:13px;padding:2px 6px;border-radius:6px}
-.recf-x:hover{color:var(--ink);background:var(--hl)}
-.recf-b{padding:12px 14px 14px;display:grid;gap:10px;touch-action:auto}
-.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--green);border-radius:8px;overflow:hidden}
-.seg button{border:0;background:none;padding:6px 4px;font-size:13px;color:var(--green)}
-.seg button[aria-pressed="true"]{background:var(--green);color:var(--on-green);font-weight:600}
-.seg button:disabled{cursor:default}
-.recf-t{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
-.recf-time{font-family:var(--f-display);font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
-.recf.recording .recf-time{color:var(--rec)}
-.recf-when{font-size:12px;color:var(--muted)}
-.recf-seek{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
-.recf-seek input{width:100%;margin:0;accent-color:var(--green)}
-.recf-seek span{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
-.recf-btns{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px}
-.recf-btns .rbtn{display:flex;justify-content:center;align-items:center;padding:8px 6px}
-.recf.recording #recfGo{background:var(--rec);border-color:var(--rec);color:#fff}
-.recf.recording #recfGo .dot{animation:pulse 1s infinite}
-.recf-msg{font-size:12.5px;color:var(--muted);line-height:1.5}
-.recf-msg.warn{color:var(--accent)}
-.rec-pill{position:fixed;z-index:30;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:9px 16px;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(20,30,24,.2);display:flex;gap:8px;align-items:center;font-variant-numeric:tabular-nums}
-.rec-pill i{width:9px;height:9px;border-radius:50%;background:var(--green)}
-.rec-pill.recording i{background:var(--rec);animation:pulse 1s infinite}
-@media (prefers-reduced-motion:reduce){.recf .dot,.rec-pill i,.rbtn .dot{animation:none!important}}
 .toast{position:fixed;left:50%;max-width:calc(100% - 32px);text-align:center;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--green);color:var(--on-green);padding:8px 16px;border-radius:999px;font-size:14px;z-index:20}
 @media (max-width:820px){
   .layout{grid-template-columns:minmax(0,1fr)}
@@ -207,18 +158,6 @@ textarea{min-height:90px;resize:vertical}
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
-<button type="button" class="rec-pill" id="recPill" hidden aria-label="打开录音框"><i></i><span id="pillTxt">录音</span></button>
-<section class="recf" id="recf" aria-label="录音框">
-  <div class="recf-h" id="recfHead" title="拖动移动，双击回到右下角"><span class="dot"></span><b id="recfDay">Day 1 录音</b><button type="button" class="recf-x" id="recfMin" aria-label="收合录音框">收合</button></div>
-  <div class="recf-b">
-    <div class="seg" role="group" aria-label="选择哪一段"><button type="button" data-slot="a" aria-pressed="true">第一遍</button><button type="button" data-slot="b" aria-pressed="false">对照后重录</button></div>
-    <div class="recf-t"><span class="recf-time" id="recfTime" aria-live="polite">0:00</span><span class="recf-when" id="recfWhen">这一段还没录</span></div>
-    <div class="recf-seek"><input type="range" id="recfSeek" min="0" max="1000" step="1" value="0" disabled aria-label="播放位置"><span id="recfPos">0:00 / 0:00</span></div>
-    <div class="recf-btns"><button type="button" class="rbtn go" id="recfGo"><span class="dot"></span>录音</button><button type="button" class="rbtn" id="recfPlay" disabled>播放</button><button type="button" class="rbtn" id="recfDl" disabled>下载</button></div>
-    <div class="recf-msg" id="recfMsg">录音存在这台设备的浏览器里，每段只保留最新一次。</div>
-    <button type="button" class="rbtn go" id="recfOff" hidden>下载可录音版</button>
-  </div>
-</section>
 
 <script>
 const DATA = {"weeks": [{"w": 1, "name": "打通开口", "goal": "不经过中文，用最简单的句子描述正在发生的事。目标：开口不卡、uh 变少。"}, {"w": 2, "name": "讲好项目故事", "goal": "把 text-to-SQL 项目练成一段能脱口而出的 2 分钟故事：背景 → 问题 → 行动 → 结果。"}, {"w": 3, "name": "把技术讲清楚", "goal": "用英文解释数据工程的核心概念：先给结论，再举例，最后讲取舍。"}, {"w": 4, "name": "面试实战", "goal": "行为题、追问、不会的题、反问面试官，最后完成一次完整模拟面试。"}], "days": [{"d": 1, "w": 1, "title": "30-Second Intro", "zh": "30 秒自我介绍", "mono": "边收拾桌面边说你现在在做什么。只用现在进行时，一句话不超过 8 个词。", "starters": ["I'm opening my laptop.", "I'm checking my messages.", "Now I'm making a list for today."], "rec": "Introduce yourself in 30 seconds.", "chunks": [["I'm a full-stack engineer with five years of experience.", "我是有五年经验的全栈工程师。"], ["Right now I'm focusing on data engineering.", "我现在主要做数据工程方向。"], ["Most of my recent work is on an analytics platform.", "我最近的工作主要在一个分析平台上。"], ["I enjoy turning messy data into something useful.", "我喜欢把杂乱的数据变成有用的东西。"]], "model": "Hi, I'm Kiya. I'm a full-stack engineer with five years of experience. Right now I'm focusing on data engineering. Most of my recent work is on an analytics platform, where I build features that help business users query data on their own. I enjoy turning messy data into something useful, and I'm looking for a role where I can work on data pipelines full time.", "fix": [["I have five years experience.", "I have five years of experience.", "years 后面要加 of"]], "tip": "今天先录下来，存好。第 30 天你会再录一次同一个题目，对比就能听到自己的进步。"}, {"d": 2, "w": 1, "title": "My First Hour at Work", "zh": "上班第一小时", "mono": "回想今天早上上班的第一个小时，用一般过去时一件一件说出来。", "starters": ["I got to work at nine.", "First, I checked Slack.", "Then I looked at the dashboard."], "rec": "What do you usually do in your first hour at work?", "chunks": [["The first thing I do is check my messages.", "我做的第一件事是看消息。"], ["Then I go through the alerts from last night.", "然后我看一下昨晚的告警。"], ["If something failed, I fix that first.", "如果有任务失败，我先修那个。"], ["After that, I plan my day.", "之后我安排一天的工作。"]], "model": "The first thing I do is check my messages, because people in other time zones may need something from me. Then I go through the alerts from last night. If a job failed, I fix that first, since other teams depend on the data. After that, I plan my day. I usually pick one big task for the morning, when I can focus best.", "fix": [["I first check message.", "The first thing I do is check my messages.", "message 可数，要用复数；用 The first thing I do is… 更自然"]], "tip": "First / Then / After that 是最省力的连接词。卡住时先说其中一个，给大脑争取一秒。"}, {"d": 3, "w": 1, "title": "Stand-up Update", "zh": "站会更新", "mono": "假装在开站会：昨天做了什么、今天要做什么、有什么卡住。每部分说两句。", "starters": ["Yesterday I finished…", "Today I'm going to…", "I'm blocked on…"], "rec": "Give a stand-up update about your work this week.", "chunks": [["Yesterday I finished the first version of the query parser.", "昨天我完成了查询解析器的第一版。"], ["Today I'm going to add tests for the edge cases.", "今天我要给边界情况加测试。"], ["I'm blocked on access to the production logs.", "我卡在拿不到生产环境日志的权限。"], ["Could someone from the platform team help with that?", "平台组有人能帮忙吗？"]], "model": "Yesterday I finished the first version of the query parser, and it works for the main cases. Today I'm going to add tests for the edge cases, like empty results and very long questions. I'm blocked on access to the production logs, which I need to check real user questions. Could someone from the platform team help with that after the meeting?", "fix": [["Yesterday I finish the parser.", "Yesterday I finished the parser.", "说过去的事一定用过去时，这是你最常漏的点"]], "tip": "站会的结构固定：Yesterday / Today / Blocked。结构熟了，注意力就能放在内容上。"}, {"d": 4, "w": 1, "title": "My Team and My Role", "zh": "团队和我的角色", "mono": "边看团队的群组列表，边用英文介绍每个人做什么。", "starters": ["She works on the frontend.", "He's in charge of the data warehouse.", "I'm responsible for…"], "rec": "Tell me about your team and your role on it.", "chunks": [["I'm on a team of six engineers.", "我们组有六个工程师。"], ["I'm responsible for the query engine.", "我负责查询引擎。"], ["I work closely with the product team.", "我和产品团队合作很紧密。"], ["We ship a new release every two weeks.", "我们每两周发一个版本。"]], "model": "I'm on a team of six engineers, and we build an analytics system for internal business users. I'm responsible for the query engine, which turns user requests into SQL. I work closely with the product team, because they talk to users every day and know what's confusing. We ship a new release every two weeks, so I'm used to working in short cycles.", "fix": [["I am response for the query engine.", "I'm responsible for the query engine.", "responsible 是形容词，response 是名词"]], "tip": "面试官问团队，其实想听你在团队里做什么。每说一句别人，就补一句自己。"}, {"d": 5, "w": 1, "title": "My Tech Stack", "zh": "我的技术栈", "mono": "打开你最常用的三个工具，每个用两句话说：它是什么、你用它做什么。", "starters": ["This is our data warehouse.", "I use it to…", "It's good for…"], "rec": "What tools and technologies do you use every day?", "chunks": [["Our data lives in a cloud data warehouse.", "我们的数据放在云数据仓库里。"], ["I write most of my code in Python and SQL.", "我大部分代码用 Python 和 SQL 写。"], ["We use Airflow to schedule our jobs.", "我们用 Airflow 调度任务。"], ["It's easy to use, but it gets slow at scale.", "它好用，但数据量大了会变慢。"]], "model": "Our data lives in a cloud data warehouse, and I write most of my code in Python and SQL. We use Airflow to schedule our jobs, and dbt to manage our transformations. On the application side, I still use TypeScript, because I came from full-stack work. Each tool has trade-offs. For example, our warehouse is easy to use, but it gets expensive at scale.", "fix": [["We use Airflow to schedule our job.", "We use Airflow to schedule our jobs.", "我们有很多任务，用复数 jobs"]], "tip": "把工具名换成你们真实用的。每个工具配一个 but，听起来就有经验。"}, {"d": 6, "w": 1, "title": "A Bug I Fixed", "zh": "我修过的一个 bug", "mono": "回想最近修的一个 bug，按时间顺序说：发现了什么 → 怎么查 → 原因 → 怎么修。", "starters": ["We noticed that…", "It turned out that…", "So I changed…"], "rec": "Tell me about a bug you fixed recently.", "chunks": [["We noticed that the daily numbers didn't match.", "我们发现每日数据对不上。"], ["It turned out that a join was creating duplicates.", "原来是一个 join 产生了重复行。"], ["I added a check to catch it earlier.", "我加了一个检查，可以更早发现这个问题。"], ["Since then, it hasn't happened again.", "从那以后再也没发生过。"]], "model": "Last month, we noticed that the daily numbers in our dashboard didn't match the source system. I compared the two tables step by step. It turned out that a join was creating duplicates, because one table had more than one row per user. I fixed the join, and I also added a check to catch duplicates earlier. Since then, it hasn't happened again.", "fix": [["The number is not match.", "The numbers didn't match.", "match 是动词，不需要 is"]], "tip": "It turned out that… 是讲故事最好用的句块，用在“原来是……”的地方。"}, {"d": 7, "w": 1, "title": "Week 1 Review", "zh": "第一周回顾：60 秒自我介绍", "mono": "把这周 6 天的句块各挑一句，连起来说一遍。", "starters": ["I'm a full-stack engineer…", "I'm responsible for…", "It turned out that…"], "rec": "Tell me about yourself and what you do at work. (60 seconds)", "chunks": [["Let me give you a quick overview.", "我简单介绍一下。"], ["On a typical day, I…", "平时我一天会……"], ["One thing I'm proud of is…", "我比较自豪的一件事是……"], ["That's a bit about me.", "这就是我的大致情况。"]], "model": "Let me give you a quick overview. I'm a full-stack engineer with five years of experience, and I'm moving toward data engineering. I'm on a team of six, and I'm responsible for the query engine of our analytics platform. On a typical day, I check our data jobs, fix anything that failed, and then work on new features. One thing I'm proud of is a data quality check I added that stopped duplicate records. That's a bit about me.", "fix": [], "tip": "把今天的录音和第 1 天对比：数一数 uh 的次数，再看说满 60 秒用了几次停顿。"}, {"d": 8, "w": 2, "title": "Project Context", "zh": "项目背景", "mono": "假装给新同事介绍你们的平台：它是给谁用的、能做什么。", "starters": ["It's a platform for…", "Users can…", "Before this, they had to…"], "rec": "What does your analytics platform do, and who uses it?", "chunks": [["Recently I worked on an AI-powered analytics platform.", "我最近在做一个 AI 驱动的分析平台。"], ["It helps business users analyze data on their own.", "它帮助业务人员自己分析数据。"], ["Before this, they had to ask an analyst for every report.", "以前每份报告都要找分析师做。"], ["That could take days.", "那可能要好几天。"]], "model": "Recently I worked on an AI-powered analytics platform. It helps business users, like product managers and marketing people, analyze data on their own. Before this, they had to ask an analyst for every report, and that could take days. Our goal was to let them get answers in minutes, without writing any SQL.", "fix": [["The recent project I work on…", "Recently I worked on…", "说过去的项目用过去时；Recently 放句首更自然"], ["AI power analytics platform", "AI-powered analytics platform", "power 要变成形容词 powered"]], "tip": "背景只讲 3–4 句。面试官最想听的是后面你做了什么，背景太长会抢走时间。"}, {"d": 9, "w": 2, "title": "The Problem", "zh": "要解决的问题", "mono": "用“问题 + 后果”的句式，说出旧方案的三个问题。", "starters": ["The problem was that…", "As a result,…", "Users kept asking…"], "rec": "What problem was the project trying to solve?", "chunks": [["We already had a DSL-to-SQL feature.", "我们已经有一个 DSL 转 SQL 的功能。"], ["But most business users found it hard to use.", "但大部分业务人员觉得很难用。"], ["They had to learn our own query syntax.", "他们得先学我们自己的查询语法。"], ["So we decided to let them ask in natural language.", "所以我们决定让他们直接用自然语言提问。"]], "model": "We already had a DSL-to-SQL feature, but most business users found it hard to use. They had to learn our own query syntax, and many of them gave up after a few tries. As a result, the analysts still got the same number of requests. So we decided to let users ask questions in natural language, and have the system generate the SQL for them.", "fix": [["They can only say native language.", "They can just ask in natural language.", "native language 是母语；自然语言是 natural language"]], "tip": "问题要讲清“谁 + 遇到什么困难 + 造成什么后果”。后果最好有数字。"}, {"d": 10, "w": 2, "title": "What I Did", "zh": "我做了什么", "mono": "列出你在这个项目里亲手做的事，每句都用 I 开头，不用 we。", "starters": ["I designed…", "I built…", "I worked with… to…"], "rec": "What was your role, and what did you build?", "chunks": [["I was responsible for the text-to-SQL pipeline.", "我负责 text-to-SQL 的整条流程。"], ["I designed how we pass the table schema to the model.", "我设计了怎么把表结构传给模型。"], ["I built a step that checks the SQL before running it.", "我做了一个在执行前检查 SQL 的步骤。"], ["I also set up a test set of real user questions.", "我还建了一套真实用户问题的测试集。"]], "model": "I was responsible for the text-to-SQL pipeline. First, I designed how we pass the table schema to the model, so it only sees the tables it needs. Then I built a step that checks the SQL before running it, for example, whether the columns actually exist. I also set up a test set of real user questions, so we could measure every change.", "fix": [["We hope to using text-to-SQL.", "We wanted to use text-to-SQL.", "hope to 后面接动词原形；说过去的计划用 wanted to"]], "tip": "面试里 we 太多，面试官分不清你做了什么。原则：讲背景用 we，讲行动用 I。"}, {"d": 11, "w": 2, "title": "The Hardest Part", "zh": "难点：准确率", "mono": "说出准确率不高的三个原因，每个原因配一个例子。", "starters": ["The hardest part was accuracy.", "One reason was that…", "For example,…"], "rec": "What was the hardest part of the project, and how did you handle it?", "chunks": [["The hardest part was accuracy.", "最难的是准确率。"], ["The generated SQL wasn't always correct.", "生成的 SQL 不总是对的。"], ["The model often picked the wrong table.", "模型经常选错表。"], ["To fix that, we added example queries to the prompt.", "为了解决这个问题，我们在提示词里加了示例查询。"]], "model": "The hardest part was accuracy. The generated SQL wasn't always correct. One reason was that we have hundreds of tables, and the model often picked the wrong one. Another reason was business terms. For example, active user means something specific in our company. To fix that, we added a glossary of business terms and some example queries to the prompt.", "fix": [["The difficult point is the correct rate.", "The hardest part was accuracy.", "准确率是 accuracy；“难点”说 the hardest part / the main challenge"]], "tip": "这是你录音里卡住的地方。今天的四个句块要说到不用想为止。"}, {"d": 12, "w": 2, "title": "Results with Numbers", "zh": "结果和数字", "mono": "把项目的成果换成 3 个数字，每个数字说一句。没有数字就说“前后对比”。", "starters": ["As a result,…", "Accuracy went from … to …", "Now users can…"], "rec": "What was the result of the project?", "chunks": [["As a result, accuracy went from about sixty to eighty-five percent.", "结果准确率从大约 60% 提到了 85%。"], ["Requests to the analysts dropped by a third.", "找分析师的请求少了三分之一。"], ["Users now get answers in under a minute.", "用户现在一分钟内就能得到答案。"], ["We're now rolling it out to more teams.", "我们正在推广给更多团队。"]], "model": "As a result, accuracy on our test set went from about sixty to eighty-five percent. Requests to the analysts dropped by about a third, so they had more time for deeper work. Users now get answers in under a minute instead of waiting days. We're now rolling it out to more teams.", "fix": [["We general report and metrics.", "We generate reports and metrics.", "generate 是生成；general 是“一般的”"]], "tip": "示例里的数字是占位用的，一定要换成你们真实的数据。没有精确数字就说 about / roughly。"}, {"d": 13, "w": 2, "title": "Trade-offs and Lessons", "zh": "取舍和反思", "mono": "如果重做一次这个项目，你会改什么？说两个改动和原因。", "starters": ["Looking back,…", "If I did it again, I would…", "The trade-off was…"], "rec": "If you could do this project again, what would you do differently?", "chunks": [["Looking back, I would build the test set first.", "回头看，我会先建测试集。"], ["We spent too long tuning the prompt without measuring.", "我们花了太多时间调提示词，却没有衡量效果。"], ["The trade-off was speed versus accuracy.", "取舍在于速度和准确率。"], ["I learned to measure before I optimize.", "我学到了先衡量、再优化。"]], "model": "Looking back, I would build the test set first. At the beginning, we spent too long tuning the prompt without measuring, so we couldn't tell if a change really helped. There was also a trade-off between speed and accuracy. A bigger model was more accurate, but too slow for users. The main thing I learned is to measure before I optimize.", "fix": [["If I do it again, I will…", "If I did it again, I would…", "假设性的情况用 did / would"]], "tip": "面试官喜欢听反思，因为这能看出你会成长。说一个具体的错误，比说“一切都很顺利”可信得多。"}, {"d": 14, "w": 2, "title": "Week 2 Review", "zh": "第二周回顾：2 分钟项目故事", "mono": "把 Day 8–13 的句块按顺序串起来，先不录音，顺一遍。", "starters": ["Recently I worked on…", "The problem was…", "The hardest part was…"], "rec": "Walk me through a project you're proud of. (2 minutes)", "chunks": [["Let me walk you through it.", "我带您过一遍。"], ["The goal was to…", "目标是……"], ["My part was…", "我负责的部分是……"], ["In the end,…", "最后……"]], "model": "Let me walk you through it. Recently I worked on an AI-powered analytics platform. We already had a DSL-to-SQL feature, but most business users found it hard to use. The goal was to let them ask questions in natural language. My part was the text-to-SQL pipeline. The hardest part was accuracy, because the model often picked the wrong table. I added schema filtering, a business glossary, and a SQL check before execution. In the end, accuracy went up a lot and analysts got fewer requests. Looking back, I would build the test set earlier.", "fix": [], "tip": "把今天的录音和你最初那段对比，那段里有 15 个以上的 uh。这周目标是控制在 5 个以内。"}, {"d": 15, "w": 3, "title": "A Pipeline, End to End", "zh": "讲一条数据管道", "mono": "在纸上画出你们的一条数据流，边指边讲：数据从哪来、经过什么、到哪去。", "starters": ["The data comes from…", "Then it goes into…", "At the end,…"], "rec": "Walk me through a data pipeline you've worked on.", "chunks": [["The data comes from our app's event logs.", "数据来自我们应用的事件日志。"], ["We load it into the warehouse every hour.", "我们每小时把它加载进数仓。"], ["Then we clean it and build summary tables.", "然后清洗数据，建汇总表。"], ["The dashboards read from those tables.", "看板从这些表里读数据。"]], "model": "The data comes from our app's event logs, like clicks and page views. We load the raw data into the warehouse every hour. Then we clean it, remove duplicates, and build summary tables, such as daily active users. The dashboards and the text-to-SQL feature read from those tables, not from the raw data, so queries stay fast.", "fix": [["The data is come from logs.", "The data comes from logs.", "come 是动词，不能和 is 一起用"]], "tip": "讲流程用“来源 → 处理 → 去向”三段。说到哪一段，手就指到图上哪一段，能明显减少卡顿。"}, {"d": 16, "w": 3, "title": "ETL vs ELT", "zh": "ETL 和 ELT 的区别", "mono": "用一个比喻向朋友解释：先做菜再端上桌 vs 先把食材搬进厨房再做。", "starters": ["The main difference is…", "In ETL,…", "These days, most teams…"], "rec": "What's the difference between ETL and ELT?", "chunks": [["The main difference is where the transformation happens.", "主要区别在于转换在哪里发生。"], ["In ETL, we transform the data before loading it.", "ETL 是先转换，再加载。"], ["In ELT, we load the raw data first.", "ELT 是先加载原始数据。"], ["Modern warehouses are powerful enough to do the work.", "现代数仓的计算能力足够做这些转换。"]], "model": "The main difference is where the transformation happens. In ETL, we transform the data before loading it into the warehouse. In ELT, we load the raw data first and transform it inside the warehouse. These days, most teams use ELT, because modern warehouses are powerful enough to do the work, and keeping the raw data lets you rebuild tables later.", "fix": [["ETL is transform before load.", "In ETL, you transform the data before loading it.", "before 后面接动名词 loading"]], "tip": "解释概念的公式：一句结论 → 两边各一句 → 一句“所以现在大家怎么做”。"}, {"d": 17, "w": 3, "title": "Data Modeling", "zh": "数据建模：事实表和维度表", "mono": "拿你们的订单或事件数据举例，说出哪张是事实表、哪些是维度表。", "starters": ["A fact table stores…", "A dimension table describes…", "For example,…"], "rec": "How would you model the data for an online store?", "chunks": [["I'd start with a star schema.", "我会从星型模型开始。"], ["The fact table stores each order.", "事实表存每一笔订单。"], ["Dimension tables describe customers and products.", "维度表描述客户和商品。"], ["It makes most reports easy to write.", "这样大多数报表都很好写。"]], "model": "I'd start with a star schema. In the middle, there's a fact table that stores each order, with the amount, the time, and keys to other tables. Around it, there are dimension tables that describe customers, products, and dates. This design makes most reports easy to write, because you only need simple joins from the fact table to the dimensions.", "fix": [["I will use star schema.", "I'd use a star schema.", "schema 是可数名词，前面要加 a"]], "tip": "冠词是中文母语者最常漏的。今天每说一个名词，都检查一下前面有没有 a / the。"}, {"d": 18, "w": 3, "title": "Batch vs Streaming", "zh": "批处理和流处理", "mono": "举两个你们业务里的例子：一个适合批处理，一个必须实时。说出理由。", "starters": ["It depends on…", "If you need…, then…", "Otherwise,…"], "rec": "When would you use batch processing, and when would you use streaming?", "chunks": [["It depends on how fresh the data needs to be.", "这取决于数据需要多新。"], ["For daily reports, batch is simpler and cheaper.", "日报用批处理更简单、更便宜。"], ["For fraud detection, we need data in seconds.", "反欺诈需要秒级数据。"], ["I'd start with batch unless there's a real need.", "除非真有需要，我会先用批处理。"]], "model": "It depends on how fresh the data needs to be. For daily reports, batch processing is simpler and cheaper, and a few hours of delay is fine. For things like fraud detection or live alerts, we need the data in seconds, so streaming makes sense. In general, I'd start with batch unless there's a real business need, because streaming systems are harder to run.", "fix": [["It is depend on…", "It depends on…", "depend 是动词，不能和 is 连用"]], "tip": "It depends on… 是回答“该用哪个”类问题的万能开头，后面一定要接“取决于什么”。"}, {"d": 19, "w": 3, "title": "Data Quality", "zh": "数据质量", "mono": "说出你最担心的三种数据问题，以及你会怎么发现它们。", "starters": ["One common problem is…", "To catch that, I would…", "If a check fails,…"], "rec": "How do you make sure your data is correct?", "chunks": [["I add checks at every step of the pipeline.", "我在管道的每一步都加检查。"], ["For example, I check for nulls and duplicates.", "例如检查空值和重复。"], ["I also compare row counts with the source.", "我也会和源头对比行数。"], ["If a check fails, the pipeline stops and alerts us.", "检查失败的话，管道会停下并通知我们。"]], "model": "I add checks at every step of the pipeline. For example, I check for nulls in important columns and for duplicate records. I also compare row counts with the source system, so we know if data is missing. If a check fails, the pipeline stops and sends an alert, so bad data never reaches the dashboards. It's better to show no number than a wrong number.", "fix": [["We check the data is correct or not.", "We check whether the data is correct.", "用 whether，不需要 or not"]], "tip": "把 Day 6 的 duplicate bug 当例子加进来，抽象概念配上你自己的真实经历，就会很有说服力。"}, {"d": 20, "w": 3, "title": "Optimizing a Slow Query", "zh": "优化慢查询", "mono": "回想一个慢查询，按“先测量 → 找原因 → 改 → 再测量”说一遍。", "starters": ["First, I looked at the query plan.", "The problem was…", "After the change,…"], "rec": "A query is running very slowly. How do you fix it?", "chunks": [["First, I'd look at the query plan.", "首先我会看查询计划。"], ["Often it's scanning the whole table.", "常见的原因是全表扫描。"], ["Filtering on the partition column usually helps a lot.", "按分区字段过滤通常效果很大。"], ["Then I'd measure again to confirm.", "然后我会再测一次确认。"]], "model": "First, I'd look at the query plan to see where the time goes. Very often, the query is scanning the whole table. Filtering on the partition column, like the date, usually helps a lot. I'd also check the joins, because joining two big tables without filtering first is expensive. Then I'd measure again to confirm the change actually helped.", "fix": [["The query is very slowly.", "The query is very slow.", "is 后面用形容词 slow；runs slowly 才用副词"]], "tip": "面试官问“怎么做”，要回答步骤，不是只说一个技巧。First / Then / Finally 让对方跟得上。"}, {"d": 21, "w": 3, "title": "Week 3 Review", "zh": "第三周回顾：讲给外行听", "mono": "想象对一个完全不懂技术的朋友，解释你的工作对公司有什么用。", "starters": ["Basically, I…", "Think of it like…", "Without it,…"], "rec": "Explain what a data engineer does to someone who isn't technical.", "chunks": [["Basically, I build the pipes that move data around.", "简单说，我搭建搬运数据的管道。"], ["Think of it like plumbing for information.", "可以想成信息的水管系统。"], ["Without it, people make decisions on bad numbers.", "没有它，大家会根据错误的数字做决定。"], ["My job is to make the data reliable and easy to use.", "我的工作是让数据可靠又好用。"]], "model": "Basically, I build the pipes that move data around a company. Think of it like plumbing for information. Data comes in from many places, like apps and payment systems, and I make sure it arrives clean, on time, and in a shape people can use. Without it, people make decisions on bad numbers. My job is to make the data reliable and easy to use.", "fix": [], "tip": "能讲给外行听，就说明你真的懂了，这也是面试官常用的考法。"}, {"d": 22, "w": 4, "title": "Tell Me About Yourself", "zh": "面试版自我介绍", "mono": "按“现在 → 过去 → 未来”三段，各说两句。", "starters": ["Currently, I…", "Before that, I…", "Now I'm looking for…"], "rec": "Tell me about yourself.", "chunks": [["Currently, I'm working on an analytics platform.", "目前我在做一个分析平台。"], ["Before that, I built web apps as a full-stack engineer.", "在那之前，我是全栈工程师，做 web 应用。"], ["Over time, I got more interested in the data side.", "慢慢地，我对数据这边越来越感兴趣。"], ["Now I'm looking for a full-time data engineering role.", "现在我想找一份全职的数据工程岗位。"]], "model": "Currently, I'm working on an AI-powered analytics platform, where I own the text-to-SQL pipeline. Before that, I spent several years building web apps as a full-stack engineer. Over time, I got more interested in the data side, because I kept seeing that good products depend on good data. Now I'm looking for a full-time data engineering role where I can work on pipelines and data quality at scale.", "fix": [["I am working in analytics platform.", "I'm working on an analytics platform.", "做某个项目用 work on，还要加冠词 an"]], "tip": "Present → Past → Future 的结构控制在 60–90 秒。说完停下，让面试官追问。"}, {"d": 23, "w": 4, "title": "Why Data Engineering?", "zh": "为什么转数据工程", "mono": "说出两个让你想转方向的真实瞬间。", "starters": ["What draws me to it is…", "I realized that…", "My full-stack background helps because…"], "rec": "Why do you want to move from full-stack to data engineering?", "chunks": [["What draws me to data engineering is the impact.", "吸引我的是它的影响力。"], ["I realized that most bugs I saw were data problems.", "我发现我遇到的大多数 bug 其实是数据问题。"], ["My full-stack background is actually an advantage.", "我的全栈背景其实是优势。"], ["I understand where the data comes from.", "我了解数据是从哪里产生的。"]], "model": "What draws me to data engineering is the impact. One good pipeline can help every team in the company. In my full-stack work, I realized that many of the bugs I saw were actually data problems. I also think my background is an advantage. I understand how applications create data, so I can design pipelines that match how the data is really produced.", "fix": [["Because I am interesting in data.", "Because I'm interested in data.", "人感兴趣用 interested；interesting 是“有趣的”"]], "tip": "别只说“我喜欢数据”。用一个真实经历说明你为什么喜欢，再说你的背景能带来什么。"}, {"d": 24, "w": 4, "title": "A Disagreement", "zh": "和同事意见不合", "mono": "回想一次技术分歧：分歧是什么、你怎么沟通、结果如何。", "starters": ["We disagreed about…", "I understood his point, but…", "In the end, we agreed to…"], "rec": "Tell me about a time you disagreed with a teammate.", "chunks": [["We disagreed about which model to use.", "我们在用哪个模型上有分歧。"], ["I understood his concern about cost.", "我理解他对成本的顾虑。"], ["I suggested we test both on real questions.", "我建议用真实问题把两个都测一下。"], ["In the end, the data made the decision for us.", "最后数据帮我们做了决定。"]], "model": "We disagreed about which model to use for text-to-SQL. My teammate wanted a smaller model to save cost, and I wanted a bigger one for accuracy. I understood his concern about cost, so instead of arguing, I suggested we test both on our set of real questions. The smaller model was only slightly worse and much cheaper, so we went with it. In the end, the data made the decision for us.", "fix": [["I and my colleague have different opinion.", "My colleague and I had different opinions.", "别人放前面、自己放后面；opinion 用复数"]], "tip": "冲突题的重点不是谁赢了，而是你怎么用事实解决分歧。结局即使是你让步，也是好答案。"}, {"d": 25, "w": 4, "title": "A Mistake I Made", "zh": "我犯过的错", "mono": "说一个真实的失误：发生了什么、你怎么补救、之后改变了什么。", "starters": ["One mistake I made was…", "As soon as I noticed, I…", "Since then, I always…"], "rec": "Tell me about a mistake you made at work.", "chunks": [["One mistake I made was deploying without enough testing.", "我犯过的一个错是测试不够就上线了。"], ["As soon as I noticed, I rolled it back.", "一发现我就回滚了。"], ["I told my manager right away.", "我马上告诉了经理。"], ["Since then, I always test with real data first.", "从那以后，我总是先用真实数据测试。"]], "model": "One mistake I made was deploying a change to a pipeline without enough testing. It broke a report that the sales team used every morning. As soon as I noticed, I rolled it back and told my manager right away. Then I fixed the bug and added a test for that case. Since then, I always test with a copy of real data before I deploy.", "fix": [["I make a mistake last year.", "I made a mistake last year.", "last year 是过去，用 made"]], "tip": "失败题要占 30% 失误 + 70% 补救和改进，重点放在你学到了什么。"}, {"d": 26, "w": 4, "title": "When You Don't Know", "zh": "不会的问题怎么答", "mono": "给自己出一个你不太熟的技术问题，练习“先争取时间 → 说已知部分 → 说怎么查”。", "starters": ["That's a good question. Let me think.", "I haven't used that directly, but…", "Here's how I'd approach it."], "rec": "How does Kafka guarantee message ordering? (If you're not sure, practice handling it.)", "chunks": [["That's a good question. Let me think for a second.", "好问题，让我想一下。"], ["I haven't used it in production, but here's what I know.", "我没有在生产环境用过，但我知道的是这样。"], ["My guess is that it works like this.", "我的推测是它这样运作。"], ["I'd confirm that in the docs before relying on it.", "在依赖它之前，我会先查文档确认。"]], "model": "That's a good question. Let me think for a second. I haven't used Kafka in production, but here's what I know. Kafka keeps messages in order within a partition, but not across partitions. So if you need ordering for one user, you'd send all of that user's messages with the same key. I'd confirm the details in the docs before relying on it.", "fix": [["Sorry, I don't know.", "I'm not sure, but here's how I'd think about it.", "直接说不知道就结束了；给出思路，面试官会给你加分"]], "tip": "用停顿代替 uh。说出 Let me think for a second，然后安静两秒，听起来很自信。"}, {"d": 27, "w": 4, "title": "Design Out Loud", "zh": "边想边说：设计一个系统", "mono": "边画边说：设计一个统计用户行为的管道。先问需求，再画框。", "starters": ["Before I start, can I ask…", "At a high level,…", "One thing to watch out for is…"], "rec": "Design a pipeline that counts daily active users for a mobile app.", "chunks": [["Before I start, can I ask a few questions?", "开始前，我可以问几个问题吗？"], ["At a high level, there are three parts.", "大体上分三部分。"], ["Let me think out loud for a moment.", "让我边想边说一下。"], ["One thing to watch out for is late-arriving data.", "需要注意的一点是迟到的数据。"]], "model": "Before I start, can I ask a few questions? How many users do we have, and how fresh does the number need to be? Okay, at a high level, there are three parts. The app sends events to a queue. A job loads them into the warehouse every hour. Then a daily job counts unique users and writes the result to a summary table. One thing to watch out for is late-arriving data, so I'd recount the last two days every night.", "fix": [["I think maybe we can maybe use…", "I'd use…", "连续的 maybe 听起来没把握；先给方案，再说取舍"]], "tip": "系统设计题最大的加分项是先问问题，最大的扣分项是沉默。想到哪说到哪，比憋着想好再说更好。"}, {"d": 28, "w": 4, "title": "Asking for Clarity", "zh": "听不懂时怎么问", "mono": "练习三种情况：没听清、不确定意思、想确认范围。每种说两遍。", "starters": ["Sorry, could you repeat that?", "Just to make sure I understand,…", "Do you mean…?"], "rec": "Practice: The interviewer asks, 'How would you handle schema evolution in your lake?' Clarify first, then answer.", "chunks": [["Sorry, could you say that again?", "抱歉，能再说一遍吗？"], ["Just to make sure I understand, you mean…", "我确认一下，您的意思是……"], ["Are you asking about the design or the tools?", "您是问设计思路还是具体工具？"], ["Got it. Then I'd say…", "明白了，那我会说……"]], "model": "Just to make sure I understand, you mean when the source adds or changes columns, right? Got it. Then I'd say there are two parts. First, I'd use a table format that supports schema changes, so adding a column doesn't break old data. Second, I'd add a check that alerts us when the schema changes, so downstream tables don't fail silently.", "fix": [["What? Can you say again?", "Sorry, could you say that again?", "直接说 What 不礼貌；加上 Sorry 和 could you"]], "tip": "确认问题不是弱点。外国面试官会觉得你很严谨，而且能给你多 5 秒想答案。"}, {"d": 29, "w": 4, "title": "Your Questions", "zh": "反问面试官", "mono": "准备 3 个你真的想知道的问题，大声问出来，再假设对方回答，接一句追问。", "starters": ["Could you tell me more about…?", "What does success look like…?", "How does the team…?"], "rec": "The interviewer asks: 'Do you have any questions for us?' Ask two good ones.", "chunks": [["What does success look like in the first six months?", "前六个月怎样算做得好？"], ["What's the biggest data challenge the team is facing?", "团队现在面对的最大数据挑战是什么？"], ["How do data engineers work with analysts here?", "这里的数据工程师和分析师怎么合作？"], ["That's really helpful, thank you.", "这很有帮助，谢谢。"]], "model": "Yes, thank you. First, what does success look like for this role in the first six months? And second, what's the biggest data challenge the team is facing right now? I'm asking because in my current project, the hardest part was data quality, and I'd like to know if that's similar here.", "fix": [["No, I don't have question.", "Yes, I have a couple of questions.", "永远要准备问题；说没有会显得不感兴趣"]], "tip": "好问题能显示你在乎这份工作。把你的经验连到问题里，反问也能变成加分项。"}, {"d": 30, "w": 4, "title": "Mock Interview", "zh": "毕业：完整模拟面试", "mono": "不看任何笔记，用这 30 天学过的句块，自由说 5 分钟你的工作。", "starters": ["Let me give you a quick overview.", "Let me walk you through it.", "That's a good question. Let me think."], "rec": "Answer three questions in a row: 1) Tell me about yourself. 2) Walk me through a project. 3) Tell me about a mistake. Then re-record your Day 1 intro.", "chunks": [["Thank you for having me today.", "谢谢您今天的时间。"], ["I'm happy to go into more detail.", "我可以再展开讲。"], ["Does that answer your question?", "这回答了您的问题吗？"], ["I'm really excited about this role.", "我对这个岗位很期待。"]], "model": "Thank you for having me today. Let me give you a quick overview. I'm a full-stack engineer with five years of experience, and I'm moving into data engineering. Recently I worked on an AI-powered analytics platform, where I owned the text-to-SQL pipeline. The hardest part was accuracy, and I improved it with schema filtering, a business glossary, and a test set of real questions. I'm happy to go into more detail on any part. Does that answer your question?", "fix": [], "tip": "最后一步：播放第 1 天的录音，再播放今天的。数一数 uh 少了多少，把数字写在笔记里。"}]};
@@ -271,7 +210,7 @@ function openDay(n){S.day=n;S.tab='w'+dayOf(n).w;S.open[dayOf(n).w]=true;save();
 
 /* ---------- audio ---------- */
 const audio=new Audio();let playingBtn=null,seqTimer=null,seqOn=false;
-function stopAudio(){audio.pause();try{ra.pause();}catch(e){}clearTimeout(seqTimer);seqOn=false;if(playingBtn){playingBtn.classList.remove('on');playingBtn.innerHTML=PLAY;}playingBtn=null;
+function stopAudio(){audio.pause();clearTimeout(seqTimer);seqOn=false;if(playingBtn){playingBtn.classList.remove('on');playingBtn.innerHTML=PLAY;}playingBtn=null;
   document.querySelectorAll('[data-seq]').forEach(b=>b.textContent='跟读全部');}
 function playSrc(src,btn,onEnd){
   if(playingBtn===btn&&!audio.paused){stopAudio();return;}
@@ -323,8 +262,8 @@ function dayPage(d){
      <button class="timer" data-min="10" data-step="1">计时 10:00</button>
      <label class="chk"><input type="checkbox" id="st1" data-st="1" ${st[1]?'checked':''}>完成</label></div>
      <div class="q">“${esc(d.rec)}”</div>
-     <ol class="howto"><li>按“录音”说 1 分钟，不写稿，卡住也不要停。</li><li>播放回听，数 uh 的次数，记下卡住的地方。</li><li>查出正确说法，填进下面的卡词本。</li><li>对照参考回答，在“对照后重录”再录一遍，两段对比着听。</li></ol>
-     ${recBox(d.d)}</div>
+     <ol class="howto"><li>按页面右下角的“开始录音”说 1 分钟，不写稿，卡住也不要停。</li><li>播放回听，数 uh 的次数，记下卡住的地方。</li><li>查出正确说法，填进下面的卡词本。</li><li>对照参考回答，先点“下载”存下第一遍，再录一遍（新的会覆盖旧的），两段对比着听。</li></ol>
+     </div>
    <div class="step"><div class="step-h"><span class="min">5′</span><span class="t">③ 句块跟读</span>
      <button class="timer" data-min="5" data-step="2">计时 5:00</button>
      <label class="chk"><input type="checkbox" id="st2" data-st="2" ${st[2]?'checked':''}>完成</label></div>
@@ -420,7 +359,6 @@ function overview(){
     <p class="lead">只练输入不会提高口语。每天录一次、听一次，你才知道自己卡在哪。卡住的词查到后，整句放进卡词本，第二天先复习。</p>
     <p class="lead">四周的安排：第 1 周练开口不卡，第 2 周把项目故事练熟，第 3 周练技术解释，第 4 周练面试问答。</p></div>
     <div class="svgbox">${loopSvg()}</div></section>
-  <section class="blk"><h3>进步对比</h3>${compareBox()}</section>
   <section class="blk"><h3>uh 次数变化（每分钟）</h3>${trendSvg()}</section>
   <section class="blk"><h3>30 天进度</h3><div class="cal">${DATA.days.map(d=>`<button class="${S.done[d.d]?'done':''} ${d.d===today.d?'today':''}" data-day="${d.d}" title="${esc(d.zh)}">${d.d}</button>`).join('')}</div></section>
   </article>`;}
@@ -452,17 +390,12 @@ function render(){
   else if(S.tab==='words')m.innerHTML=wordsPage();
   else if(S.tab==='fb')m.innerHTML=fbPage();
   else{m.innerHTML=dayPage(dayOf(S.day));syncDoneBtn();}
-  raKey=null;paintRec();
-}
+  }
 function addWord(){const zh=$('#wzh').value.trim(),en=$('#wen').value.trim();if(!zh&&!en){toast('先填中文或英文');return;}
   S.words.push({d:S.tab[0]==='w'&&S.tab!=='words'?S.day:0,zh,en,ts:Date.now()});save();$('#wzh').value='';$('#wen').value='';renderTree();toast('已加入卡词本');if(S.tab==='words')render();}
 $('#main').addEventListener('click',e=>{
   const t=e.target;
   const dy=t.closest('[data-day]');if(dy){openDay(+dy.dataset.day);return;}
-  const orc=t.closest('[data-openrec]');if(orc){openRec(orc.dataset.openrec);return;}
-  const rp=t.closest('[data-rplay]');if(rp){raToggle(rp.dataset.rplay);return;}
-  const rd=t.closest('[data-rdl]');if(rd){recDownload(rd.dataset.rdl);return;}
-  const of=t.closest('[data-offline]');if(of){downloadOffline(of);return;}
   const pl=t.closest('.play');if(pl){playSrc(pl.dataset.src,pl);return;}
   const sq=t.closest('[data-seq]');if(sq){playSeq(dayOf(S.day),sq);return;}
   const tm=t.closest('.timer');if(tm){toggleTimer(tm,+tm.dataset.min,+tm.dataset.step);return;}
@@ -474,189 +407,9 @@ $('#main').addEventListener('click',e=>{
     if(navigator.clipboard)navigator.clipboard.writeText(v).then(done).catch(()=>{$('#fb').select();toast('请长按选中后复制');});else{$('#fb').select();toast('请长按选中后复制');}return;}
   if(t.id==='fbClear'){S.feedback='';save();render();return;}
 });
-$('#main').addEventListener('change',e=>{const t=e.target;if(t.dataset.rseek){raSeek(t.dataset.rseek,+t.value);seeking=false;return;}
-  if(t.dataset.st!==undefined){setStep(S.day,+t.dataset.st,t.checked);return;}
-  if(t.id==='uh'){S.uh[S.day]=t.value;save();}if(t.id==='secs'){S.secs[S.day]=t.value;save();}});
-$('#main').addEventListener('input',e=>{const t=e.target;if(t.dataset.rseek){seeking=true;const k=t.dataset.rseek,T=raTotal(k),cur=T*t.value/1000;const p=document.querySelector(`[data-rpos="${k}"]`);if(p)p.textContent=`${fmtS(cur)} / ${fmtS(T)}`;return;}if(t.id==='note'){S.notes[S.day]=t.value;save();}if(t.id==='fb'){S.feedback=t.value;save();}});
+$('#main').addEventListener('change',e=>{const t=e.target;if(t.id==='note'){S.notes[S.day]=t.value;save();}if(t.id==='fb'){S.feedback=t.value;save();}});
 $('#main').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.target.id==='wen'||e.target.id==='wzh')){e.preventDefault();addWord();}});
 
-/* ---------- recorder (ported from 英文對話工具箱): resident floating box, two takes per day ---------- */
-const REC={state:'idle',session:null,clips:{},urls:{},slot:'a'};
-const MAXREC=180;
-const fmtS=s=>`${Math.floor(s/60)}:${pad(Math.floor(s%60))}`;
-const recKey=(d,t)=>`d${pad(d)}_${t}`;
-const whenS=t=>{const x=new Date(t);return `${x.getMonth()+1}/${x.getDate()} ${pad(x.getHours())}:${pad(x.getMinutes())}`;};
-const fkey=()=>REC.session?REC.session.key:recKey(S.day,REC.slot);
-function idb(){return new Promise((res,rej)=>{try{const r=indexedDB.open('oral30-recorder',1);r.onupgradeneeded=()=>r.result.createObjectStore('clips');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}catch(e){rej(e);}});}
-async function idbPut(k,v){try{const d=await idb();const tx=d.transaction('clips','readwrite');tx.objectStore('clips').put(v,k);tx.oncomplete=tx.onerror=()=>d.close();}catch(e){}}
-async function loadAllClips(){try{const d=await idb();await new Promise(res=>{const c=d.transaction('clips').objectStore('clips').openCursor();
-  c.onsuccess=()=>{const cur=c.result;if(!cur){res();return;}const v=cur.value;if(v&&v.blob)setClip(cur.key,v);cur.continue();};c.onerror=()=>res();});d.close();}catch(e){}
-  refreshCompare();paintRec();}
-function refreshCompare(){if(S.tab!=='ov')return;const box=document.getElementById('cmpBox');if(box)box.outerHTML=compareBox();}
-function setClip(k,v){if(REC.urls[k])URL.revokeObjectURL(REC.urls[k]);REC.clips[k]=v;REC.urls[k]=URL.createObjectURL(v.blob);if(raKey===k)raKey=null;}
-const recSupported=()=>!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder);
-const pickType=()=>(!window.MediaRecorder||!MediaRecorder.isTypeSupported)?'':(['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg'].find(t=>MediaRecorder.isTypeSupported(t))||'');
-function micPolicyBlocked(){try{const p=document.permissionsPolicy||document.featurePolicy;return !!(p&&p.allowsFeature&&!p.allowsFeature('microphone'));}catch(e){return false;}}
-const BLOCKED_MSG='claude.ai 里打开时浏览器会拦截麦克风，所以这里录不了。请用可录音版：点下面的按钮下载，或回到对话里下载 oral30-offline.html，再用 Chrome、Edge 或 Safari 打开。';
-function recErr(e){const n=e&&e.name;
-  if(n==='NotAllowedError'||n==='SecurityError')return OFFLINE?'麦克风权限被拒绝。请在浏览器地址栏旁的权限设置里允许麦克风，再按一次录音。':BLOCKED_MSG;
-  if(n==='NotFoundError'||n==='OverconstrainedError')return '找不到麦克风。接上麦克风后再按一次录音。';
-  if(n==='NotReadableError'||n==='AbortError')return '麦克风正被其他 App 占用。关掉那个 App 后再试一次。';
-  return '麦克风没有启动成功，再按一次录音试试。';}
-function recMsg(t,warn){const m=document.getElementById('recfMsg');if(m){m.textContent=t;m.classList.toggle('warn',!!warn);}}
-function showOfflineCta(){if(OFFLINE)return;const o=document.getElementById('recfOff');if(o)o.hidden=false;const n=document.getElementById('offNote');if(n)n.hidden=false;}
-let mic=null,micIdle=null;
-const micAlive=()=>mic&&mic.getAudioTracks().some(t=>t.readyState==='live');
-async function getMic(){clearTimeout(micIdle);if(micAlive())return mic;mic=await navigator.mediaDevices.getUserMedia({audio:true});
-  mic.getAudioTracks().forEach(t=>t.addEventListener('ended',()=>{if(REC.session&&REC.session.rec&&REC.session.rec.state!=='inactive')REC.session.rec.stop();}));return mic;}
-function releaseMic(){clearTimeout(micIdle);if(mic){mic.getTracks().forEach(t=>t.stop());mic=null;}}
-function releaseLater(){clearTimeout(micIdle);micIdle=setTimeout(()=>{if(REC.state==='idle')releaseMic();},120000);}
-async function recStart(){
-  if(REC.state==='starting'){REC.state='idle';REC.session=null;recMsg('已取消。');paintRec();return;}
-  if(REC.state!=='idle')return;
-  const key=recKey(S.day,REC.slot);
-  if(!recSupported()){recMsg(OFFLINE?'这个打开方式不支持录音（比如 App 里的文件预览）。请把文件用 Chrome、Edge 或 Safari 打开。':BLOCKED_MSG,true);showOfflineCta();return;}
-  if(!OFFLINE&&micPolicyBlocked()){recMsg(BLOCKED_MSG,true);showOfflineCta();return;}
-  stopAudio();const tok={key};REC.state='starting';REC.session=tok;recMsg('正在打开麦克风。浏览器弹出授权时，请选“允许”。');paintRec();
-  const slow=setTimeout(()=>{if(REC.session===tok&&REC.state==='starting'){recMsg('麦克风还没有回应。没看到授权提示的话，说明这个打开方式不支持录音，请用浏览器直接打开文件。按“取消”可以停止等待。',true);showOfflineCta();}},4000);
-  let stream;try{stream=await getMic();}catch(e){clearTimeout(slow);if(REC.session!==tok)return;mic=null;REC.state='idle';REC.session=null;recMsg(recErr(e),true);showOfflineCta();paintRec();return;}
-  clearTimeout(slow);
-  if(REC.session!==tok){releaseLater();return;}
-  const type=pickType();let rec;
-  try{rec=type?new MediaRecorder(stream,{mimeType:type}):new MediaRecorder(stream);}catch(e){releaseMic();REC.state='idle';REC.session=null;recMsg('这个浏览器不支持网页录音，请用 Chrome、Edge 或 Safari 打开。',true);paintRec();return;}
-  const s={key,rec,chunks:[],t0:Date.now(),tick:null,guard:null,done:false};REC.session=s;
-  const finish=()=>{if(s.done)return;s.done=true;clearInterval(s.tick);clearTimeout(s.guard);
-    if(document.hidden)releaseMic();else releaseLater();
-    if(REC.session===s)REC.session=null;
-    if(s.chunks.length){const blob=new Blob(s.chunks,{type:s.rec.mimeType||type||'audio/webm'});const at=Date.now(),dur=(at-s.t0)/1000;const v={blob,at,dur};
-      setClip(key,v);idbPut(key,v);
-      const day=+key.slice(1,3);
-      if(key.endsWith('_a')&&!S.secs[day]){S.secs[day]=String(Math.round(dur));save();const i=document.getElementById('secs');if(i&&S.day===day)i.value=S.secs[day];}
-      recMsg(`已保存 Day ${day} ${key.endsWith('_a')?'第一遍':'重录'}（${fmtS(dur)}）。按播放回听。`);refreshCompare();}
-    else recMsg('录得太短，没有保存。'+(REC.clips[key]?'上一段录音还在。':''),true);
-    REC.state='idle';paintRec();};
-  rec.ondataavailable=e=>{if(e.data&&e.data.size)s.chunks.push(e.data);};
-  rec.onstop=finish;rec.onerror=finish;
-  try{rec.start(250);}catch(e){s.done=true;releaseMic();REC.session=null;REC.state='idle';recMsg('录音没有启动成功，再按一次试试。',true);paintRec();return;}
-  REC.state='recording';recMsg('录音中，最长 3 分钟。切换页面不会中断。');
-  s.tick=setInterval(()=>{const sec=(Date.now()-s.t0)/1000;const t=fmtS(sec);
-    const el=document.getElementById('recfTime');if(el)el.textContent=t;const pt=document.getElementById('pillTxt');if(pt)pt.textContent='录音中 '+t;
-    if(sec>=MAXREC)recStop();},200);
-  paintRec();}
-function recStop(){const s=REC.session;if(!s||REC.state!=='recording'||!s.rec)return;if(Date.now()-s.t0<400)return;
-  REC.state='stopping';clearInterval(s.tick);paintRec();
-  try{if(s.rec.state!=='inactive')s.rec.stop();else s.rec.onstop();}catch(e){s.rec.onstop&&s.rec.onstop();}
-  s.guard=setTimeout(()=>{if(!s.done)s.rec.onstop();},3000);}
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)return;if(REC.state==='recording')recStop();else if(REC.state==='idle')releaseMic();});
-addEventListener('pagehide',releaseMic);
-
-/* playback of my own clips */
-const ra=new Audio();ra.preload='metadata';let raKey=null,probing=false,pendingPlay=false,pendingSeek=0,seeking=false;
-const raTotal=k=>(raKey===k&&isFinite(ra.duration)&&ra.duration>0)?ra.duration:((REC.clips[k]||{}).dur||0);
-function raLoad(k){if(raKey===k)return;raKey=k;probing=false;ra.src=REC.urls[k];}
-function raPos(k,cur){const T=raTotal(k),txt=`${fmtS(cur)} / ${fmtS(T)}`,v=T?Math.round(Math.min(cur/T,1)*1000):0;
-  document.querySelectorAll(`[data-rpos="${k}"]`).forEach(p=>p.textContent=txt);
-  if(!seeking)document.querySelectorAll(`[data-rseek="${k}"]`).forEach(x=>x.value=v);
-  if(k===fkey()&&REC.state!=='recording'){const p=document.getElementById('recfPos');if(p)p.textContent=txt;const sk=document.getElementById('recfSeek');if(sk&&!seeking)sk.value=v;}}
-function raBtn(){const lab=k=>(k===raKey&&!ra.paused)?'暂停':'播放';
-  document.querySelectorAll('[data-rplay]').forEach(b=>b.textContent=lab(b.dataset.rplay));
-  const fp=document.getElementById('recfPlay');if(fp)fp.textContent=lab(fkey());}
-ra.addEventListener('loadedmetadata',()=>{if(!isFinite(ra.duration)){probing=true;ra.currentTime=1e7;return;}
-  if(pendingSeek){ra.currentTime=pendingSeek;pendingSeek=0;}if(pendingPlay){pendingPlay=false;ra.play().catch(()=>{});}});
-ra.addEventListener('durationchange',()=>{if(probing&&isFinite(ra.duration)){probing=false;ra.currentTime=pendingSeek||0;pendingSeek=0;if(pendingPlay){pendingPlay=false;ra.play().catch(()=>{});}}});
-ra.addEventListener('timeupdate',()=>{if(probing||!raKey)return;raPos(raKey,ra.currentTime);if(raKey===fkey()&&!ra.paused){const t=document.getElementById('recfTime');if(t)t.textContent=fmtS(ra.currentTime);}});
-['play','pause','ended'].forEach(ev=>ra.addEventListener(ev,raBtn));
-function raToggle(k){if(!REC.urls[k])return;const was=raKey===k&&!ra.paused;stopAudio();if(was)return;
-  raLoad(k);if(ra.readyState>=1&&!probing){if(ra.ended||ra.currentTime>=raTotal(k)-0.05)ra.currentTime=0;ra.play().catch(()=>{});}else pendingPlay=true;}
-function raSeek(k,v){if(!REC.urls[k])return;const t=raTotal(k)*v/1000;if(raKey!==k){stopAudio();raLoad(k);pendingSeek=t;return;}
-  if(probing){pendingSeek=t;return;}try{ra.currentTime=Math.min(t,Math.max(raTotal(k)-0.05,0));}catch(e){}}
-
-/* downloads: claude.ai uses the platform's save; a local file uses a normal link */
-async function getDl(){if(!(window.claude&&window.claude.use))return null;try{return await Promise.race([window.claude.use('downloads'),new Promise(r=>setTimeout(()=>r(null),5000))]);}catch(e){return null;}}
-async function saveBlob(name,blob){const dl=await getDl();
-  if(dl){try{await dl.save({filename:name,data:blob});return 'saved';}catch(e){const c=e&&e.code;return c==='declined'?'declined':c==='rate_limited'?'busy':'fail';}}
-  if(!OFFLINE)return 'fail';
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);return 'saved';}
-async function recDownload(k){const c=REC.clips[k];if(!c)return;const d=new Date(c.at);const ext=/mp4|m4a|aac/.test(c.blob.type)?'mp4':'webm';
-  const name=`口语30天-${k.slice(0,3).toUpperCase()}-${k.endsWith('_a')?'第一遍':'重录'}-${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.${ext}`;
-  const r=await saveBlob(name,c.blob);recMsg(r==='saved'?'已下载 '+name:r==='declined'?'已取消下载。':r==='busy'?'下载窗口已经打开，处理完再试。':'这里没法下载录音。',r==='fail');}
-async function downloadOffline(btn){const lab=btn?btn.textContent:'';const say=(t,w)=>{recMsg(t,w);toast(t);};
-  if(btn){btn.disabled=true;btn.textContent='准备中…';}
-  say('正在准备可录音版（约 6.7MB）…');
-  try{const dl=await getDl();
-    if(!dl)say('这里不能直接下载。请回到对话里下载 oral30-offline.html。',true);
-    else{const r=await fetch('oral30-offline.html');if(!r.ok)throw 0;const blob=await r.blob();
-      try{await dl.save({filename:'口语30天-可录音版.html',data:blob});say('已下载。用 Chrome、Edge 或 Safari 打开这个文件就能录音。');}
-      catch(e){const c=e&&e.code;say(c==='declined'?'已取消下载。':c==='rate_limited'?'下载窗口已经打开，处理完再试。':'这里不能下载 HTML 文件。请回到对话里下载 oral30-offline.html。',c!=='declined');}}}
-  catch(e){say('文件没有取到。请回到对话里下载 oral30-offline.html。',true);}
-  if(btn){btn.disabled=false;btn.textContent=lab;}}
-
-/* in-page pieces */
-function takeRow(k,label){const c=REC.clips[k];
-  return `<div class="take" data-take="${k}"><div class="take-h"><span class="tl">${label}</span><span class="ts" data-ts="${k}">${c?whenS(c.at):'还没录'}</span><span class="tt" data-tt="${k}">${fmtS(c?c.dur:0)}</span></div>
-  <div class="take-c"><button class="rbtn" data-rplay="${k}" disabled>播放</button>
-  <input type="range" min="0" max="1000" step="1" value="0" data-rseek="${k}" aria-label="${label} 播放位置" disabled>
-  <span class="rpos" data-rpos="${k}">0:00 / ${fmtS(c?c.dur:0)}</span><button class="rbtn rdl" data-rdl="${k}" disabled>下载</button></div></div>`;}
-function recBox(day){const st=k=>`<span data-has="${k}">${REC.clips[k]?'✓ '+fmtS(REC.clips[k].dur):'还没录'}</span>`;
-  return `<div class="recline"><div class="recline-s">第一遍：${st(recKey(day,'a'))}　·　重录：${st(recKey(day,'b'))}</div>
-  <div class="recline-b"><button class="rbtn go" data-openrec="a"><span class="dot"></span>录第一遍</button><button class="rbtn" data-openrec="b"><span class="dot"></span>对照后重录</button></div>
-  <div class="rmsg">录音框常驻在右下角，可拖动、可收合。每段只保存最新一次。</div>
-  ${OFFLINE?'':`<div class="offline-note" id="offNote">在 claude.ai 里打开时浏览器会拦截麦克风。下载可录音版，用浏览器直接打开就能录（进度和这里分开保存）。<button class="rbtn go" data-offline="1">下载可录音版</button></div>`}</div>`;}
-function compareBox(){const ks=Object.keys(REC.clips);
-  if(!ks.length)return `<div id="cmpBox" class="empty">Day 1 录下“第一遍”后，这里会放你的起点录音，和最新的一段对比着听。${OFFLINE?'':'<br>在 claude.ai 里不能录音，请先 <button class="rbtn go" data-offline="1" style="font-style:normal">下载可录音版</button>'}</div>`;
-  const start=REC.clips['d01_a']?'d01_a':[...ks].sort((x,y)=>REC.clips[x].at-REC.clips[y].at)[0];
-  const latest=ks.filter(k=>k!==start).sort((x,y)=>REC.clips[y].at-REC.clips[x].at)[0];
-  const lab=k=>`Day ${+k.slice(1,3)} · ${k.endsWith('_a')?'第一遍':'重录'}`;
-  return `<div id="cmpBox" class="recbox">${takeRow(start,'起点：'+lab(start))}${latest?takeRow(latest,'最新：'+lab(latest)):'<div class="empty" style="padding:4px 0">再录一段，就能和起点对比。</div>'}</div>`;}
-
-/* floating box */
-const recf=document.getElementById('recf'),recPill=document.getElementById('recPill');
-function paintRec(){const st=REC.state,idle=st==='idle';
-  document.querySelectorAll('[data-take]').forEach(el=>{const k=el.dataset.take,c=REC.clips[k],dis=!idle||!c;
-    el.querySelector('[data-rplay]').disabled=dis;el.querySelector('[data-rseek]').disabled=dis;el.querySelector('[data-rdl]').disabled=dis;
-    el.querySelector('[data-tt]').textContent=fmtS(c?c.dur:0);el.querySelector('[data-ts]').textContent=c?whenS(c.at):'还没录';raPos(k,raKey===k?ra.currentTime:0);});
-  document.querySelectorAll('[data-has]').forEach(el=>{const c=REC.clips[el.dataset.has];el.textContent=c?'✓ '+fmtS(c.dur):'还没录';});
-  const k=fkey(),c=REC.clips[k],rec=st==='recording',day=+k.slice(1,3);
-  recf.classList.toggle('recording',rec);recPill.classList.toggle('recording',rec);
-  document.getElementById('recfDay').textContent=`Day ${day} 录音`;
-  document.querySelectorAll('#recf [data-slot]').forEach(b=>{const kk=recKey(day,b.dataset.slot);b.setAttribute('aria-pressed',String(kk===k));b.disabled=!idle;
-    b.innerHTML=(b.dataset.slot==='a'?'第一遍':'对照后重录')+(REC.clips[kk]?' <small>✓</small>':'');});
-  const go=document.getElementById('recfGo');
-  go.innerHTML=st==='starting'?'取消':rec?'<span class="dot"></span>停止':st==='stopping'?'保存中…':`<span class="dot"></span>${c?'重录':'录音'}`;
-  go.disabled=st==='stopping';
-  ['recfPlay','recfSeek','recfDl'].forEach(id=>document.getElementById(id).disabled=!idle||!c);
-  if(!rec){document.getElementById('recfTime').textContent=fmtS(c?c.dur:0);document.getElementById('recfWhen').textContent=c?`${whenS(c.at)} 录的`:'这一段还没录';
-    document.getElementById('pillTxt').textContent=`录音 · D${day}`;raPos(k,raKey===k?ra.currentTime:0);}
-  else document.getElementById('recfWhen').textContent='录音中';
-  raBtn();}
-document.getElementById('recfGo').addEventListener('click',()=>{if(REC.state==='recording')recStop();else recStart();});
-document.getElementById('recfPlay').addEventListener('click',()=>raToggle(fkey()));
-document.getElementById('recfDl').addEventListener('click',()=>recDownload(fkey()));
-document.getElementById('recfOff').addEventListener('click',e=>downloadOffline(e.currentTarget));
-document.querySelectorAll('#recf [data-slot]').forEach(b=>b.addEventListener('click',()=>{if(REC.state!=='idle')return;REC.slot=b.dataset.slot;stopAudio();paintRec();}));
-const fSeek=document.getElementById('recfSeek');
-fSeek.addEventListener('input',()=>{seeking=true;const k=fkey(),T=raTotal(k),cur=T*fSeek.value/1000;document.getElementById('recfPos').textContent=`${fmtS(cur)} / ${fmtS(T)}`;});
-fSeek.addEventListener('change',()=>{raSeek(fkey(),+fSeek.value);seeking=false;});
-fSeek.addEventListener('pointerup',()=>{seeking=false;});
-const rprefs=(()=>{try{return JSON.parse(localStorage.getItem('oral30-recf')||'{}');}catch(e){return {};}})();
-const saveRprefs=()=>{try{localStorage.setItem('oral30-recf',JSON.stringify(rprefs));}catch(e){}};
-function recCollapse(on){recf.hidden=on;recPill.hidden=!on;rprefs.min=on;saveRprefs();if(!on&&typeof rprefs.x==='number')requestAnimationFrame(()=>recPlace(rprefs.x*innerWidth,rprefs.y*innerHeight));}
-function openRec(slot){if(slot&&REC.state==='idle')REC.slot=slot;recCollapse(false);paintRec();document.getElementById('recfGo').focus();}
-document.getElementById('recfMin').addEventListener('click',()=>recCollapse(true));
-recPill.addEventListener('click',()=>recCollapse(false));
-function recPlace(x,y){const r=recf.getBoundingClientRect(),W=innerWidth,H=innerHeight;
-  x=Math.min(Math.max(8,x),W-r.width-8);y=Math.min(Math.max(8,y),H-r.height-8);
-  recf.style.left=x+'px';recf.style.top=y+'px';recf.style.right='auto';recf.style.bottom='auto';rprefs.x=x/W;rprefs.y=y/H;}
-const recHead=document.getElementById('recfHead');
-recHead.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;const r=recf.getBoundingClientRect(),dx=e.clientX-r.left,dy=e.clientY-r.top;
-  recHead.setPointerCapture(e.pointerId);const mv=ev=>recPlace(ev.clientX-dx,ev.clientY-dy);
-  const up=()=>{recHead.removeEventListener('pointermove',mv);recHead.removeEventListener('pointerup',up);recHead.removeEventListener('pointercancel',up);saveRprefs();};
-  recHead.addEventListener('pointermove',mv);recHead.addEventListener('pointerup',up);recHead.addEventListener('pointercancel',up);});
-recHead.addEventListener('dblclick',e=>{if(e.target.closest('button'))return;recf.style.cssText='';delete rprefs.x;delete rprefs.y;saveRprefs();});
-addEventListener('resize',()=>{if(recf.style.left)recPlace(parseFloat(recf.style.left),parseFloat(recf.style.top));});
-if(OFFLINE)document.getElementById('recfOff').hidden=true;
-recCollapse(rprefs.min===undefined?innerWidth<600:!!rprefs.min);
-
-seedWords();render();loadAllClips();
+seedWords();render();
 </script>
 </body></html>
