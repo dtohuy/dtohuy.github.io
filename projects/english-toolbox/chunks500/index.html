@@ -48,8 +48,7 @@ section[role=tabpanel]{display:none}section[role=tabpanel].on{display:block}
 .rec-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .rec-list li{display:flex;gap:6px;align-items:center;font-size:.8rem;color:var(--muted)}
 .rec-list li span{font-variant-numeric:tabular-nums;flex:1;min-width:0}
-#recfab,.rf-mini{display:none!important} /* the toolbox recorder is used instead */
-.recfab{position:fixed;z-index:7;width:min(320px,calc(100vw - 32px));right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(96px + env(safe-area-inset-bottom,0px));background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.18);touch-action:none}
+.recfab{position:fixed;z-index:7;width:min(320px,calc(100vw - 32px));right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(var(--barh,86px) + 12px + env(safe-area-inset-bottom,0px));background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.18);touch-action:none}
 .rf-head{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);cursor:grab;user-select:none;-webkit-user-select:none}
 .rf-head b{color:var(--green);font-size:.9rem}
 .rf-grip{color:var(--muted);letter-spacing:-2px}
@@ -58,7 +57,7 @@ section[role=tabpanel]{display:none}section[role=tabpanel].on{display:block}
 .rf-body{padding:10px;display:grid;gap:8px;touch-action:auto;max-height:45vh;overflow:auto}
 .rf-chunk{font-family:var(--display);color:var(--green);font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .recfab .chip{padding:6px 10px}
-.rf-mini{position:fixed;z-index:7;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(96px + env(safe-area-inset-bottom,0px));width:52px;height:52px;border-radius:50%;border:1px solid var(--line);background:var(--panel);font-size:1.4rem;box-shadow:0 6px 18px rgba(0,0,0,.18);cursor:pointer}
+.rf-mini{position:fixed;z-index:7;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(var(--barh,86px) + 12px + env(safe-area-inset-bottom,0px));width:52px;height:52px;border-radius:50%;border:1px solid var(--line);background:var(--panel);font-size:1.4rem;box-shadow:0 6px 18px rgba(0,0,0,.18);cursor:pointer}
 .rf-mini i{position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:var(--rec)}
 .recfab.rec-live .rf-head{background:var(--rec)}.recfab.rec-live .rf-head b,.recfab.rec-live .rf-num,.recfab.rec-live .rf-grip,.recfab.rec-live .rf-x{color:#fff}
 .settings{margin-top:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
@@ -682,7 +681,8 @@ function liveUI(on){$('recfab').classList.toggle('rec-live',on);$('rfDot').hidde
 function syncFab(){const it=ITEMS[S.cur];$('rfNum').textContent='#'+(it.id+1);$('rfChunk').textContent=it.chunk}
 function placeFab(){
   const fab=$('recfab'),p=S.fab||{};
-  $('recfab').hidden=!!p.min; $('rfMax').hidden=!p.min;
+  const isMin = p.min !== undefined ? !!p.min : innerWidth < 600;
+  $('recfab').hidden=isMin; $('rfMax').hidden=!isMin;
   if(p.x==null){fab.style.left='';fab.style.top='';fab.style.right='';fab.style.bottom='';return}
   const w=fab.offsetWidth||300,h=fab.offsetHeight||200;
   const x=Math.min(Math.max(8,p.x),innerWidth-w-8), y=Math.min(Math.max(8,p.y),innerHeight-h-8);
@@ -861,5 +861,6 @@ function init(){
   showTab(['player','library','progress','method','feedback'].includes(h)?h:(S.tab||'player'));
 }
 init();
+(function(){const b=document.querySelector(".bar");if(!b)return;const f=()=>document.documentElement.style.setProperty("--barh",b.offsetHeight+"px");f();if(window.ResizeObserver)new ResizeObserver(f).observe(b);addEventListener("resize",f)})();
 </script>
 </body></html>

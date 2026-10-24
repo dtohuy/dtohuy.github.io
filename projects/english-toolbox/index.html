@@ -97,8 +97,9 @@ h2{font-family:var(--f-display);font-size:24px;margin:34px 0 4px}
 .link span{font-size:13.5px;color:var(--muted)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
 .note{font-size:13px;color:var(--faint);margin-top:28px;max-width:70ch}
-/* keep the recorder above 語塊 500's player bar (--barh is measured from the iframe) */
-body[data-tool="chunks500"] .rec,body[data-tool="chunks500"] .rec-pill{bottom:calc(var(--barh,90px) + 12px + env(safe-area-inset-bottom,0px))}
+/* keep recorders above 語塊 500's player bar and place toolbox pill side-by-side with 語塊 500's recorder */
+body[data-tool="chunks500"] .rec{bottom:calc(var(--barh,90px) + 12px + env(safe-area-inset-bottom,0px))}
+body[data-tool="chunks500"] .rec-pill{right:76px;bottom:calc(var(--barh,90px) + 19px + env(safe-area-inset-bottom,0px))}
 /* floating recorder */
 .rec{position:fixed;z-index:50;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(300px,calc(100% - 32px));background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.28);touch-action:none}
 .rec-h{display:flex;align-items:center;gap:8px;padding:9px 10px 9px 14px;cursor:grab;user-select:none;border-bottom:1px solid var(--line)}
@@ -167,7 +168,7 @@ body[data-tool="chunks500"] .rec,body[data-tool="chunks500"] .rec-pill{bottom:ca
         <div class="link"><b>800 詞應答地圖 → 所有工具</b><span>其他工具的例句幾乎都能用這 800 多個核心詞看懂；查不到的字，先試著用核心詞換個說法。</span></div>
       </div></div>
       <p class="note">所有練習紀錄都只存在你目前這台裝置的瀏覽器裡。朗讀功能使用瀏覽器內建的英文語音，聲音會依裝置而不同。開口流利和語用與文化裡的「請 Claude 猜／改寫」第一次使用時會先請你同意。</p>
-      <p class="note">版本 v1.3.1 · 發版時間 2026-10-24 18:55</p>
+      <p class="note">版本 v1.3.2 · 發版時間 2026-10-24 19:25</p>
     </div>
   </div>
 </main>
