@@ -48,6 +48,7 @@ section[role=tabpanel]{display:none}section[role=tabpanel].on{display:block}
 .rec-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .rec-list li{display:flex;gap:6px;align-items:center;font-size:.8rem;color:var(--muted)}
 .rec-list li span{font-variant-numeric:tabular-nums;flex:1;min-width:0}
+#recfab,.rf-mini{display:none!important} /* the toolbox recorder is used instead */
 .recfab{position:fixed;z-index:7;width:min(320px,calc(100vw - 32px));right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(96px + env(safe-area-inset-bottom,0px));background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.18);touch-action:none}
 .rf-head{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);cursor:grab;user-select:none;-webkit-user-select:none}
 .rf-head b{color:var(--green);font-size:.9rem}

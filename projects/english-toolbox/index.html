@@ -97,6 +97,8 @@ h2{font-family:var(--f-display);font-size:24px;margin:34px 0 4px}
 .link span{font-size:13.5px;color:var(--muted)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
 .note{font-size:13px;color:var(--faint);margin-top:28px;max-width:70ch}
+/* keep the recorder above 語塊 500's player bar (--barh is measured from the iframe) */
+body[data-tool="chunks500"] .rec,body[data-tool="chunks500"] .rec-pill{bottom:calc(var(--barh,90px) + 12px + env(safe-area-inset-bottom,0px))}
 /* floating recorder */
 .rec{position:fixed;z-index:50;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(300px,calc(100% - 32px));background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.28);touch-action:none}
 .rec-h{display:flex;align-items:center;gap:8px;padding:9px 10px 9px 14px;cursor:grab;user-select:none;border-bottom:1px solid var(--line)}
@@ -274,7 +276,17 @@ function open(id){
   if(id && !frames[id]){
     const f = document.createElement("iframe");
     f.title = byId(id).name;
-    f.addEventListener("load", ()=>syncTheme(f));
+    f.addEventListener("load", ()=>{
+      syncTheme(f);
+      try{
+        const bar = f.contentDocument.querySelector(".bar");
+        if(bar){
+          const set = ()=>document.body.style.setProperty("--barh", bar.offsetHeight + "px");
+          set();
+          if(f.contentWindow.ResizeObserver) new f.contentWindow.ResizeObserver(set).observe(bar);
+        }
+      }catch(e){}
+    });
     if(EXTERNAL[id]) f.src = EXTERNAL[id]; else f.srcdoc = TOOLS[id];
     document.querySelector("main").appendChild(f);
     frames[id] = f;
