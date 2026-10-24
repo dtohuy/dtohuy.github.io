@@ -1,0 +1,864 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>语块 500</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@500&display=swap">
+<style>
+/* Layout: sticky tab bar, sidebar tree + main pane on wide screens, tree folds into a drawer on phones; player bar pinned to bottom */
+:root{
+  --bg:#f3eedf; --panel:#fbf8ef; --ink:#1f2a22; --muted:#5f6b5f; --line:#d9d1bb;
+  --green:#24493a; --green-2:#356b55; --rec:#b3412e; --gold:#a8792a; --hl:#e7efd9; --done:#3f7a5d; --heard:#b9cfb0; --none:#e4dcc7;
+  --display:"Playfair Display",Georgia,"Noto Serif SC",serif;
+  --body:Inter,system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  --zh:"Noto Serif SC","PingFang SC","Songti SC",serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#131c17; --panel:#1a251f; --ink:#e9e4d4; --muted:#9aa697; --line:#2e3d34;
+  --green:#8fc3a6; --green-2:#a9d4bb; --gold:#d6a957; --hl:#22362b; --done:#6fb08b; --heard:#3d5a48; --none:#26332b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#131c17; --panel:#1a251f; --ink:#e9e4d4; --muted:#9aa697; --line:#2e3d34;
+  --green:#8fc3a6; --green-2:#a9d4bb; --gold:#d6a957; --hl:#22362b; --done:#6fb08b; --heard:#3d5a48; --none:#26332b; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--panel)}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1100px;margin:0 auto}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--panel);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:baseline;gap:10px;padding-block:12px 4px;flex-wrap:wrap}
+.brand h1{font-family:var(--display);font-size:1.5rem;margin:0;color:var(--green);letter-spacing:.01em}
+.brand small{color:var(--muted)}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.tabs button{border:0;background:none;color:var(--muted);font:500 .92rem var(--body);padding:10px 12px;border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer}
+.tabs button[aria-selected="true"]{color:var(--green);border-color:var(--gold)}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+main{padding-block:18px 150px}
+section[role=tabpanel]{display:none}section[role=tabpanel].on{display:block}
+
+/* Player tab */
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 20px;display:grid;gap:10px}
+.meta{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:.82rem;letter-spacing:.04em;text-transform:uppercase;flex-wrap:wrap}
+.chunk{font-family:var(--display);font-size:clamp(1.7rem,6vw,2.5rem);line-height:1.15;color:var(--green);text-wrap:balance;margin:4px 0}
+.sent{font-size:1.15rem;margin:0}
+.sent mark{background:var(--hl);color:inherit;padding:0 2px;border-radius:3px}
+.zh{font-family:var(--zh);color:var(--muted);margin:0}
+.speaking{box-shadow:inset 3px 0 0 var(--gold)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chip{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:6px 12px;font:500 .85rem var(--body);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--green);color:var(--panel);border-color:var(--green)}
+.chip:disabled{opacity:.45;cursor:default}
+.rec-btn.on{background:var(--rec);border-color:var(--rec);color:#fff}
+.rec-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.rec-list li{display:flex;gap:6px;align-items:center;font-size:.8rem;color:var(--muted)}
+.rec-list li span{font-variant-numeric:tabular-nums;flex:1;min-width:0}
+.recfab{position:fixed;z-index:7;width:min(320px,calc(100vw - 32px));right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(96px + env(safe-area-inset-bottom,0px));background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.18);touch-action:none}
+.rf-head{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);cursor:grab;user-select:none;-webkit-user-select:none}
+.rf-head b{color:var(--green);font-size:.9rem}
+.rf-grip{color:var(--muted);letter-spacing:-2px}
+.rf-num{flex:1;color:var(--muted);font-size:.78rem;font-variant-numeric:tabular-nums}
+.rf-x{border:0;background:none;color:var(--muted);font-size:1.2rem;width:32px;height:28px;cursor:pointer}
+.rf-body{padding:10px;display:grid;gap:8px;touch-action:auto;max-height:45vh;overflow:auto}
+.rf-chunk{font-family:var(--display);color:var(--green);font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.recfab .chip{padding:6px 10px}
+.rf-mini{position:fixed;z-index:7;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(96px + env(safe-area-inset-bottom,0px));width:52px;height:52px;border-radius:50%;border:1px solid var(--line);background:var(--panel);font-size:1.4rem;box-shadow:0 6px 18px rgba(0,0,0,.18);cursor:pointer}
+.rf-mini i{position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:var(--rec)}
+.recfab.rec-live .rf-head{background:var(--rec)}.recfab.rec-live .rf-head b,.recfab.rec-live .rf-num,.recfab.rec-live .rf-grip,.recfab.rec-live .rf-x{color:#fff}
+.settings{margin-top:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.field{display:grid;gap:4px;font-size:.85rem;color:var(--muted)}
+.field select,.field input[type=range]{width:100%}
+select{font:inherit;padding:7px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.resume{margin-top:14px;padding:12px 14px;border:1px dashed var(--gold);border-radius:10px;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.note{font-size:.82rem;color:var(--muted)}
+.vrow{display:flex;gap:6px;align-items:center}.vrow select{flex:1;min-width:0}
+.vhelp{margin-top:16px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px 14px}
+.vhelp summary{cursor:pointer;padding:10px 0;font-weight:600;color:var(--green)}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;font-size:.88rem}
+.vdiag{margin:14px 0 6px;display:grid;gap:8px}
+.vdiag table{border-collapse:collapse;font-size:.78rem;width:100%}
+.vdiag td,.vdiag th{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left;vertical-align:top;word-break:break-all}
+.vdiag .tw{overflow-x:auto;max-height:50vh}
+.vgrid b{color:var(--green)}.vgrid ol{margin:6px 0 0;padding-left:20px}
+.warn{color:var(--gold)}
+
+/* Library tab */
+.lib{display:grid;grid-template-columns:240px minmax(0,1fr);gap:20px}
+.tree{position:sticky;top:calc(env(safe-area-inset-top,0px) + 100px);max-height:calc(100vh - 260px);overflow:auto;font-size:.9rem}
+.tree details{border-bottom:1px solid var(--line)}
+.tree summary{cursor:pointer;padding:7px 4px;display:flex;justify-content:space-between;gap:6px;list-style:none}
+.tree summary::-webkit-details-marker{display:none}
+.tree summary::before{content:"▸";color:var(--gold);margin-right:4px;transition:transform .15s}
+.tree details[open] summary::before{transform:rotate(90deg)}
+.tree summary span:first-of-type{flex:1}
+.tree .cnt{color:var(--muted);font-variant-numeric:tabular-nums;font-size:.78rem}
+.tree ul{list-style:none;margin:0 0 6px;padding:0 0 0 18px}
+.tree li button{border:0;background:none;color:var(--ink);font:inherit;font-size:.85rem;padding:3px 0;text-align:left;cursor:pointer;width:100%}
+.tree li button:hover{color:var(--green)}
+.tree li.m button{color:var(--done)}
+.tree .all{border:0;background:none;color:var(--green);font:600 .9rem var(--body);padding:6px 4px;cursor:pointer}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.toolbar input[type=search]{flex:1;min-width:0;font:inherit;padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.cathead{font-family:var(--display);color:var(--green);font-size:1.25rem;margin:22px 0 6px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.cathead small{font-family:var(--body);color:var(--muted);font-size:.8rem}
+.item{display:grid;grid-template-columns:2.4rem minmax(0,1fr) auto;gap:10px;padding:10px 6px;border-bottom:1px solid var(--line);align-items:start}
+.item.cur{background:var(--hl)}
+.num{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.8rem;padding-top:3px}
+.item b{font-weight:600;color:var(--green)}
+.item p{margin:2px 0 0}
+.item .z{font-family:var(--zh);color:var(--muted);font-size:.88rem}
+.acts{display:flex;gap:4px}
+.ic{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:.95rem;display:grid;place-items:center}
+.ic[aria-pressed="true"]{background:var(--done);color:var(--panel);border-color:var(--done)}
+.heardtag{font-size:.72rem;color:var(--muted)}
+.drawer{display:none}
+
+/* Progress & method */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+.card h2{font-family:var(--display);color:var(--green);margin:0 0 6px;font-size:1.3rem}
+.stats{display:flex;gap:22px;flex-wrap:wrap;margin:8px 0 14px}
+.stats div{font-variant-numeric:tabular-nums}
+.stats strong{display:block;font-family:var(--display);font-size:1.7rem;color:var(--green)}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;max-width:100%;height:auto}
+.legend{display:flex;gap:14px;font-size:.8rem;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+textarea{width:100%;min-height:150px;font:inherit;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.btn{border:0;background:var(--green);color:var(--panel);font:600 .9rem var(--body);padding:9px 16px;border-radius:9px;cursor:pointer}
+.btn.ghost{background:none;color:var(--green);border:1px solid var(--line)}
+
+/* Bottom player bar */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--panel);border-top:1px solid var(--line);padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+.bar .wrap{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding-block:10px 0}
+.now{min-width:0}
+.now b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--green)}
+.now small{color:var(--muted);font-variant-numeric:tabular-nums}
+.prog{height:3px;background:var(--line);border-radius:2px;margin-top:6px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--gold);width:0}
+.ctrls{display:flex;gap:6px}
+.ctrls button{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;font-size:1rem}
+.ctrls .play{background:var(--green);color:var(--panel);border-color:var(--green);width:50px;height:50px;font-size:1.2rem}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(100px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:.85rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+.toast.on{opacity:1}
+
+@media (max-width:760px){
+  .lib{grid-template-columns:minmax(0,1fr)}
+  .tree{display:none}
+  .drawer{display:block;margin-bottom:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px 10px}
+  .drawer > summary{padding:8px 0;font-weight:600;color:var(--green);cursor:pointer}
+  .drawer .tree{display:block;position:static;max-height:55vh}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><h1>语块 500</h1><small>20 个场景 · 每条带完整例句 · 连续播放并记住位置</small></div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="player" id="t-player">播放</button>
+      <button role="tab" aria-selected="false" data-tab="library" id="t-library">语块库</button>
+      <button role="tab" aria-selected="false" data-tab="progress" id="t-progress">进度</button>
+      <button role="tab" aria-selected="false" data-tab="method" id="t-method">怎么用</button>
+      <button role="tab" aria-selected="false" data-tab="feedback" id="t-feedback">修正意见</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- PLAYER -->
+  <section role="tabpanel" id="player" class="on">
+    <div class="stage" id="stage">
+      <div class="meta"><span id="sCat"></span><span id="sNum"></span></div>
+      <div class="chunk" id="sChunk"></div>
+      <p class="sent" id="sSent"></p>
+      <p class="zh" id="sZh"></p>
+      <div class="row" style="margin-top:6px">
+        <button class="chip" id="bMaster" aria-pressed="false">✓ 已掌握</button>
+        <button class="chip" id="bStar" aria-pressed="false">★ 收藏</button>
+        <button class="chip" id="bOnce">▶ 只听这一条</button>
+      </div>
+    </div>
+    </div>
+
+    <div class="resume" id="resume" hidden>
+      <span id="resumeTxt"></span>
+      <button class="btn" id="bResume">从这里继续</button>
+    </div>
+
+    <div class="settings">
+      <label class="field">声音来源
+        <select id="optSrc">
+          <option value="ai">AI 真人声（推荐）</option>
+          <option value="local">本机朗读</option>
+        </select>
+      </label>
+      <label class="field">播放范围
+        <select id="optRange">
+          <option value="all">全部 500 条</option>
+          <option value="cat">只播当前场景</option>
+          <option value="todo">只播未掌握</option>
+          <option value="star">只播收藏</option>
+        </select>
+      </label>
+      <label class="field">每条内容
+        <select id="optMode">
+          <option value="cs">语块 → 例句</option>
+          <option value="c">只读语块</option>
+          <option value="s">只读例句</option>
+          <option value="csz">语块 → 例句 → 中文</option>
+          <option value="zcs">中文 → 停顿 → 英文（自测）</option>
+        </select>
+      </label>
+      <label class="field">每条重复
+        <select id="optRepeat"><option value="1">1 遍</option><option value="2">2 遍</option><option value="3">3 遍</option></select>
+      </label>
+      <label class="field">语速 <span id="rateV"></span>
+        <input type="range" id="optRate" min="0.6" max="1.2" step="0.05" value="0.9">
+      </label>
+      <label class="field">条与条之间停顿 <span id="gapV"></span>
+        <input type="range" id="optGap" min="0.5" max="6" step="0.5" value="1.5">
+      </label>
+      <div class="field">英文声音
+        <div class="vrow"><select id="optVoice" aria-label="英文声音"></select><button class="chip" id="bTest" type="button">试听</button></div>
+        <span id="voiceTier" class="note"></span>
+      </div>
+      <label class="field">顺序
+        <select id="optOrder"><option value="seq">按顺序</option><option value="shuf">随机</option></select>
+      </label>
+      <label class="field">播完范围后
+        <select id="optLoop"><option value="loop">从头循环</option><option value="stop">停止</option></select>
+      </label>
+    </div>
+    <details class="vhelp" id="vhelp">
+      <summary>声音听起来像机器人？下载更自然的高级声音</summary>
+      <div class="vgrid">
+        <div><b>iPhone / iPad</b>
+          <p style="margin:6px 0 0">iOS 不让网页使用下载的高级声音（在 iOS 27 的 Safari 上实测只有基础版）。想听 Ava，可以用系统自带的「朗读屏幕」：</p>
+          <ol><li>设置 → 辅助功能 → 朗读内容：打开「朗读屏幕」，声音选 英语（美国）→ Ava（高级）</li><li>打开本页「语块库」，滚到要开始的场景</li><li>两指从屏幕顶部向下滑，系统会用 Ava 连续朗读并自动翻页</li></ol>
+          <p class="note" style="margin:4px 0 0">这种方式不会记录播放位置，也不能调重复次数，适合纯泡耳朵。</p></div>
+        <div><b>Mac</b>
+          <ol><li>系统设置 → 辅助功能 → 朗读内容</li><li>系统声音 → 管理声音</li><li>英语（美国）里勾选 Ava（高级）或 Zoe（高级）</li><li>刷新本页，选带 ★★★ 的声音</li></ol></div>
+        <div><b>Windows 电脑</b>
+          <ol><li>用 Edge 浏览器打开本页</li><li>声音列表里会出现 “Microsoft Ava / Andrew / Emma … Online (Natural)”</li><li>选带 ★★★ 的 Natural 声音，联网时最自然</li></ol></div>
+        <div><b>Android / Chrome</b>
+          <ol><li>Chrome 自带 “Google US English”，比系统默认好</li><li>Android 可在 设置 → 无障碍 → 文字转语音 里安装 Google 语音引擎的高质量英语声音</li></ol></div>
+      </div>
+      <div class="vdiag">
+        <button class="btn ghost" id="bDiag" type="button">检测本机声音</button>
+        <div id="diagOut" class="note"></div>
+      </div>
+      <p class="note">星级说明：★★★ 高级 / 自然声音，★★ 较好，★ 普通。列表会把最好的排在最前面，第一次打开会自动选中。</p>
+    </details>
+    <p class="note" id="ttsNote">「AI 真人声」是预先生成的录音（Kokoro · af_heart），每个场景第一次播放时加载约 0.5MB。「本机朗读」用手机自带声音，不用加载。中文部分始终用本机朗读。设置、位置、收听次数都会自动保存在这台设备的浏览器里。快捷键：空格 播放/暂停，← → 上一条/下一条。</p>
+  </section>
+
+  <!-- LIBRARY -->
+  <section role="tabpanel" id="library">
+    <div class="lib">
+      <aside class="tree" id="tree"></aside>
+      <div style="min-width:0">
+        <details class="drawer" id="drawer"><summary>场景目录</summary><div class="tree" id="tree2"></div></details>
+        <div class="toolbar">
+          <input type="search" id="q" placeholder="搜索英文或中文，例如 figure out / 截止">
+          <button class="chip" id="fTodo" aria-pressed="false">只看未掌握</button>
+          <button class="chip" id="fStar" aria-pressed="false">只看收藏</button>
+        </div>
+        <div id="list"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROGRESS -->
+  <section role="tabpanel" id="progress">
+    <div class="card">
+      <h2>500 格进度</h2>
+      <div class="stats" id="stats"></div>
+      <div class="legend"><span><i style="background:var(--none)"></i>没听过</span><span><i style="background:var(--heard)"></i>听过</span><span><i style="background:var(--done)"></i>已掌握</span><span><i style="background:var(--gold)"></i>当前位置</span></div>
+      <div class="svgbox" id="grid"></div>
+      <p class="note">每行是一个场景（25 条）。点格子可以跳到那一条。</p>
+    </div>
+    <div class="card">
+      <h2>各场景掌握度</h2>
+      <div class="svgbox" id="bars"></div>
+    </div>
+    <div class="card">
+      <h2>重置</h2>
+      <p class="note">清除收听次数、掌握标记和收藏。设置和播放位置保留。</p>
+      <div class="row"><button class="btn ghost" id="bReset">清除学习记录</button><button class="btn" id="bResetYes" hidden>确认清除</button></div>
+    </div>
+  </section>
+
+  <!-- METHOD -->
+  <section role="tabpanel" id="method">
+    <div class="card">
+      <h2>为什么背语块，而不是单词</h2>
+      <p>母语者说话时，大部分是成块提取的现成组合（figure out、it turns out that、let me get back to you），不是一个词一个词拼出来的。语块存进脑子以后，开口就不用先想中文再翻译。</p>
+      <div class="svgbox" id="svgPath"></div>
+    </div>
+    <div class="card">
+      <h2>一轮循环</h2>
+      <div class="svgbox" id="svgLoop"></div>
+      <ol>
+        <li><b>泡耳朵</b>：范围选“全部”，模式“语块 → 例句”，通勤或做家务时连续听。</li>
+        <li><b>跟读</b>：重复设 2 遍，第二遍跟着念，模仿重音和连读。</li>
+        <li><b>自测</b>：模式换成“中文 → 停顿 → 英文”，停顿时自己先说，再听答案。</li>
+        <li><b>标记</b>：能脱口而出的标“已掌握”，之后范围切到“只播未掌握”。</li>
+        <li><b>造句</b>：每天挑 3 个，换成自己工作里的事说一遍。</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- FEEDBACK -->
+  <section role="tabpanel" id="feedback">
+    <div class="card">
+      <h2>修正意见</h2>
+      <p class="note">写下要改的地方（某条例句、分类、播放功能、界面），会自动保存在本机。写好后点“复制”，贴回对话给我。</p>
+      <textarea id="fb" placeholder="例如：#137 的例句太书面，换成口语；希望加“每天 20 条”的模式……"></textarea>
+      <div class="row" style="margin-top:10px"><button class="btn" id="bCopy">复制意见</button><span class="note" id="fbSaved"></span></div>
+    </div>
+  </section>
+</main>
+
+<div class="bar">
+  <div class="wrap">
+    <div class="now">
+      <b id="nChunk"></b>
+      <small id="nInfo"></small>
+      <div class="prog"><i id="nProg"></i></div>
+    </div>
+    <div class="ctrls">
+      <button id="bPrev" aria-label="上一条">⏮</button>
+      <button id="bPlay" class="play" aria-label="播放">▶</button>
+      <button id="bNext" aria-label="下一条">⏭</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="recfab" id="recfab" role="region" aria-label="我的跟读">
+  <div class="rf-head" id="rfHead">
+    <span class="rf-grip" aria-hidden="true">⋮⋮</span>
+    <b>我的跟读</b><span class="rf-num" id="rfNum"></span>
+    <button class="rf-x" id="rfMin" type="button" aria-label="收起">–</button>
+  </div>
+  <div class="rf-body">
+    <div class="rf-chunk" id="rfChunk"></div>
+    <div class="row">
+      <button class="chip rec-btn" id="bRec" type="button">🎙 录音</button>
+      <label class="chip" for="recFile">📁 文件</label>
+      <input type="file" id="recFile" accept="audio/*,video/*" hidden>
+      <button class="chip" id="bCompare" type="button" disabled>⇄ 对比</button>
+    </div>
+    <div id="recStatus" class="note"></div>
+    <ul class="rec-list" id="recList"></ul>
+  </div>
+</div>
+<button class="rf-mini" id="rfMax" type="button" aria-label="打开跟读录音" hidden>🎙<i id="rfDot" hidden></i></button>
+
+
+<script>
+const CATS = [{"zh": "寒暄开场", "en": "Greetings & small talk", "items": [["How's it going?", "Hey Mark, how's it going? I haven't seen you all week.", "嘿 Mark，最近怎么样？一整周都没见到你。"], ["Long time no see", "Long time no see! You look like you just got back from a trip.", "好久不见！你看起来像刚旅行回来。"], ["What have you been up to?", "So what have you been up to since the last meetup?", "上次聚会之后你都在忙什么？"], ["Nice to meet you", "Nice to meet you, Priya. Jen told me a lot about your work.", "很高兴认识你，Priya。Jen 跟我讲了很多你的工作。"], ["How was your weekend?", "How was your weekend? Did you end up going hiking?", "周末过得怎么样？最后去爬山了吗？"], ["Not bad at all", "The new office? Not bad at all, the coffee is actually good.", "新办公室？挺不错的，咖啡居然很好喝。"], ["Can't complain", "Work is busy, but I can't complain.", "工作挺忙，不过没什么好抱怨的。"], ["Same as usual", "Same as usual, lots of meetings and a few fires to put out.", "老样子，很多会，还有几件急事要处理。"], ["Good to see you again", "Good to see you again! It's been at least a year.", "很高兴再见到你！至少有一年了吧。"], ["What brings you here?", "What brings you here today? Are you speaking at the event?", "今天什么风把你吹来了？你在活动上发言吗？"], ["Where are you from originally?", "Where are you from originally? I hear a bit of an accent.", "你老家是哪里的？我听出一点口音。"], ["I've heard a lot about you", "I've heard a lot about you from the data team.", "数据团队的人常常提起你。"], ["Let me introduce you to", "Let me introduce you to Sam, he runs our platform team.", "我给你介绍一下 Sam，他负责我们的平台团队。"], ["How do you know each other?", "How do you two know each other? From college?", "你们俩怎么认识的？大学同学吗？"], ["What do you do?", "So what do you do? Are you also in tech?", "你是做什么的？也在科技行业吗？"], ["It's a small world", "You worked with Lisa too? It's a small world.", "你也和 Lisa 共事过？世界真小。"], ["Have a good one", "Thanks for the help, have a good one!", "谢谢帮忙，祝你今天愉快！"], ["Take care", "I've got to run. Take care, and say hi to your team.", "我得走了。保重，代我向你团队问好。"], ["Catch you later", "I'm heading to a meeting. Catch you later!", "我去开会了，回头见！"], ["Keep in touch", "It was great talking to you. Let's keep in touch.", "和你聊天很开心，保持联系吧。"], ["I'd better get going", "It's getting late, I'd better get going.", "有点晚了，我得走了。"], ["Say hi to", "Say hi to your parents for me.", "替我向你爸妈问好。"], ["How's work been?", "How's work been since the reorg?", "重组之后工作怎么样？"], ["Busy as always", "Busy as always, but the project is finally moving.", "一如既往地忙，不过项目终于有进展了。"], ["Thanks for having me", "Thanks for having me, the dinner was amazing.", "谢谢款待，晚餐太棒了。"]]}, {"zh": "表达观点", "en": "Giving opinions", "items": [["In my opinion", "In my opinion, we should fix the data model before adding features.", "我认为我们应该先修数据模型，再加功能。"], ["I think that", "I think that the second option is cheaper in the long run.", "我觉得第二个方案长期来看更便宜。"], ["The way I see it", "The way I see it, the delay isn't really anyone's fault.", "在我看来，这次延误其实不是谁的错。"], ["If you ask me", "If you ask me, the meeting could have been an email.", "要我说，这个会发封邮件就够了。"], ["To be honest", "To be honest, I'm not sure the plan will work.", "说实话，我不确定这个计划行得通。"], ["I'd say", "I'd say we're about eighty percent done.", "我估计我们完成了大约百分之八十。"], ["It seems to me that", "It seems to me that users don't understand the dashboard.", "我感觉用户看不懂这个仪表板。"], ["As far as I'm concerned", "As far as I'm concerned, quality matters more than speed.", "对我来说，质量比速度重要。"], ["I feel like", "I feel like we're solving the wrong problem.", "我觉得我们在解决错的问题。"], ["My take is", "My take is that we need more tests, not more people.", "我的看法是我们需要更多测试，而不是更多人。"], ["I'm convinced that", "I'm convinced that caching will cut the load time in half.", "我确信缓存能把加载时间减半。"], ["From my point of view", "From my point of view, the API is too complicated.", "从我的角度看，这个 API 太复杂了。"], ["I strongly believe", "I strongly believe every team should own its data.", "我坚信每个团队都应该对自己的数据负责。"], ["It makes sense to", "It makes sense to start with a small pilot.", "先做个小试点是合理的。"], ["The thing is", "The thing is, nobody has tested it at scale.", "问题是，还没人做过大规模测试。"], ["What I mean is", "What I mean is, we need a clear owner for this.", "我的意思是，这件事需要一个明确的负责人。"], ["Personally, I prefer", "Personally, I prefer Python for quick scripts.", "我个人更喜欢用 Python 写小脚本。"], ["I'm in favor of", "I'm in favor of moving the deadline by a week.", "我赞成把截止日期推后一周。"], ["I'm against", "I'm against adding another tool to the stack.", "我反对再往技术栈里加工具。"], ["It's worth", "It's worth spending a day on documentation.", "花一天写文档是值得的。"], ["It's not worth", "It's not worth arguing about the naming.", "为命名争论不值得。"], ["The point is", "The point is, the numbers don't match.", "关键是数字对不上。"], ["I'd rather", "I'd rather ship something simple than wait for perfect.", "我宁愿先上线简单的版本，也不想等完美。"], ["Let's be realistic", "Let's be realistic, we can't finish all of this by Friday.", "现实点吧，周五前我们做不完这些。"], ["Correct me if I'm wrong", "Correct me if I'm wrong, but this table is updated daily?", "我说错了请纠正，这张表是每天更新的吧？"]]}, {"zh": "同意与反对", "en": "Agreeing & disagreeing", "items": [["I couldn't agree more", "I couldn't agree more, the onboarding needs work.", "我完全同意，入职流程需要改进。"], ["That's a good point", "That's a good point, I hadn't thought about the cost.", "说得好，我没考虑到成本。"], ["You're absolutely right", "You're absolutely right, we missed that edge case.", "你说得完全对，我们漏了那个边界情况。"], ["Fair enough", "Fair enough, let's try it your way.", "有道理，那就按你的方式试试。"], ["I see what you mean", "I see what you mean, but the timeline is tight.", "我明白你的意思，但时间很紧。"], ["I'm with you on that", "I'm with you on that, the old process was painful.", "这点我同意你，旧流程太痛苦了。"], ["That makes sense", "That makes sense, thanks for explaining.", "有道理，谢谢解释。"], ["Exactly", "Exactly, that's what I was trying to say.", "没错，我就是想说这个。"], ["I'm not so sure about that", "I'm not so sure about that, the data says otherwise.", "这点我不太确定，数据显示不是这样。"], ["I see it differently", "I see it differently, I think the issue is upstream.", "我看法不一样，我觉得问题在上游。"], ["I have to disagree", "I have to disagree, the old version was faster.", "我得说我不同意，旧版本更快。"], ["That's not always the case", "Bigger teams move faster? That's not always the case.", "团队越大越快？不一定。"], ["I agree up to a point", "I agree up to a point, but security comes first.", "我在一定程度上同意，但安全优先。"], ["You have a point, but", "You have a point, but we've already signed the contract.", "你说得有道理，但我们已经签合同了。"], ["Let's agree to disagree", "We won't settle this today. Let's agree to disagree.", "今天说不清，就保留各自意见吧。"], ["I'm on the fence", "I'm on the fence about switching databases.", "换不换数据库我还拿不定主意。"], ["That's exactly what I think", "That's exactly what I think, the UI is too busy.", "我也正是这么想的，界面太杂了。"], ["Not necessarily", "More data means better models? Not necessarily.", "数据多模型就更好？不一定。"], ["I don't think so", "I don't think so, the bug was there before the release.", "我不这么认为，这个 bug 在发布前就有了。"], ["Good call", "Rolling back first was a good call.", "先回滚是个正确的决定。"], ["I'll go along with that", "I'll go along with that if everyone else agrees.", "如果大家都同意，我也没意见。"], ["That's a fair question", "That's a fair question, let me check the logs.", "这个问题问得好，我查下日志。"], ["I take your point", "I take your point about the cost, but we need reliability.", "成本的问题我明白，但我们需要稳定性。"], ["With all due respect", "With all due respect, that estimate is too optimistic.", "恕我直言，这个估算太乐观了。"], ["We're on the same page", "Good, so we're on the same page about the scope.", "好，那我们对范围的理解一致了。"]]}, {"zh": "请求与求助", "en": "Requests & asking for help", "items": [["Could you please", "Could you please send me the slides after the call?", "会后能把幻灯片发给我吗？"], ["Would you mind", "Would you mind reviewing my pull request today?", "你介意今天帮我看下这个 PR 吗？"], ["Can you give me a hand", "Can you give me a hand moving these boxes?", "能帮我搬一下这些箱子吗？"], ["I was wondering if", "I was wondering if you had time to chat this week.", "我想问你这周有没有时间聊聊。"], ["Do you have a minute?", "Do you have a minute? I have a quick question.", "你有空一分钟吗？我有个小问题。"], ["Is it okay if", "Is it okay if I join the meeting late?", "我晚点进会可以吗？"], ["I need some help with", "I need some help with this SQL query.", "这条 SQL 我需要点帮助。"], ["Could you walk me through", "Could you walk me through how the pipeline works?", "你能带我过一遍这个管道是怎么运作的吗？"], ["Would it be possible to", "Would it be possible to get access to the staging server?", "有可能给我开通测试服务器的权限吗？"], ["Any chance you could", "Any chance you could cover my shift on Friday?", "你周五能替我值班吗？"], ["Let me know if", "Let me know if you need anything else.", "还需要什么就告诉我。"], ["I'd appreciate it if", "I'd appreciate it if you could reply by Monday.", "如果你能在周一前回复我会很感激。"], ["Can I ask you something?", "Can I ask you something about the interview process?", "我能问你点面试流程的事吗？"], ["Could you do me a favor?", "Could you do me a favor and print this for me?", "能帮我个忙，把这个打印出来吗？"], ["Mind if I", "Mind if I sit here?", "介意我坐这儿吗？"], ["Feel free to", "Feel free to ping me if anything breaks.", "有东西坏了随时找我。"], ["Could you take a look at", "Could you take a look at this error message?", "你能看一下这个报错吗？"], ["I'm stuck on", "I'm stuck on the last step of the setup.", "我卡在设置的最后一步了。"], ["Would you be able to", "Would you be able to join the call at 3?", "你三点能参加电话会吗？"], ["Do you happen to know", "Do you happen to know who owns this table?", "你知道这张表归谁管吗？"], ["Could you point me to", "Could you point me to the documentation?", "能告诉我文档在哪儿吗？"], ["I hate to ask, but", "I hate to ask, but could you stay a bit longer?", "不好意思开口，你能再多待一会儿吗？"], ["Thanks in advance", "Please fill out the form by Friday. Thanks in advance!", "请在周五前填好表格，先谢谢了！"], ["That would be great", "If you could send it today, that would be great.", "如果你今天能发过来就太好了。"], ["No rush", "Send me the numbers when you can, no rush.", "方便时把数字发我就行，不急。"]]}, {"zh": "提出建议", "en": "Making suggestions", "items": [["How about", "How about we meet on Tuesday instead?", "改成周二见怎么样？"], ["Why don't we", "Why don't we take a short break?", "我们休息一下吧？"], ["Let's", "Let's start with the most urgent issue.", "我们从最紧急的问题开始吧。"], ["Maybe we should", "Maybe we should ask the data team first.", "也许我们应该先问问数据团队。"], ["What if we", "What if we split the task into two parts?", "如果我们把任务拆成两部分呢？"], ["I'd suggest", "I'd suggest adding an index on that column.", "我建议给那一列加个索引。"], ["You might want to", "You might want to restart the service first.", "你可以先重启一下服务。"], ["It might be a good idea to", "It might be a good idea to back up the data.", "备份一下数据可能是个好主意。"], ["Have you thought about", "Have you thought about using a queue here?", "你考虑过这里用队列吗？"], ["If I were you, I'd", "If I were you, I'd ask for more time.", "如果我是你，我会申请更多时间。"], ["You could always", "You could always try the other approach.", "你也可以试试另一个方法。"], ["Shall we", "Shall we go over the agenda?", "我们过一下议程吧？"], ["It's probably best to", "It's probably best to wait until Monday.", "最好还是等到周一。"], ["One option is to", "One option is to cache the results.", "一个选择是缓存结果。"], ["Another way would be to", "Another way would be to run it in batches.", "另一种做法是分批跑。"], ["Let's go with", "Let's go with the cheaper plan for now.", "我们先选便宜的方案吧。"], ["Why not", "Why not just ask her directly?", "为什么不直接问她？"], ["I recommend", "I recommend reading the docs before you start.", "我建议你开始之前先看文档。"], ["You'd better", "You'd better leave early, traffic is bad.", "你最好早点出门，路上很堵。"], ["How about trying", "How about trying a smaller dataset first?", "先用小一点的数据集试试怎么样？"], ["Let's not", "Let's not change everything at once.", "别一下子全改了。"], ["It's up to you, but", "It's up to you, but I'd test it first.", "你决定，不过我会先测一下。"], ["Let's give it a try", "The idea sounds odd, but let's give it a try.", "这个想法听着奇怪，不过试试吧。"], ["Let's play it by ear", "We don't know the weather yet, let's play it by ear.", "天气还不确定，到时候再看吧。"], ["Let's keep it simple", "Let's keep it simple and use one table.", "简单点，就用一张表。"]]}, {"zh": "解释与澄清", "en": "Explaining & clarifying", "items": [["What I'm trying to say is", "What I'm trying to say is that the scope keeps growing.", "我想说的是范围一直在扩大。"], ["In other words", "In other words, we need to start over.", "换句话说，我们得重来。"], ["Let me put it another way", "Let me put it another way: users leave after one click.", "我换个说法：用户点一下就走了。"], ["To put it simply", "To put it simply, the job failed because of bad input.", "简单来说，任务失败是因为输入有问题。"], ["Basically", "Basically, the system checks the data every hour.", "基本上，系统每小时检查一次数据。"], ["What do you mean by", "What do you mean by \"real-time\"? Seconds or minutes?", "你说的“实时”是指几秒还是几分钟？"], ["Could you clarify", "Could you clarify what the deadline is?", "能说清楚截止日期是什么时候吗？"], ["Just to be clear", "Just to be clear, the meeting is at 10, not 11?", "确认一下，会是十点不是十一点？"], ["Let me make sure I understand", "Let me make sure I understand, you want a daily report?", "我确认下理解对不对，你要的是日报？"], ["So you're saying", "So you're saying the numbers are wrong?", "所以你是说数字有误？"], ["Does that make sense?", "We load the data first, then clean it. Does that make sense?", "我们先加载数据再清洗，这样讲清楚吗？"], ["The reason is", "The reason is that the API has a rate limit.", "原因是 API 有调用频率限制。"], ["Here's how it works", "Here's how it works: you upload a file, and we parse it.", "是这样运作的：你上传文件，我们来解析。"], ["Let me explain", "Let me explain why the dashboard is slow.", "我来解释下仪表板为什么慢。"], ["I didn't catch that", "Sorry, I didn't catch that. Could you say it again?", "抱歉没听清，能再说一遍吗？"], ["What I meant was", "What I meant was next Friday, not this Friday.", "我指的是下周五，不是这周五。"], ["To be more specific", "To be more specific, the error happens on login.", "具体来说，错误发生在登录时。"], ["That's not what I meant", "That's not what I meant, I like the idea.", "我不是那个意思，我喜欢这个想法。"], ["Let me rephrase that", "Let me rephrase that, the cost is too high for us.", "我换个说法，这个成本对我们来说太高了。"], ["In short", "In short, the project is on track.", "总之，项目进展正常。"], ["The main idea is", "The main idea is to reduce manual work.", "核心思路是减少人工操作。"], ["It's like", "It's like a library, each table is a book.", "就像图书馆，每张表就是一本书。"], ["Think of it as", "Think of it as a to-do list for the server.", "把它想成服务器的待办清单。"], ["What exactly do you need?", "What exactly do you need from me by Friday?", "周五前你具体需要我提供什么？"], ["Am I making sense?", "Am I making sense, or should I draw it?", "我讲清楚了吗？还是我画出来？"]]}, {"zh": "时间与计划", "en": "Time & plans", "items": [["By the end of the day", "I'll send you the report by the end of the day.", "我今天下班前把报告发给你。"], ["In the meantime", "In the meantime, you can use the old version.", "在此期间你可以先用旧版本。"], ["For the time being", "For the time being, we'll run it manually.", "暂时我们先手动跑。"], ["Sooner or later", "Sooner or later we'll have to upgrade.", "迟早我们得升级。"], ["At the last minute", "They changed the plan at the last minute.", "他们在最后一刻改了计划。"], ["In advance", "Please book the room in advance.", "请提前订会议室。"], ["On time", "The train was on time for once.", "火车难得准点。"], ["In time", "We finished just in time for the demo.", "我们刚好在演示前完成。"], ["Ahead of schedule", "We're a week ahead of schedule.", "我们比计划提前了一周。"], ["Behind schedule", "The migration is two days behind schedule.", "迁移比计划晚了两天。"], ["As soon as possible", "Please fix it as soon as possible.", "请尽快修好。"], ["Any day now", "The new laptop should arrive any day now.", "新电脑这几天随时会到。"], ["From now on", "From now on, all changes need a review.", "从现在开始，所有改动都需要审查。"], ["So far", "So far, everything looks good.", "到目前为止一切看起来都不错。"], ["Up to now", "Up to now, we've had no complaints.", "到目前为止我们没收到投诉。"], ["For now", "That's enough for now, let's pick it up tomorrow.", "今天先到这儿，明天继续。"], ["Once in a while", "Once in a while, the job fails for no reason.", "偶尔这个任务会莫名其妙失败。"], ["Every other day", "I go to the gym every other day.", "我隔天去一次健身房。"], ["I'm planning to", "I'm planning to take a course on Spark.", "我打算上一门 Spark 课程。"], ["I'm going to", "I'm going to call the client after lunch.", "午饭后我要给客户打电话。"], ["I'm thinking of", "I'm thinking of moving to a new team.", "我在考虑换个团队。"], ["I'm looking forward to", "I'm looking forward to the trip next month.", "我很期待下个月的旅行。"], ["It's about time", "It's about time we cleaned up these old tables.", "早该清理这些旧表了。"], ["Take your time", "Take your time, there's no deadline.", "慢慢来，没有截止日期。"], ["In the long run", "In the long run, automation saves money.", "从长远看，自动化能省钱。"]]}, {"zh": "因果与逻辑", "en": "Cause & logic", "items": [["Because of", "The flight was canceled because of the storm.", "航班因为暴风雨取消了。"], ["Due to", "The delay was due to a network issue.", "延误是由网络问题造成的。"], ["As a result", "We fixed the index. As a result, queries are faster.", "我们修了索引，结果查询变快了。"], ["That's why", "The data was wrong. That's why the report looked strange.", "数据错了，所以报告看起来很怪。"], ["That's because", "It's slow. That's because it scans the whole table.", "它很慢，因为它扫描了全表。"], ["So that", "I wrote notes so that the next person can follow.", "我写了笔记，好让下一个人能跟上。"], ["In order to", "In order to save time, we reused the old code.", "为了节省时间，我们复用了旧代码。"], ["Which means", "The server is down, which means no one can log in.", "服务器挂了，也就是说没人能登录。"], ["Leads to", "Bad data leads to bad decisions.", "坏数据导致坏决策。"], ["Thanks to", "Thanks to your help, we finished early.", "多亏你的帮忙，我们提前完成了。"], ["As long as", "You can use it as long as you credit the author.", "只要注明作者，你就可以用。"], ["Unless", "The job won't run unless the file arrives.", "除非文件到了，否则任务不会运行。"], ["In that case", "In that case, let's postpone the launch.", "那样的话，我们推迟上线吧。"], ["If so", "Is the test failing? If so, send me the log.", "测试失败了吗？如果是，把日志发我。"], ["If not", "Can you join? If not, I'll take notes for you.", "你能参加吗？不行的话我帮你记笔记。"], ["Otherwise", "Save your work, otherwise you'll lose it.", "保存好你的工作，否则会丢。"], ["Since", "Since you're here, can you check this?", "既然你在，能帮我看下这个吗？"], ["The result is", "The result is a cleaner and faster pipeline.", "结果是管道更干净更快了。"], ["It depends on", "It depends on how much data we have.", "这取决于我们有多少数据。"], ["It comes down to", "It all comes down to budget.", "说到底还是预算问题。"], ["On the basis of", "We chose the tool on the basis of cost.", "我们根据成本选择了这个工具。"], ["For this reason", "For this reason, we added a retry step.", "出于这个原因，我们加了重试步骤。"], ["It turns out that", "It turns out that the bug was in the config.", "结果发现 bug 在配置里。"], ["No wonder", "No wonder it's slow, there's no index.", "难怪这么慢，根本没有索引。"], ["That explains why", "That explains why the numbers doubled.", "这就解释了为什么数字翻倍了。"]]}, {"zh": "对比与转折", "en": "Contrast", "items": [["On the other hand", "It's cheap. On the other hand, it's hard to maintain.", "它很便宜，另一方面却很难维护。"], ["However", "The plan is good. However, it needs more people.", "计划不错，但需要更多人手。"], ["Even though", "Even though it was raining, we went out.", "尽管在下雨，我们还是出门了。"], ["Even so", "It's expensive. Even so, it's worth it.", "它很贵，即便如此也值得。"], ["Instead of", "Instead of emailing, just call her.", "别发邮件了，直接打给她。"], ["Rather than", "Rather than guessing, let's check the logs.", "与其猜，不如查日志。"], ["Compared to", "Compared to last year, sales are up 20 percent.", "和去年比，销售额涨了百分之二十。"], ["Unlike", "Unlike the old system, this one scales well.", "和旧系统不同，这个扩展性很好。"], ["In contrast", "In contrast, batch jobs run once a day.", "相比之下，批处理任务每天只跑一次。"], ["While", "While the first option is fast, the second is safer.", "第一个选项快，而第二个更安全。"], ["Whereas", "I like mornings, whereas my brother likes nights.", "我喜欢早上，而我弟弟喜欢晚上。"], ["At the same time", "It's a risk. At the same time, it's a big opportunity.", "这是风险，同时也是个大机会。"], ["Then again", "It might work. Then again, it might not.", "可能会成功，但话说回来也可能不会。"], ["Having said that", "It's a great tool. Having said that, it's not for everyone.", "这是个好工具，话虽如此，并不适合所有人。"], ["All the same", "Thanks all the same, I'll manage on my own.", "还是谢谢你，我自己能搞定。"], ["Despite", "Despite the delay, the launch went well.", "尽管有延误，上线还是很顺利。"], ["In spite of", "In spite of the cost, they bought the license.", "尽管很贵，他们还是买了许可证。"], ["Although", "Although it's old, the laptop still works fine.", "虽然旧了，这台电脑还挺好用。"], ["But still", "It's late, but still, I want to finish this.", "很晚了，但我还是想做完。"], ["The difference is", "The difference is that this one runs in real time.", "区别在于这个是实时运行的。"], ["Not only... but also", "It's not only faster but also cheaper.", "它不仅更快，而且更便宜。"], ["Either way", "Either way, we need an answer by Friday.", "不管怎样，周五前要有答案。"], ["Rather", "It wasn't a bug, rather a missing feature.", "那不是 bug，而是缺了一个功能。"], ["The same as", "My setup is the same as yours.", "我的配置和你的一样。"], ["Different from", "This dataset is different from the one we used last time.", "这个数据集和我们上次用的不一样。"]]}, {"zh": "举例与补充", "en": "Examples & adding info", "items": [["For example", "Some tools, for example Airflow, handle scheduling well.", "有些工具，比如 Airflow，调度做得很好。"], ["For instance", "We can automate small tasks, for instance renaming files.", "我们可以把小任务自动化，比如重命名文件。"], ["Such as", "I use tools such as dbt and Spark every day.", "我每天都用 dbt 和 Spark 这样的工具。"], ["Like", "We need someone senior, like Anna.", "我们需要资深的人，比如 Anna。"], ["Take... for example", "Take our last release, for example. It had zero bugs.", "就拿我们上一次发布来说，零 bug。"], ["In addition", "In addition, we need to update the docs.", "另外，我们还需要更新文档。"], ["On top of that", "On top of that, the server is out of space.", "更糟的是，服务器空间也满了。"], ["Not to mention", "It's fast, not to mention free.", "它很快，更不用说还是免费的。"], ["Plus", "The hotel is close to the station, plus it has a pool.", "酒店离车站近，而且还有泳池。"], ["What's more", "What's more, the new version supports Python.", "而且新版本支持 Python。"], ["Also", "I also want to talk about hiring.", "我还想聊聊招聘的事。"], ["As well as", "She manages the budget as well as the team.", "她既管预算也管团队。"], ["Apart from", "Apart from the price, I like everything about it.", "除了价格，其他我都喜欢。"], ["Except for", "Everyone came except for Tom.", "除了 Tom，大家都来了。"], ["Especially", "I love this city, especially in autumn.", "我爱这座城市，尤其是秋天。"], ["In particular", "One table in particular causes most of the errors.", "尤其是有一张表引发了大部分错误。"], ["Let me give you an example", "Let me give you an example from my last project.", "我举个我上个项目的例子。"], ["A good example is", "A good example is how we cut the report time.", "一个好例子是我们如何缩短报告时间。"], ["Speaking of", "Speaking of deadlines, when is the review due?", "说到截止日期，评审什么时候交？"], ["By the way", "By the way, did you get my email?", "顺便问一下，你收到我的邮件了吗？"], ["And so on", "We track clicks, views, purchases, and so on.", "我们追踪点击、浏览、购买等等。"], ["That kind of thing", "We talk about deadlines, priorities, that kind of thing.", "我们会聊截止日期、优先级之类的事。"], ["To name a few", "We use Kafka, Spark, and Flink, to name a few.", "我们用 Kafka、Spark、Flink 等等。"], ["Another thing is", "Another thing is the lack of testing.", "另一点是缺乏测试。"], ["Last but not least", "Last but not least, thanks to the whole team.", "最后但同样重要的是，感谢整个团队。"]]}, {"zh": "情绪与感受", "en": "Feelings & reactions", "items": [["I'm so glad", "I'm so glad you could make it.", "你能来我太高兴了。"], ["That's great news", "You got the offer? That's great news!", "你拿到 offer 了？太好了！"], ["I'm really excited about", "I'm really excited about the new project.", "我对新项目非常兴奋。"], ["I'm a bit worried about", "I'm a bit worried about the deadline.", "我有点担心截止日期。"], ["I'm fed up with", "I'm fed up with fixing the same bug.", "我受够了修同一个 bug。"], ["It drives me crazy", "It drives me crazy when the build breaks.", "构建一失败我就抓狂。"], ["I'm sorry to hear that", "I'm sorry to hear that you're sick.", "听说你病了，我很难过。"], ["That's a shame", "You missed the concert? That's a shame.", "你错过了演唱会？太可惜了。"], ["What a relief", "The data is safe? What a relief.", "数据没丢？总算松了口气。"], ["I can't believe", "I can't believe it's already October.", "真不敢相信已经十月了。"], ["I'm not in the mood for", "I'm not in the mood for a long meeting today.", "我今天没心情开长会。"], ["It's no big deal", "Don't worry, it's no big deal.", "别担心，没什么大不了的。"], ["I'm proud of", "I'm proud of what we built this year.", "我为我们今年做出的东西感到自豪。"], ["I'm tired of", "I'm tired of waiting for approval.", "我等审批等烦了。"], ["It makes me nervous", "Speaking in public makes me nervous.", "在公开场合讲话让我紧张。"], ["I'm looking forward to it", "A team dinner? I'm looking forward to it.", "团队聚餐？我很期待。"], ["Good for you", "You started running? Good for you!", "你开始跑步了？真不错！"], ["That sounds fun", "A cooking class? That sounds fun.", "烹饪课？听起来挺有意思。"], ["I feel bad about", "I feel bad about missing your call.", "没接到你的电话，我很过意不去。"], ["I'm used to", "I'm used to working late on Fridays.", "我习惯了周五加班。"], ["I can't stand", "I can't stand noisy offices.", "我受不了吵闹的办公室。"], ["That's awesome", "You finished the marathon? That's awesome!", "你跑完马拉松了？太厉害了！"], ["Oh no", "Oh no, I left my laptop at home.", "糟了，我把电脑落家里了。"], ["I'm happy for you", "You're moving to London? I'm happy for you.", "你要搬去伦敦？真替你高兴。"], ["I'm a little disappointed", "I'm a little disappointed with the results.", "我对结果有点失望。"]]}, {"zh": "推测与不确定", "en": "Uncertainty & guessing", "items": [["I'm not sure", "I'm not sure, but I think it's on the third floor.", "我不确定，不过应该在三楼。"], ["I guess", "I guess we can try again tomorrow.", "我想我们可以明天再试试。"], ["Probably", "It's probably a cache issue.", "可能是缓存问题。"], ["It might be", "It might be a permissions problem.", "可能是权限问题。"], ["It looks like", "It looks like the job finished early.", "看起来任务提前完成了。"], ["Chances are", "Chances are she's still in the meeting.", "她很可能还在开会。"], ["As far as I know", "As far as I know, the API is free.", "据我所知，这个 API 是免费的。"], ["If I remember correctly", "If I remember correctly, we launched in March.", "如果我没记错，我们是三月上线的。"], ["I have no idea", "I have no idea why it worked.", "我完全不知道它为什么成功了。"], ["I'm not a hundred percent sure", "I'm not a hundred percent sure, so let me check.", "我不是百分之百确定，我查一下。"], ["There's a good chance", "There's a good chance it will rain later.", "待会儿很可能下雨。"], ["I doubt it", "Will they finish today? I doubt it.", "他们今天能完成吗？我怀疑。"], ["It's hard to say", "It's hard to say how long it will take.", "很难说要多久。"], ["I suppose", "I suppose you're right.", "我想你是对的。"], ["Maybe", "Maybe we should ask Lisa.", "也许我们该问问 Lisa。"], ["I'd imagine", "I'd imagine the client will want a demo.", "我想客户会要求演示。"], ["It could be that", "It could be that the file is corrupted.", "可能是文件损坏了。"], ["My guess is", "My guess is the network dropped.", "我猜是网络断了。"], ["I wouldn't be surprised if", "I wouldn't be surprised if they changed the plan again.", "如果他们又改计划，我也不意外。"], ["Who knows", "Who knows, maybe it'll work this time.", "谁知道呢，也许这次就成功了。"], ["Let me double-check", "Let me double-check the date before I confirm.", "确认之前我再核对一下日期。"], ["I'll find out", "I don't know yet, but I'll find out.", "我还不知道，不过我会去问清楚。"], ["Don't quote me on that", "It's about 5,000 users, but don't quote me on that.", "大概五千个用户，不过别当真。"], ["Off the top of my head", "Off the top of my head, I'd say three weeks.", "不细算的话，我估计三周。"], ["It seems like", "It seems like everyone is busy today.", "今天好像大家都很忙。"]]}, {"zh": "工作与会议", "en": "Work & meetings", "items": [["Let's get started", "Okay everyone, let's get started.", "好，大家开始吧。"], ["The purpose of this meeting is", "The purpose of this meeting is to agree on the roadmap.", "这次会议的目的是确定路线图。"], ["Let's move on to", "Let's move on to the next item.", "我们进入下一项。"], ["Let's circle back to", "Let's circle back to this after lunch.", "这个午饭后再回头讨论。"], ["I'll keep it short", "I'll keep it short, I know we're over time.", "我长话短说，知道已经超时了。"], ["Can everyone see my screen?", "Can everyone see my screen?", "大家能看到我的屏幕吗？"], ["I'd like to add something", "I'd like to add something to what Tom said.", "我想补充一下 Tom 说的。"], ["Sorry to interrupt", "Sorry to interrupt, but we have a hard stop at 3.", "抱歉打断，我们三点必须结束。"], ["Go ahead", "Go ahead, you were saying?", "你继续，你刚才说？"], ["Let's take this offline", "This is getting detailed. Let's take this offline.", "这个太细了，会后单独聊吧。"], ["Action items", "Let's wrap up with the action items.", "最后我们总结一下待办事项。"], ["Who's in charge of", "Who's in charge of the release notes?", "发布说明谁负责？"], ["I'll follow up on", "I'll follow up on the budget question.", "预算的问题我来跟进。"], ["Keep me in the loop", "Please keep me in the loop on any changes.", "有任何变化请及时告诉我。"], ["Touch base", "Let's touch base again on Thursday.", "周四我们再碰一下。"], ["Set up a meeting", "I'll set up a meeting with the client.", "我来约客户开个会。"], ["On my plate", "I have a lot on my plate this week.", "我这周手上事情很多。"], ["Get back to you", "Let me check and get back to you.", "我查一下再回复你。"], ["Run it by", "Let me run it by my manager first.", "我先跟我经理确认一下。"], ["Up to speed", "Can you bring the new hire up to speed?", "你能带新人熟悉一下情况吗？"], ["Work on", "I'm working on a new data pipeline.", "我在做一个新的数据管道。"], ["Be responsible for", "I was responsible for the reporting layer.", "我负责报表层。"], ["Deal with", "I deal with data quality issues every day.", "我每天都在处理数据质量问题。"], ["Report to", "I report to the head of engineering.", "我向工程负责人汇报。"], ["Work closely with", "I work closely with the analytics team.", "我和分析团队密切合作。"]]}, {"zh": "问题与解决", "en": "Problems & solutions", "items": [["Something went wrong", "Something went wrong during the upload.", "上传时出了点问题。"], ["It's not working", "The login page is not working again.", "登录页又不好使了。"], ["There's a problem with", "There's a problem with the payment system.", "支付系统有问题。"], ["Figure out", "We need to figure out why the job failed.", "我们得弄清楚任务为什么失败。"], ["Look into", "I'll look into it this afternoon.", "我今天下午调查一下。"], ["Get to the bottom of", "We finally got to the bottom of the issue.", "我们终于找到了问题的根源。"], ["Sort out", "Let's sort out the access issue first.", "我们先解决权限问题。"], ["Fix the issue", "A restart fixed the issue.", "重启解决了问题。"], ["Work around", "We found a way to work around the limit.", "我们找到了绕过限制的办法。"], ["Come up with", "We came up with a better solution.", "我们想出了一个更好的方案。"], ["Root cause", "The root cause was a missing null check.", "根本原因是缺了空值检查。"], ["Narrow it down", "I narrowed it down to one function.", "我把范围缩小到一个函数。"], ["Run into", "We ran into some trouble with the API.", "我们在 API 上遇到了一些麻烦。"], ["Out of order", "The printer is out of order again.", "打印机又坏了。"], ["It keeps crashing", "The app keeps crashing on my phone.", "这个应用在我手机上老是闪退。"], ["Turn off and on again", "Have you tried turning it off and on again?", "你试过关了再开吗？"], ["Get rid of", "We need to get rid of these duplicate rows.", "我们得去掉这些重复的行。"], ["Make sure", "Make sure the tests pass before you merge.", "合并前确保测试通过。"], ["Try out", "Let's try out the new version on staging.", "我们在测试环境试试新版本。"], ["Step by step", "Let's go through it step by step.", "我们一步一步来。"], ["Trial and error", "We got it working through trial and error.", "我们靠反复试错让它跑起来了。"], ["Back to square one", "The fix didn't work, we're back to square one.", "修复没用，我们又回到原点了。"], ["Under control", "Don't worry, everything is under control.", "别担心，一切都在掌控之中。"], ["Hit a wall", "We hit a wall with the old library.", "我们在旧库上碰了壁。"], ["A quick fix", "This is a quick fix, we'll need a proper solution later.", "这是临时修补，之后需要正式方案。"]]}, {"zh": "进度与结果", "en": "Progress & results", "items": [["On track", "The project is on track for a June launch.", "项目按计划将在六月上线。"], ["Make progress", "We made good progress this week.", "这周我们进展不错。"], ["Almost there", "We're almost there, just one test left.", "快完成了，只剩一个测试。"], ["Up and running", "The new server is up and running.", "新服务器已经运行起来了。"], ["Wrap up", "Let's wrap up this task by Friday.", "我们周五前收尾这项任务。"], ["Get it done", "Don't worry, I'll get it done tonight.", "别担心，我今晚搞定。"], ["Pay off", "All that practice finally paid off.", "那些练习终于有了回报。"], ["Cut down on", "We cut down on costs by 30 percent.", "我们把成本降低了百分之三十。"], ["Go up", "Traffic went up after the update.", "更新后流量上升了。"], ["Go down", "Error rates went down a lot.", "错误率大幅下降。"], ["Turn out", "The test turned out fine.", "测试结果没问题。"], ["End up", "We ended up rewriting the whole module.", "我们最后重写了整个模块。"], ["Keep up with", "It's hard to keep up with all the new tools.", "跟上所有新工具很难。"], ["Fall behind", "I fell behind on my emails this week.", "我这周邮件积压了。"], ["Catch up on", "I need to catch up on some reading.", "我得补一些阅读。"], ["Carry on", "Carry on, I'll join you in a minute.", "你们继续，我马上来。"], ["Stick to", "Let's stick to the original plan.", "我们按原计划来。"], ["Hit the target", "We hit our target for the quarter.", "我们完成了本季度目标。"], ["Make a difference", "Small changes can make a big difference.", "小改变也能带来大不同。"], ["Take longer than expected", "The migration took longer than expected.", "迁移花的时间比预期长。"], ["Step up", "Our team stepped up when it mattered.", "关键时刻我们团队顶上了。"], ["Come along", "How's the new feature coming along?", "新功能进展得怎么样？"], ["Ready to go", "The release is ready to go.", "发布已经准备就绪。"], ["Get the hang of", "I'm starting to get the hang of Spark.", "我开始掌握 Spark 的窍门了。"], ["Make it", "We made it! The demo worked.", "我们做到了！演示成功了。"]]}, {"zh": "日常动作", "en": "Everyday actions", "items": [["Pick up", "Can you pick up some milk on your way home?", "你回家路上能买点牛奶吗？"], ["Drop off", "I'll drop off the kids at school.", "我送孩子去学校。"], ["Check in", "We checked in at the hotel at noon.", "我们中午在酒店办了入住。"], ["Check out", "You should check out this new café.", "你应该去看看这家新咖啡馆。"], ["Look for", "I'm looking for my keys.", "我在找我的钥匙。"], ["Look up", "Look up the word if you don't know it.", "不认识这个词就查一下。"], ["Find out", "I found out that the store closes at 8.", "我发现商店八点关门。"], ["Set up", "It took an hour to set up the printer.", "装好打印机花了一个小时。"], ["Turn on", "Turn on the lights, it's dark in here.", "开灯吧，这里太暗了。"], ["Turn off", "Don't forget to turn off the stove.", "别忘了关炉子。"], ["Put on", "Put on a jacket, it's cold outside.", "穿件外套，外面冷。"], ["Take off", "Please take off your shoes at the door.", "请在门口脱鞋。"], ["Fill out", "Please fill out this form.", "请填一下这张表。"], ["Hang out", "We usually hang out at the park on weekends.", "我们周末通常在公园玩。"], ["Run out of", "We've run out of coffee again.", "我们的咖啡又喝完了。"], ["Go through", "Let's go through the checklist.", "我们过一遍清单吧。"], ["Give up", "Don't give up, you're close.", "别放弃，你快成功了。"], ["Get up", "I get up at six every morning.", "我每天早上六点起床。"], ["Throw away", "Don't throw away the receipt.", "别把收据扔了。"], ["Clean up", "Let's clean up before we leave.", "走之前我们收拾一下。"], ["Grab a bite", "Want to grab a bite after work?", "下班后去吃点东西吗？"], ["Run errands", "I need to run some errands this afternoon.", "我今天下午要办点杂事。"], ["Get some rest", "You look tired, get some rest.", "你看起来很累，休息一下吧。"], ["Work out", "I work out three times a week.", "我每周健身三次。"], ["Do the dishes", "I'll cook if you do the dishes.", "你洗碗的话我就做饭。"]]}, {"zh": "社交与关系", "en": "Social & relationships", "items": [["Get along with", "I get along well with my teammates.", "我和队友相处得很好。"], ["Hit it off", "We hit it off right away.", "我们一见如故。"], ["Hang out with", "I like to hang out with friends on Fridays.", "我喜欢周五和朋友出去玩。"], ["Catch up with", "Let's catch up over coffee next week.", "下周喝杯咖啡叙叙旧吧。"], ["Get to know", "I'd love to get to know your team.", "我很想认识一下你的团队。"], ["Count on", "You can count on me.", "你可以指望我。"], ["Look up to", "I've always looked up to my mentor.", "我一直很敬佩我的导师。"], ["Be there for", "Thanks for being there for me.", "谢谢你一直支持我。"], ["Keep in mind", "Keep in mind that she's new here.", "记住她是新来的。"], ["Make friends", "It's hard to make friends in a new city.", "在新城市交朋友很难。"], ["Have a chat", "Let's have a chat about your career goals.", "我们聊聊你的职业目标吧。"], ["Grab a coffee", "Want to grab a coffee before the meeting?", "开会前去喝杯咖啡吗？"], ["Drop by", "Feel free to drop by my desk anytime.", "随时来我工位坐坐。"], ["Be into", "I'm really into photography these days.", "我最近很迷摄影。"], ["Have a lot in common", "We have a lot in common.", "我们有很多共同点。"], ["Let someone down", "I don't want to let my team down.", "我不想让团队失望。"], ["Stand up for", "She always stands up for her team.", "她总是维护她的团队。"], ["Get on someone's nerves", "His constant typing gets on my nerves.", "他一直敲键盘让我心烦。"], ["Make it up to you", "Sorry I'm late, I'll make it up to you.", "抱歉迟到了，我会补偿你的。"], ["No hard feelings", "We disagreed, but no hard feelings.", "我们意见不同，但没有芥蒂。"], ["It means a lot", "Your support means a lot to me.", "你的支持对我意义重大。"], ["I owe you one", "Thanks for covering for me, I owe you one.", "谢谢你帮我顶班，欠你一次。"], ["Don't mention it", "Thanks! — Don't mention it.", "谢谢！——别客气。"], ["You're welcome to", "You're welcome to join us for dinner.", "欢迎你和我们一起吃晚饭。"], ["What are you up to tonight?", "What are you up to tonight? Want to see a movie?", "你今晚干嘛？要不要看电影？"]]}, {"zh": "婉拒与客气", "en": "Polite declining & softening", "items": [["I'm afraid", "I'm afraid I can't make it on Friday.", "恐怕我周五去不了。"], ["I'd love to, but", "I'd love to, but I have plans tonight.", "我很想去，可我今晚有安排。"], ["Maybe another time", "Maybe another time, I'm really busy this week.", "改天吧，我这周真的很忙。"], ["Thanks, but I'll pass", "Thanks, but I'll pass on dessert.", "谢谢，甜点我就不要了。"], ["I'm not really into", "I'm not really into horror movies.", "我不太喜欢恐怖片。"], ["That's not really my thing", "Karaoke is not really my thing.", "唱 K 不太是我的菜。"], ["I have a lot going on", "I have a lot going on right now.", "我现在手上事情很多。"], ["I'm not able to", "I'm not able to take on more work this month.", "这个月我没法再接更多工作了。"], ["I'll have to check", "I'll have to check my calendar first.", "我得先查一下日程。"], ["Let me think about it", "Let me think about it and get back to you.", "让我想想再回复你。"], ["That might be difficult", "Friday might be difficult for me.", "周五对我来说可能有点难。"], ["I'm not sure that's a good idea", "I'm not sure that's a good idea right before launch.", "上线前这么做我觉得不太妥。"], ["Unfortunately", "Unfortunately, the position has been filled.", "很遗憾，这个职位已经招到人了。"], ["I wish I could", "I wish I could help, but I'm not on that team.", "我希望能帮上忙，可我不在那个团队。"], ["It's not a good time", "It's not a good time, can I call you back?", "现在不太方便，我回头打给你？"], ["Sorry for the inconvenience", "Sorry for the inconvenience, the site will be back soon.", "抱歉给您带来不便，网站很快恢复。"], ["I apologize for", "I apologize for the late reply.", "抱歉回复晚了。"], ["My bad", "My bad, I sent the wrong file.", "我的错，发错文件了。"], ["It was my mistake", "It was my mistake, I'll fix it now.", "是我的失误，我现在就改。"], ["No worries", "No worries, it happens to everyone.", "没关系，谁都会这样。"], ["Don't worry about it", "Don't worry about it, I already fixed it.", "别在意，我已经修好了。"], ["Just a thought", "Just a thought, but what about a shorter meeting?", "只是个想法，会议短一点怎么样？"], ["If it's not too much trouble", "If it's not too much trouble, could you resend it?", "如果不麻烦的话，能再发一次吗？"], ["Would it help if", "Would it help if I wrote a summary?", "我写个总结会有帮助吗？"], ["I hope that's okay", "I moved the meeting to 4, I hope that's okay.", "我把会改到四点了，希望没问题。"]]}, {"zh": "结尾与总结", "en": "Wrapping up & summarizing", "items": [["To sum up", "To sum up, we need more time and one more engineer.", "总结一下，我们需要更多时间和多一名工程师。"], ["All in all", "All in all, it was a successful quarter.", "总的来说，这是个成功的季度。"], ["At the end of the day", "At the end of the day, users just want it to work.", "说到底，用户只希望它能用。"], ["The bottom line is", "The bottom line is we're over budget.", "底线是我们超预算了。"], ["Overall", "Overall, the feedback was positive.", "总体来说反馈是积极的。"], ["In conclusion", "In conclusion, the new design improves retention.", "结论是新设计提高了留存。"], ["That's about it", "That's about it from me. Any questions?", "我就讲这些，有问题吗？"], ["That's all for today", "That's all for today, thanks everyone.", "今天就到这里，谢谢大家。"], ["Any questions?", "That's the plan. Any questions?", "计划就是这样，有问题吗？"], ["Let's call it a day", "It's six already. Let's call it a day.", "已经六点了，今天就到这吧。"], ["I'll leave it there", "I'll leave it there and hand over to Maria.", "我就讲到这，交给 Maria。"], ["Thanks for your time", "Thanks for your time, I really appreciate it.", "谢谢你抽出时间，非常感谢。"], ["To recap", "To recap, the deadline is next Monday.", "回顾一下，截止日期是下周一。"], ["The key takeaway is", "The key takeaway is to test early.", "核心收获是尽早测试。"], ["Looking ahead", "Looking ahead, we plan to add streaming.", "展望未来，我们计划加入流处理。"], ["Next steps", "Let's talk about next steps.", "我们谈谈下一步。"], ["Let's wrap things up", "We're running late, let's wrap things up.", "时间不够了，我们收个尾。"], ["I'll send a summary", "I'll send a summary after the call.", "会后我会发个总结。"], ["Talk to you soon", "Great chat. Talk to you soon!", "聊得很好，回头再聊！"], ["Let me know what you think", "Here's the draft. Let me know what you think.", "这是草稿，告诉我你的想法。"], ["Looking forward to hearing from you", "Looking forward to hearing from you.", "期待你的回复。"], ["Have a great weekend", "Thanks for everything, have a great weekend!", "谢谢一切，周末愉快！"], ["It was a pleasure", "It was a pleasure working with you.", "和你共事很愉快。"], ["That's a wrap", "That's a wrap! Great job, everyone.", "收工！大家辛苦了。"], ["In a nutshell", "In a nutshell, we moved everything to the cloud.", "简而言之，我们把所有东西都搬上了云。"]]}, {"zh": "高频搭配", "en": "Core collocations", "items": [["Make a decision", "We need to make a decision by Monday.", "我们得在周一前做决定。"], ["Make a mistake", "Everyone makes mistakes, just learn from them.", "人人都会犯错，吸取教训就好。"], ["Make sense of", "I'm trying to make sense of these numbers.", "我在努力弄懂这些数字。"], ["Take a look", "Take a look at this chart.", "看一下这张图。"], ["Take a break", "Let's take a ten-minute break.", "我们休息十分钟。"], ["Take a while", "It might take a while to load.", "加载可能要一会儿。"], ["Take advantage of", "Take advantage of the free trial.", "好好利用免费试用。"], ["Take part in", "I took part in a hackathon last year.", "我去年参加了一场黑客松。"], ["Have a look", "Can I have a look at your notes?", "我能看看你的笔记吗？"], ["Have trouble with", "I'm having trouble with my laptop.", "我的电脑出了点问题。"], ["Pay attention to", "Pay attention to the error messages.", "注意看报错信息。"], ["Get used to", "You'll get used to the new tool quickly.", "你很快就会习惯新工具。"], ["Get in touch with", "I'll get in touch with the vendor.", "我会联系供应商。"], ["Do your best", "Just do your best in the interview.", "面试尽力就好。"], ["Do a favor", "Can you do me a favor?", "能帮我个忙吗？"], ["Keep an eye on", "Keep an eye on the memory usage.", "留意一下内存使用。"], ["Give it a shot", "I've never used Rust, but I'll give it a shot.", "我没用过 Rust，但我试试。"], ["Come up", "Something came up, I have to leave early.", "临时有事，我得早走。"], ["Bring up", "She brought up a good question.", "她提出了一个好问题。"], ["Point out", "He pointed out a bug in my code.", "他指出了我代码里的一个 bug。"], ["Hold on", "Hold on, let me find the file.", "等一下，我找下文件。"], ["Go ahead with", "We decided to go ahead with the plan.", "我们决定按计划推进。"], ["Be supposed to", "The report was supposed to be ready yesterday.", "报告本该昨天就准备好。"], ["Be about to", "I was about to call you.", "我正要给你打电话。"], ["Be in charge of", "Who's in charge of hiring?", "招聘谁负责？"]]}];
+const ITEMS = [];
+CATS.forEach((c,ci)=>c.items.forEach(([chunk,sent,zh])=>ITEMS.push({id:ITEMS.length,ci,chunk,sent,zh})));
+const $ = id=>document.getElementById(id);
+const KEY='chunk500.v1';
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return {}}}
+let S = Object.assign({cur:0,heard:{},master:{},star:{},opt:{range:'all',mode:'cs',repeat:'1',rate:'0.9',gap:'1.5',voice:'',order:'seq',loop:'loop'},tab:'player',fb:'',last:null}, load());
+S.opt = Object.assign({src:'ai',range:'all',mode:'cs',repeat:'1',rate:'0.9',gap:'1.5',voice:'',order:'seq',loop:'loop'}, S.opt||{});
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+function toast(t){const el=$('toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),1600)}
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function markSent(it){
+  // highlight chunk words inside the sentence (best effort, case-insensitive)
+  const core = it.chunk.replace(/\.\.\./g,'').replace(/[?!.]/g,'').trim();
+  const s = esc(it.sent); const i = s.toLowerCase().indexOf(core.toLowerCase());
+  if(i<0 || !core) return s;
+  return s.slice(0,i)+'<mark>'+s.slice(i,i+core.length)+'</mark>'+s.slice(i+core.length);
+}
+
+/* ---------- tabs ---------- */
+function showTab(t){
+  document.querySelectorAll('[role=tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));
+  document.querySelectorAll('[role=tabpanel]').forEach(p=>p.classList.toggle('on',p.id===t));
+  S.tab=t;save();
+  if(t==='progress')drawProgress();
+  if(t==='library')scrollToCur(false);
+}
+document.querySelectorAll('[role=tab]').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+
+/* ---------- queue ---------- */
+let order=null;
+function inRange(it){
+  const r=S.opt.range;
+  if(r==='cat')return it.ci===ITEMS[S.cur].ci;
+  if(r==='todo')return !S.master[it.id];
+  if(r==='star')return !!S.star[it.id];
+  return true;
+}
+function queue(){
+  let q=ITEMS.filter(inRange).map(i=>i.id);
+  if(S.opt.order==='shuf'){
+    if(!order||order.len!==q.length){const a=q.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}order={len:q.length,ids:a}}
+    q=order.ids.filter(id=>q.includes(id));
+  }
+  return q;
+}
+function step(dir){
+  const q=queue(); if(!q.length){toast('这个范围里没有语块');return false}
+  let p=q.indexOf(S.cur);
+  if(p<0){ // current not in range: jump to next in-range item after cur
+    const nxt=q.find(id=>id>S.cur); setCur(nxt!==undefined?nxt:q[0]); return true;
+  }
+  p+=dir;
+  if(p>=q.length){ if(S.opt.loop==='stop'&&playing){stop();toast('这个范围播完了');return false} p=0 }
+  if(p<0)p=q.length-1;
+  setCur(q[p]); return true;
+}
+
+/* ---------- render current ---------- */
+function setCur(id,scroll){
+  S.cur=id;save();renderCur();syncFab();prefetch(id);$('recStatus').textContent='';renderRecs();
+  if(scroll!==false)scrollToCur(true);
+}
+function renderCur(){
+  const it=ITEMS[S.cur];
+  $('sCat').textContent=CATS[it.ci].zh+' · '+CATS[it.ci].en;
+  $('sNum').textContent='#'+(it.id+1)+' / 500 · 听过 '+(S.heard[it.id]||0)+' 次';
+  $('sChunk').textContent=it.chunk;
+  $('sSent').innerHTML=markSent(it);
+  $('sZh').textContent=it.zh;
+  $('bMaster').setAttribute('aria-pressed',!!S.master[it.id]);
+  $('bStar').setAttribute('aria-pressed',!!S.star[it.id]);
+  $('nChunk').textContent=it.chunk;
+  const q=queue();const p=q.indexOf(it.id);
+  $('nInfo').textContent='#'+(it.id+1)+' · '+CATS[it.ci].zh+(p>=0?' · 范围内 '+(p+1)+'/'+q.length:'');
+  $('nProg').style.width=(p>=0?((p+1)/q.length*100):0)+'%';
+  document.querySelectorAll('.item.cur').forEach(e=>e.classList.remove('cur'));
+  const row=document.getElementById('it'+it.id); if(row)row.classList.add('cur');
+}
+function scrollToCur(smooth){
+  if(!$('library').classList.contains('on'))return;
+  const row=document.getElementById('it'+S.cur); if(row&&row.offsetParent)row.scrollIntoView({block:'center',behavior:smooth&&!matchMedia('(prefers-reduced-motion: reduce)').matches?'smooth':'auto'});
+}
+
+/* ---------- speech ---------- */
+const synth = window.speechSynthesis;
+let voices=[], playing=false, runId=0, wake=null;
+const NOVELTY=/\b(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Fred|Junior|Ralph|Kathy|Grandma|Grandpa|Eddy|Flo|Reed|Rocko|Sandy|Shelley|Deranged|Hysterical|Pipe Organ)\b/i;
+function voiceScore(v){
+  const id=(v.name+' '+(v.voiceURI||'')).toLowerCase();
+  let s=0;
+  if(NOVELTY.test(v.name))return -100;
+  if(/premium|高级|高級/.test(id))s+=100;
+  else if(/natural/.test(id))s+=95;
+  else if(/enhanced|增强|增強|neural|wavenet/.test(id))s+=70;
+  else if(/google (us|uk) english/.test(id))s+=55;
+  if(/\b(ava|zoe|samantha|evan|nathan|allison|susan|aria|jenny|emma|andrew|brian|guy|michelle|serena|daniel|karen|moira)\b/.test(id))s+=15;
+  if(/en[-_]us/i.test(v.lang))s+=10; else if(/en[-_](gb|au|ca|ie)/i.test(v.lang))s+=5;
+  if(v.localService===false&&!/natural|google/.test(id))s-=5;
+  if(/super-compact/.test(id))s-=8; else if(/\.compact\./.test(id))s-=2;
+  return s;
+}
+function stars(sc){return sc>=90?'★★★':sc>=50?'★★':'★'}
+const IOS_BASIC=()=>/iPhone|iPad|iPod/.test(navigator.userAgent)&&!voices.some(v=>voiceScore(v)>=50);
+function tierText(v){
+  if(!v)return '';const sc=voiceScore(v);
+  if(IOS_BASIC())return 'iPhone 的网页只能用系统基础声音，下载的高级声音不会出现在这里。已自动选最好的一个。';
+  return sc>=90?'高级声音，接近真人。':sc>=50?'较好的声音。想更自然可以下载高级声音（见下方说明）。':'普通声音，听起来比较机械。建议按下方说明下载高级声音。';
+}
+function pickVoices(){
+  if(!synth)return;
+  voices=synth.getVoices().filter(v=>/^en[-_]/i.test(v.lang)&&!NOVELTY.test(v.name));
+  voices.sort((a,b)=>voiceScore(b)-voiceScore(a)||a.name.localeCompare(b.name));
+  // same name+lang appears as compact and super-compact on iOS: keep only the better one
+  const seen=new Set(); voices=voices.filter(v=>{const k=v.name+'|'+v.lang; if(seen.has(k))return false; seen.add(k); return true});
+  const sel=$('optVoice');
+  sel.innerHTML=voices.length?voices.map(v=>`<option value="${esc(v.name)}">${stars(voiceScore(v))} ${esc(v.name.replace(/^Microsoft /,''))} · ${v.lang}</option>`).join(''):'<option value="">系统默认英文</option>';
+  if(S.opt.voice&&voices.some(v=>v.name===S.opt.voice))sel.value=S.opt.voice;
+  else if(voices[0]){sel.value=voices[0].name;S.opt.voice=voices[0].name;save()}
+  const cur=voices.find(v=>v.name===sel.value);
+  $('voiceTier').textContent=tierText(cur);
+  if(cur&&voiceScore(cur)<50&&!IOS_BASIC())$('vhelp').open=true;
+}
+function zhVoice(){ if(!synth)return null; return synth.getVoices().find(v=>/^zh[-_](CN|Hans)/i.test(v.lang))||synth.getVoices().find(v=>/^zh/i.test(v.lang))||null }
+function sleep(ms,tok){return new Promise(r=>setTimeout(r,ms))}
+function say(text,lang,rate){
+  return new Promise(res=>{
+    if(!synth){setTimeout(res,800);return}
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang=lang; u.rate=rate;
+    if(lang==='en-US'){const v=voices.find(v=>v.name===S.opt.voice)||voices[0]; if(v)u.voice=v}
+    else {const z=zhVoice(); if(z)u.voice=z}
+    let done=false; const fin=()=>{if(done)return;done=true;clearTimeout(t);res()};
+    u.onend=fin;u.onerror=fin;
+    // fallback: some mobile engines drop onend
+    const t=setTimeout(fin,2000+text.length*(lang==='en-US'?110:320)/rate);
+    synth.speak(u);
+  });
+}
+/* ---------- AI voice (pre-generated Kokoro audio, one JSON per scene) ---------- */
+const SILENT='data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//OEwAAAAAAAAAAAAEluZm8AAAAPAAAACQAABCAARUVFRUVFRUVFRUVdXV1dXV1dXV1dXXR0dHR0dHR0dHR0i4uLi4uLi4uLi4uioqKioqKioqKiorq6urq6urq6urq60dHR0dHR0dHR0dHo6Ojo6Ojo6Ojo6P//////////////AAAAAExhdmM2MC4zMQAAAAAAAAAAAAAAACQD8AAAAAAAAAQgDeb0IwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//NExAAAAANIAAAAAExBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMu//NExFMAAANIAAAAADEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMu//NExKYAAANIAAAAADEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMu//NExKwAAANIAAAAADEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMu//NExKwAAANIAAAAADEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMu//NExKwAAANIAAAAADEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMu//NExKwAAANIAAAAADEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NExKwAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NExKwAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV';
+const audioEl=new Audio(); audioEl.preload='auto';
+const catCache={}; const urlCache={};
+function loadCat(ci){
+  if(!catCache[ci]) catCache[ci]=fetch('audio/cat'+ci+'.json').then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}).catch(e=>{delete catCache[ci];throw e});
+  return catCache[ci];
+}
+function b64url(b64){const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return URL.createObjectURL(new Blob([u],{type:'audio/mpeg'}))}
+async function clipUrl(it,kind){
+  const key=kind+it.id; if(urlCache[key])return urlCache[key];
+  const d=await loadCat(it.ci); const k=it.id-it.ci*25;
+  return urlCache[key]=b64url(d[kind][k]);
+}
+function unlockAudio(){try{audioEl.src=SILENT;const p=audioEl.play();if(p)p.catch(()=>{})}catch(e){}}
+function playClip(url,rate,tok){
+  return new Promise(res=>{
+    let done=false;const fin=()=>{if(done)return;done=true;audioEl.onended=audioEl.onerror=null;clearInterval(chk);res()};
+    audioEl.onended=fin;audioEl.onerror=fin;
+    audioEl.src=url;audioEl.playbackRate=rate;audioEl.defaultPlaybackRate=rate;
+    try{audioEl.preservesPitch=true}catch(e){}
+    const chk=setInterval(()=>{if(tok!==runId){audioEl.pause();fin()}},150);
+    const p=audioEl.play(); if(p)p.catch(()=>{toast('点一下播放键继续');fin()});
+  });
+}
+let aiFailed=false;
+async function en(it,kind,rate,tok){
+  if(S.opt.src==='ai'&&!aiFailed){
+    try{const u=await clipUrl(it,kind); if(tok!==runId)return; await playClip(u,rate,tok); return}
+    catch(e){aiFailed=true;toast('AI 声音加载失败，改用本机朗读')}
+  }
+  await say(kind==='c'?it.chunk:it.sent,'en-US',rate);
+}
+function prefetch(id){ if(S.opt.src!=='ai')return; const ci=ITEMS[id].ci; loadCat(ci).catch(()=>{}); if(ci<19)loadCat(ci+1).catch(()=>{}) }
+
+async function speakItem(it,tok){
+  const rate=+S.opt.rate, m=S.opt.mode, rep=+S.opt.repeat;
+  const ok=()=>tok===runId;
+  $('stage').classList.add('speaking');
+  for(let r=0;r<rep&&ok();r++){
+    if(m==='zcs'){
+      await say(it.zh,'zh-CN',1); if(!ok())break;
+      await sleep(Math.max(2500,it.sent.length*70)); if(!ok())break;
+      await en(it,'c',rate,tok); if(!ok())break; await sleep(400);
+      if(!ok())break; await en(it,'s',rate,tok);
+    } else {
+      if(m!=='s'){await en(it,'c',rate,tok); if(!ok())break; if(m!=='c')await sleep(450)}
+      if(!ok())break;
+      if(m!=='c')await en(it,'s',rate,tok);
+      if(!ok())break;
+      if(m==='csz'){await sleep(300); if(!ok())break; await say(it.zh,'zh-CN',1)}
+    }
+    if(r<rep-1&&ok())await sleep(700);
+  }
+  $('stage').classList.remove('speaking');
+  if(ok()){S.heard[it.id]=(S.heard[it.id]||0)+1;S.last={id:it.id,t:Date.now()};save();$('sNum').textContent='#'+(it.id+1)+' / 500 · 听过 '+S.heard[it.id]+' 次';updateHeardTag(it.id)}
+}
+async function loop(tok){
+  // if current item is outside range, move into range first
+  if(!queue().includes(S.cur)) step(1);
+  while(playing&&tok===runId){
+    await speakItem(ITEMS[S.cur],tok);
+    if(!playing||tok!==runId)break;
+    await sleep(+S.opt.gap*1000);
+    if(!playing||tok!==runId)break;
+    if(!step(1))break;
+  }
+}
+function play(){
+  if(!synth&&S.opt.src!=='ai'){toast('这个浏览器不支持朗读');return}
+  unlockAudio();
+  if(synth)synth.cancel(); playing=true; runId++;
+  $('bPlay').textContent='⏸';$('bPlay').setAttribute('aria-label','暂停');
+  if(navigator.wakeLock&&!wake){navigator.wakeLock.request('screen').then(w=>{wake=w;w.addEventListener('release',()=>wake=null)}).catch(()=>{})}
+  loop(runId);
+}
+function stop(){
+  playing=false; runId++; if(synth)synth.cancel(); try{audioEl.pause()}catch(e){}
+  $('bPlay').textContent='▶';$('bPlay').setAttribute('aria-label','播放');
+  $('stage').classList.remove('speaking');
+  if(wake){wake.release().catch(()=>{});wake=null}
+}
+function toggle(){playing?stop():play()}
+function jump(id,autoplay){const was=playing; stop(); setCur(id); if(was||autoplay)play()}
+async function playOnce(id){stop(); unlockAudio(); setCur(id,false); runId++; const tok=runId; synth&&synth.cancel(); await speakItem(ITEMS[id],tok)}
+
+$('bPlay').onclick=toggle;
+$('bNext').onclick=()=>{const was=playing;stop();step(1);if(was)play()};
+$('bPrev').onclick=()=>{const was=playing;stop();step(-1);if(was)play()};
+$('bOnce').onclick=()=>playOnce(S.cur);
+$('bMaster').onclick=()=>{toggleFlag('master',S.cur)};
+$('bStar').onclick=()=>{toggleFlag('star',S.cur)};
+document.addEventListener('keydown',e=>{
+  if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;
+  if(e.code==='Space'){e.preventDefault();toggle()}
+  else if(e.key==='ArrowRight'){$('bNext').click()}
+  else if(e.key==='ArrowLeft'){$('bPrev').click()}
+});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&playing&&navigator.wakeLock&&!wake){navigator.wakeLock.request('screen').then(w=>wake=w).catch(()=>{})}});
+
+function toggleFlag(k,id){
+  if(S[k][id])delete S[k][id]; else S[k][id]=1;
+  save(); renderCur(); updateRow(id); renderTree();
+  toast(k==='master'?(S.master[id]?'标为已掌握':'取消掌握'):(S.star[id]?'已收藏':'取消收藏'));
+}
+
+/* ---------- shadowing recorder (IndexedDB, latest 3 per item) ---------- */
+const REC_DB='chunk500-rec'; let recDbP=null;
+function recDb(){
+  if(!recDbP)recDbP=new Promise((res,rej)=>{try{const r=indexedDB.open(REC_DB,1);r.onupgradeneeded=()=>r.result.createObjectStore('recs');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}catch(e){rej(e)}});
+  return recDbP;
+}
+async function recGet(id){try{const db=await recDb();return await new Promise(res=>{const q=db.transaction('recs').objectStore('recs').get(String(id));q.onsuccess=()=>res(q.result||[]);q.onerror=()=>res([])})}catch(e){return []}}
+async function recPut(id,arr){const db=await recDb();return new Promise((res,rej)=>{const tx=db.transaction('recs','readwrite');tx.objectStore('recs').put(arr,String(id));tx.oncomplete=res;tx.onerror=()=>rej(tx.error)})}
+function wavFromBuffer(buf){
+  const ch=buf.numberOfChannels,len=buf.length,mono=new Float32Array(len);
+  for(let c=0;c<ch;c++){const d=buf.getChannelData(c);for(let i=0;i<len;i++)mono[i]+=d[i]/ch}
+  const out=new DataView(new ArrayBuffer(44+len*2)),sr=buf.sampleRate,w=(o,s)=>{for(let i=0;i<s.length;i++)out.setUint8(o+i,s.charCodeAt(i))};
+  w(0,'RIFF');out.setUint32(4,36+len*2,true);w(8,'WAVE');w(12,'fmt ');out.setUint32(16,16,true);out.setUint16(20,1,true);out.setUint16(22,1,true);
+  out.setUint32(24,sr,true);out.setUint32(28,sr*2,true);out.setUint16(32,2,true);out.setUint16(34,16,true);w(36,'data');out.setUint32(40,len*2,true);
+  for(let i=0;i<len;i++){const v=Math.max(-1,Math.min(1,mono[i]));out.setInt16(44+i*2,v<0?v*0x8000:v*0x7fff,true)}
+  return new Blob([out],{type:'audio/wav'});
+}
+async function toWav(blob){
+  // decode any audio/video the phone gives us, resample to 16 kHz mono WAV (small, always playable)
+  const AC=window.AudioContext||window.webkitAudioContext; const ab=await blob.arrayBuffer();
+  const ctx=new AC(); let dec;
+  try{dec=await new Promise((res,rej)=>{const p=ctx.decodeAudioData(ab,res,rej);if(p&&p.then)p.then(res,rej)})}finally{try{ctx.close()}catch(e){}}
+  const sr=16000,frames=Math.ceil(dec.duration*sr);
+  const off=new (window.OfflineAudioContext||window.webkitOfflineAudioContext)(1,Math.max(frames,1),sr);
+  const src=off.createBufferSource();src.buffer=dec;src.connect(off.destination);src.start();
+  const rendered=await off.startRendering();
+  return {blob:wavFromBuffer(rendered),dur:dec.duration};
+}
+async function saveRec(id,blob){
+  $('recStatus').textContent='正在处理录音…';
+  try{
+    const {blob:wav,dur}=await toWav(blob);
+    if(dur>120){$('recStatus').textContent='录音超过 2 分钟，请录短一点（一条例句 3–10 秒就够）。';return}
+    const arr=await recGet(id); arr.unshift({t:Date.now(),dur,blob:wav}); await recPut(id,arr.slice(0,3));
+    S.recN=S.recN||{}; S.recN[id]=1; save();
+    $('recStatus').textContent='已保存 '+dur.toFixed(1)+' 秒。点 ⇄ 对比原声。';
+    renderRecs();
+  }catch(e){$('recStatus').textContent='这个文件读不出声音。请换一个录音文件，或用语音备忘录 / 前置镜头录像再试。'}
+}
+let recUrls=[];
+async function renderRecs(){
+  const id=S.cur, arr=await recGet(id); if(id!==S.cur)return;
+  recUrls.forEach(u=>URL.revokeObjectURL(u)); recUrls=arr.map(r=>URL.createObjectURL(r.blob));
+  $('bCompare').disabled=!arr.length;
+  $('recList').innerHTML=arr.map((r,i)=>{const d=new Date(r.t);
+    return `<li><button class="chip" data-p="${i}" type="button">▶ 第 ${arr.length-i} 遍</button><span>${r.dur.toFixed(1)} 秒 · ${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}</span><button class="chip" data-d="${i}" type="button">删除</button></li>`}).join('');
+}
+$('recList').onclick=async e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  if(b.dataset.p!==undefined){stop();unlockAudio();runId++;await playClip(recUrls[+b.dataset.p],1,runId)}
+  if(b.dataset.d!==undefined){const arr=await recGet(S.cur);arr.splice(+b.dataset.d,1);await recPut(S.cur,arr);if(!arr.length&&S.recN)delete S.recN[S.cur];save();renderRecs()}
+};
+$('bCompare').onclick=async()=>{
+  if(!recUrls.length)return; stop(); unlockAudio(); runId++; const tok=runId, it=ITEMS[S.cur];
+  $('recStatus').textContent='原声…'; await en(it,'s',+S.opt.rate,tok); if(tok!==runId)return;
+  await sleep(500); if(tok!==runId)return;
+  $('recStatus').textContent='我的…'; await playClip(recUrls[0],1,tok); if(tok===runId)$('recStatus').textContent='';
+};
+$('recFile').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0]; e.target.value=''; if(f)saveRec(S.cur,f)});
+// live mic: works in a normal browser tab; inside the Claude viewer the mic is blocked, so fall back to the file picker
+let mediaRec=null, recChunks=[], recTimer=null, recStart=0;
+$('bRec').onclick=async()=>{
+  const btn=$('bRec');
+  if(mediaRec&&mediaRec.state==='recording'){mediaRec.stop();return}
+  if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder)){$('recFile').click();return}
+  stop();
+  try{
+    const stream=await Promise.race([navigator.mediaDevices.getUserMedia({audio:true}),new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),4000))]);
+    recChunks=[]; mediaRec=new MediaRecorder(stream); const id=S.cur;
+    mediaRec.ondataavailable=ev=>{if(ev.data.size)recChunks.push(ev.data)};
+    mediaRec.onstop=()=>{stream.getTracks().forEach(t=>t.stop());clearInterval(recTimer);btn.classList.remove('on');btn.textContent='🎙 录音';liveUI(false);saveRec(id,new Blob(recChunks,{type:mediaRec.mimeType||'audio/mp4'}))};
+    mediaRec.start(); recStart=Date.now(); btn.classList.add('on'); liveUI(true);
+    recTimer=setInterval(()=>{const s=(Date.now()-recStart)/1000;btn.textContent='■ 停 '+s.toFixed(0)+'s';if(s>60)mediaRec.stop()},250);
+    btn.textContent='■ 停 0s';
+  }catch(err){
+    $('recStatus').innerHTML='麦克风没有打开（浏览器拒绝或这里不支持）。可以点 <b>📁 文件</b>：iPhone 上可以选「拍照或录像」用前置镜头录，或选语音备忘录里的录音。';
+  }
+};
+
+/* ---------- floating recorder window ---------- */
+function liveUI(on){$('recfab').classList.toggle('rec-live',on);$('rfDot').hidden=!on}
+function syncFab(){const it=ITEMS[S.cur];$('rfNum').textContent='#'+(it.id+1);$('rfChunk').textContent=it.chunk}
+function placeFab(){
+  const fab=$('recfab'),p=S.fab||{};
+  $('recfab').hidden=!!p.min; $('rfMax').hidden=!p.min;
+  if(p.x==null){fab.style.left='';fab.style.top='';fab.style.right='';fab.style.bottom='';return}
+  const w=fab.offsetWidth||300,h=fab.offsetHeight||200;
+  const x=Math.min(Math.max(8,p.x),innerWidth-w-8), y=Math.min(Math.max(8,p.y),innerHeight-h-8);
+  fab.style.left=x+'px';fab.style.top=y+'px';fab.style.right='auto';fab.style.bottom='auto';
+}
+(function(){
+  const fab=$('recfab'),head=$('rfHead');let d=null;
+  head.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;const r=fab.getBoundingClientRect();d={dx:e.clientX-r.left,dy:e.clientY-r.top};head.setPointerCapture(e.pointerId);head.style.cursor='grabbing'});
+  head.addEventListener('pointermove',e=>{if(!d)return;S.fab=Object.assign(S.fab||{},{x:e.clientX-d.dx,y:e.clientY-d.dy});placeFab()});
+  const end=()=>{if(!d)return;d=null;head.style.cursor='';save()};
+  head.addEventListener('pointerup',end);head.addEventListener('pointercancel',end);
+  head.addEventListener('dblclick',()=>{S.fab={min:false};save();placeFab()});
+  $('rfMin').onclick=()=>{S.fab=Object.assign(S.fab||{},{min:true});save();placeFab()};
+  $('rfMax').onclick=()=>{S.fab=Object.assign(S.fab||{},{min:false});save();placeFab()};
+  addEventListener('resize',placeFab);
+})();
+
+/* ---------- options ---------- */
+const optMap={optSrc:'src',optRange:'range',optMode:'mode',optRepeat:'repeat',optRate:'rate',optGap:'gap',optVoice:'voice',optOrder:'order',optLoop:'loop'};
+Object.entries(optMap).forEach(([el,k])=>{
+  const e=$(el); if(k!=='voice')e.value=S.opt[k];
+  e.addEventListener(e.type==='range'?'input':'change',()=>{S.opt[k]=e.value;save();labels();if(k==='src'){aiFailed=false;prefetch(S.cur)}if(k==='range'||k==='order'){order=null;renderCur()}});
+});
+function labels(){$('rateV').textContent='×'+(+S.opt.rate).toFixed(2);$('gapV').textContent=S.opt.gap+' 秒'}
+
+/* ---------- library ---------- */
+function treeHTML(){
+  return `<button class="all" data-cat="-1">全部场景 · 500</button>`+CATS.map((c,ci)=>{
+    const ids=ITEMS.filter(i=>i.ci===ci); const m=ids.filter(i=>S.master[i.id]).length;
+    return `<details${ITEMS[S.cur].ci===ci?' open':''}><summary><span>${esc(c.zh)}</span><span class="cnt">${m}/25</span></summary><ul>${ids.map(i=>`<li class="${S.master[i.id]?'m':''}"><button data-id="${i.id}">${esc(i.chunk)}</button></li>`).join('')}</ul></details>`;
+  }).join('');
+}
+function renderTree(){
+  [$('tree'),$('tree2')].forEach(t=>{
+    const open=[...t.querySelectorAll('details')].map(d=>d.open);
+    t.innerHTML=treeHTML();
+    if(open.length)t.querySelectorAll('details').forEach((d,i)=>d.open=open[i]);
+  });
+}
+function onTreeClick(e){
+  const b=e.target.closest('button'); if(!b)return;
+  if(b.dataset.cat){ $('q').value=''; filt.todo=filt.star=false; syncFilt(); renderList(); window.scrollTo({top:0}); return }
+  const id=+b.dataset.id; filt.q='';$('q').value='';renderList(); setCur(id); scrollToCur(true);
+  $('drawer').open=false;
+}
+$('tree').onclick=onTreeClick;$('tree2').onclick=onTreeClick;
+const filt={q:'',todo:false,star:false};
+function syncFilt(){$('fTodo').setAttribute('aria-pressed',filt.todo);$('fStar').setAttribute('aria-pressed',filt.star)}
+$('q').addEventListener('input',e=>{filt.q=e.target.value.trim().toLowerCase();renderList()});
+$('fTodo').onclick=()=>{filt.todo=!filt.todo;syncFilt();renderList()};
+$('fStar').onclick=()=>{filt.star=!filt.star;syncFilt();renderList()};
+function rowHTML(it){
+  return `<div class="item${it.id===S.cur?' cur':''}" id="it${it.id}">
+    <span class="num">${it.id+1}</span>
+    <div style="min-width:0"><b>${esc(it.chunk)}</b><p>${markSent(it)}</p><p class="z">${esc(it.zh)} <span class="heardtag" id="h${it.id}">${S.heard[it.id]?'· 听过 '+S.heard[it.id]+' 次':''}</span></p></div>
+    <div class="acts">
+      <button class="ic" data-a="once" data-id="${it.id}" aria-label="播放这一条">▶</button>
+      <button class="ic" data-a="from" data-id="${it.id}" aria-label="从这里连续播放">⏩</button>
+      <button class="ic" data-a="master" data-id="${it.id}" aria-pressed="${!!S.master[it.id]}" aria-label="已掌握">✓</button>
+    </div></div>`;
+}
+function renderList(){
+  const out=[];
+  CATS.forEach((c,ci)=>{
+    const rows=ITEMS.filter(i=>i.ci===ci&&(!filt.todo||!S.master[i.id])&&(!filt.star||S.star[i.id])&&(!filt.q||(i.chunk+' '+i.sent+' '+i.zh).toLowerCase().includes(filt.q)));
+    if(!rows.length)return;
+    const m=ITEMS.filter(i=>i.ci===ci&&S.master[i.id]).length;
+    out.push(`<h3 class="cathead">${esc(c.zh)} <small>${esc(c.en)} · 掌握 ${m}/25</small></h3>`+rows.map(rowHTML).join(''));
+  });
+  $('list').innerHTML=out.join('')||'<p class="note">没有匹配的语块。</p>';
+}
+function updateRow(id){const r=document.getElementById('it'+id); if(r){r.outerHTML=rowHTML(ITEMS[id])}}
+function updateHeardTag(id){const h=document.getElementById('h'+id); if(h)h.textContent='· 听过 '+S.heard[id]+' 次'}
+$('list').onclick=e=>{
+  const b=e.target.closest('button[data-a]'); if(!b)return; const id=+b.dataset.id;
+  if(b.dataset.a==='once')playOnce(id);
+  if(b.dataset.a==='from'){jump(id,true);toast('从 #'+(id+1)+' 开始连续播放')}
+  if(b.dataset.a==='master')toggleFlag('master',id);
+};
+
+/* ---------- progress SVG ---------- */
+const SVGNS='http://www.w3.org/2000/svg';
+function drawProgress(){
+  const heard=Object.keys(S.heard).length, mast=Object.keys(S.master).length, total=Object.values(S.heard).reduce((a,b)=>a+b,0);
+  $('stats').innerHTML=`<div><strong>${heard}</strong>听过的语块</div><div><strong>${mast}</strong>已掌握</div><div><strong>${total}</strong>累计播放次数</div><div><strong>${Object.keys(S.star).length}</strong>收藏</div><div><strong>${Object.keys(S.recN||{}).length}</strong>录过音的语块</div>`;
+  const cs=16,gap=3,lw=96,W=lw+25*(cs+gap),H=20*(cs+gap);
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="${W}" role="img" aria-label="500 个语块的进度格">`;
+  CATS.forEach((c,ci)=>{
+    s+=`<text x="0" y="${ci*(cs+gap)+cs-4}" font-size="11" fill="var(--muted)" font-family="var(--body)">${esc(c.zh)}</text>`;
+    for(let k=0;k<25;k++){const id=ci*25+k;
+      const f=id===S.cur?'var(--gold)':S.master[id]?'var(--done)':S.heard[id]?'var(--heard)':'var(--none)';
+      s+=`<rect data-id="${id}" x="${lw+k*(cs+gap)}" y="${ci*(cs+gap)}" width="${cs}" height="${cs}" rx="3" fill="${f}" style="cursor:pointer"><title>#${id+1} ${esc(ITEMS[id].chunk)}</title></rect>`}
+  });
+  $('grid').innerHTML=s+'</svg>';
+  // bars
+  const bw=320,bh=18,bg=8,lab=96,BW=lab+bw+44,BH=20*(bh+bg);
+  let b=`<svg viewBox="0 0 ${BW} ${BH}" width="${BW}" role="img" aria-label="各场景掌握和收听比例">`;
+  CATS.forEach((c,ci)=>{
+    const ids=ITEMS.filter(i=>i.ci===ci); const m=ids.filter(i=>S.master[i.id]).length, h=ids.filter(i=>S.heard[i.id]).length;
+    const y=ci*(bh+bg);
+    b+=`<text x="0" y="${y+bh-5}" font-size="11" fill="var(--muted)" font-family="var(--body)">${esc(c.zh)}</text>
+    <rect x="${lab}" y="${y}" width="${bw}" height="${bh}" rx="4" fill="var(--none)"/>
+    <rect x="${lab}" y="${y}" width="${bw*h/25}" height="${bh}" rx="4" fill="var(--heard)"/>
+    <rect x="${lab}" y="${y}" width="${bw*m/25}" height="${bh}" rx="4" fill="var(--done)"/>
+    <text x="${lab+bw+6}" y="${y+bh-5}" font-size="11" fill="var(--ink)" font-family="var(--body)" style="font-variant-numeric:tabular-nums">${m}/25</text>`;
+  });
+  $('bars').innerHTML=b+'</svg>';
+}
+$('grid').onclick=e=>{const r=e.target.closest('rect[data-id]');if(!r)return;jump(+r.dataset.id);showTab('player')};
+$('bReset').onclick=()=>{$('bResetYes').hidden=false};
+$('bResetYes').onclick=()=>{S.heard={};S.master={};S.star={};save();$('bResetYes').hidden=true;drawProgress();renderList();renderTree();renderCur();toast('学习记录已清除')};
+
+/* ---------- method SVGs ---------- */
+function methodSVG(){
+  const t=(x,y,s,o='')=>`<text x="${x}" y="${y}" font-size="13" fill="var(--ink)" font-family="var(--body)" text-anchor="middle" ${o}>${s}</text>`;
+  const box=(x,y,w,h,f)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" fill="${f}" stroke="var(--line)"/>`;
+  const arr=(x1,y,x2,c)=>`<line x1="${x1}" y1="${y}" x2="${x2-6}" y2="${y}" stroke="${c}" stroke-width="2"/><polygon points="${x2},${y} ${x2-8},${y-5} ${x2-8},${y+5}" fill="${c}"/>`;
+  let s=`<svg viewBox="0 0 640 210" width="640" role="img" aria-label="单词拼接与语块提取对比">`;
+  s+=t(320,20,'想说：我查一下再回复你','font-weight="600"');
+  // slow path
+  s+=box(10,40,120,40,'var(--none)')+t(70,65,'中文想法');
+  s+=box(170,40,120,40,'var(--none)')+t(230,65,'逐词翻译');
+  s+=box(330,40,120,40,'var(--none)')+t(390,65,'拼语法');
+  s+=box(490,40,140,40,'var(--none)')+t(560,65,'uh… I check…');
+  s+=arr(130,60,170,'var(--muted)')+arr(290,60,330,'var(--muted)')+arr(450,60,490,'var(--muted)');
+  s+=t(320,100,'慢，卡，容易出错','fill="var(--muted)" font-size="12"');
+  // fast path
+  s+=box(10,130,120,40,'var(--hl)')+t(70,155,'意思');
+  s+=box(170,125,460,50,'var(--hl)')+t(400,155,'Let me check and get back to you.','font-weight="600" fill="var(--green)"');
+  s+=arr(130,150,170,'var(--green)');
+  s+=t(320,195,'整块提取：语块已经存好，直接说出口','fill="var(--green)" font-size="12"');
+  $('svgPath').innerHTML=s+'</svg>';
+  const cx=320,cy=130,R=88, steps=['泡耳朵','跟读','自测','标记','造句'];
+  let l=`<svg viewBox="0 0 640 260" width="640" role="img" aria-label="五步学习循环">`;
+  l+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="var(--line)" stroke-width="2" stroke-dasharray="4 5"/>`;
+  l+=t(cx,cy-4,'每天 20 分钟','font-weight="600" fill="var(--green)"')+t(cx,cy+16,'循环一轮','fill="var(--muted)" font-size="12"');
+  steps.forEach((n,i)=>{const a=-Math.PI/2+i*2*Math.PI/5,x=cx+R*Math.cos(a),y=cy+R*Math.sin(a);
+    l+=`<circle cx="${x}" cy="${y}" r="30" fill="${i===2?'var(--gold)':'var(--green)'}"/>`+t(x,y+5,n,'fill="var(--panel)" font-weight="600"')});
+  $('svgLoop').innerHTML=l+'</svg>';
+}
+
+/* ---------- feedback ---------- */
+$('fb').value=S.fb||'';
+$('fb').addEventListener('input',e=>{S.fb=e.target.value;save();$('fbSaved').textContent='已保存在本机'});
+$('bCopy').onclick=()=>{const v=$('fb').value;
+  if(!v.trim()){toast('还没写意见');return}
+  navigator.clipboard.writeText(v).then(()=>toast('已复制，贴回对话即可')).catch(()=>{$('fb').select();toast('请手动复制选中的文字')})};
+
+/* ---------- init ---------- */
+function init(){
+  labels(); renderTree(); renderList(); renderCur(); methodSVG(); renderRecs(); syncFab(); placeFab();
+  if(synth){pickVoices(); synth.onvoiceschanged=pickVoices}
+  else {$('ttsNote').innerHTML='<span class="warn">这个浏览器不支持朗读，无法播放声音。请换 Chrome、Safari 或 Edge 打开。</span>'}
+  $('optVoice').addEventListener('change',()=>{S.opt.voice=$('optVoice').value;save();$('voiceTier').textContent=tierText(voices.find(v=>v.name===S.opt.voice))});
+  $('bDiag').onclick=()=>{
+    if(!synth){$('diagOut').textContent='这个浏览器没有朗读功能。';return}
+    const all=synth.getVoices();
+    const en=all.filter(v=>/^en/i.test(v.lang));
+    const ava=all.filter(v=>/ava|zoe/i.test(v.name+' '+v.voiceURI));
+    const inApp=/; ?wv\)|FBAN|Instagram|Line\//i.test(navigator.userAgent)||!/Safari\//.test(navigator.userAgent);
+    let h=`<p>浏览器一共读到 <b>${all.length}</b> 个声音，其中英文 <b>${en.length}</b> 个。`+
+      (ava.length?`找到 Ava/Zoe：${ava.map(v=>esc(v.name)+'（'+v.lang+'）').join('、')}。`:'<b>没有找到 Ava 或 Zoe。</b>')+
+      (inApp?' 看起来不是在 Safari 里打开的，App 内浏览器通常读不到高级声音。':'')+'</p>';
+    h+='<div class="tw"><table><tr><th>名称</th><th>语言</th><th>标识</th><th>本地</th></tr>'+
+      en.map(v=>`<tr><td>${esc(v.name)}</td><td>${v.lang}</td><td>${esc(v.voiceURI||'')}</td><td>${v.localService?'是':'否'}</td></tr>`).join('')+'</table></div>';
+    h+='<p>截图这个列表发给我，我帮你判断。</p>';
+    $('diagOut').innerHTML=h;
+  };
+  $('bTest').onclick=()=>{if(!synth)return;stop();runId++;synth.cancel();say(ITEMS[S.cur].sent,'en-US',+S.opt.rate)};
+  if(S.last){const it=ITEMS[S.cur];const d=new Date(S.last.t);
+    $('resumeTxt').textContent=`上次停在 #${it.id+1}「${it.chunk}」· ${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    $('resume').hidden=false;
+    $('bResume').onclick=()=>{$('resume').hidden=true;play()};
+  }
+  const h=location.hash.slice(1);
+  showTab(['player','library','progress','method','feedback'].includes(h)?h:(S.tab||'player'));
+}
+init();
+</script>
+</body></html>
