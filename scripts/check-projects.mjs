@@ -8,6 +8,7 @@
 //        id          slug, same as the folder name
 //        category    an id from assets/data/categories.json
 //        date        YYYY-MM-DD (newest first on the page)
+//        time        optional HH:mm or HH:mm:ss
 //        title, description   string, or { "zh-Hant", "zh-Hans", "en" }
 //        tags        optional list of strings / i18n objects
 //        version     semver like 1.0.0, shown on the card; release tag is <id>-v<version>
@@ -87,6 +88,9 @@ projects.forEach((p, i) => {
     errors.push(`${where}: category "${p?.category}" is not in categories.json`);
   }
   if (!isDate(p?.date)) errors.push(`${where}: date must be YYYY-MM-DD`);
+  if (p?.time != null && (typeof p.time !== "string" || !/^\d{2}:\d{2}(:\d{2})?$/.test(p.time))) {
+    errors.push(`${where}.time: must look like HH:mm`);
+  }
   if (p?.version != null && !/^\d+\.\d+\.\d+$/.test(p.version)) errors.push(`${where}.version: must look like 1.0.0`);
   checkText(`${where}.title`, p?.title, true);
   checkText(`${where}.description`, p?.description, true);
