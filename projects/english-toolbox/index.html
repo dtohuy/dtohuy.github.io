@@ -97,9 +97,9 @@ h2{font-family:var(--f-display);font-size:24px;margin:34px 0 4px}
 .link span{font-size:13.5px;color:var(--muted)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
 .note{font-size:13px;color:var(--faint);margin-top:28px;max-width:70ch}
-/* keep recorders above 語塊 500's player bar and place toolbox pill side-by-side with 語塊 500's recorder */
-body[data-tool="chunks500"] .rec{bottom:calc(var(--barh,90px) + 12px + env(safe-area-inset-bottom,0px))}
-body[data-tool="chunks500"] .rec-pill{right:76px;bottom:calc(var(--barh,90px) + 19px + env(safe-area-inset-bottom,0px))}
+/* keep recorders above 語塊 500's player bar: place toolbox recorder on the LEFT, 語塊 500 recorder on the RIGHT */
+body[data-tool="chunks500"] .rec{left:16px;right:auto;bottom:calc(var(--barh,90px) + 12px + env(safe-area-inset-bottom,0px))}
+body[data-tool="chunks500"] .rec-pill{left:16px;right:auto;bottom:calc(var(--barh,90px) + 12px + env(safe-area-inset-bottom,0px))}
 /* floating recorder */
 .rec{position:fixed;z-index:50;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(300px,calc(100% - 32px));background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.28);touch-action:none}
 .rec-h{display:flex;align-items:center;gap:8px;padding:9px 10px 9px 14px;cursor:grab;user-select:none;border-bottom:1px solid var(--line)}
@@ -168,7 +168,7 @@ body[data-tool="chunks500"] .rec-pill{right:76px;bottom:calc(var(--barh,90px) + 
         <div class="link"><b>800 詞應答地圖 → 所有工具</b><span>其他工具的例句幾乎都能用這 800 多個核心詞看懂；查不到的字，先試著用核心詞換個說法。</span></div>
       </div></div>
       <p class="note">所有練習紀錄都只存在你目前這台裝置的瀏覽器裡。朗讀功能使用瀏覽器內建的英文語音，聲音會依裝置而不同。開口流利和語用與文化裡的「請 Claude 猜／改寫」第一次使用時會先請你同意。</p>
-      <p class="note">版本 v1.3.2 · 發版時間 2026-10-24 19:25</p>
+      <p class="note">版本 v1.3.3 · 發版時間 2026-10-25 13:10</p>
     </div>
   </div>
 </main>
@@ -271,6 +271,12 @@ function open(id){
   const home = document.getElementById("home");
   if(!id || !(TOOLS[id] || EXTERNAL[id])){ id = ""; }
   document.body.dataset.tool = id;
+  if(id === "chunks500"){
+    const box = document.getElementById("rec");
+    if(box && !box.dataset.userMoved){
+      box.style.left = ""; box.style.top = ""; box.style.right = ""; box.style.bottom = "";
+    }
+  }
   home.hidden = !!id;
   if(!id) dailyStatus();
   Object.entries(frames).forEach(([k,f])=>f.hidden = k !== id);
@@ -558,8 +564,15 @@ document.addEventListener("click", e=>{
   const prefs = (()=>{ try{ return JSON.parse(localStorage.getItem("toolbox-recorder-ui")||"{}"); }catch(e){ return {}; } })();
   const savePrefs = ()=>{ try{ localStorage.setItem("toolbox-recorder-ui", JSON.stringify(prefs)); }catch(e){} };
   function collapse(on){ box.hidden = on; pill.hidden = !on; prefs.min = on; savePrefs(); }
+  window.collapseToolboxRecorder = (on=true)=>collapse(on);
   document.getElementById("recMin").addEventListener("click", ()=>collapse(true));
-  pill.addEventListener("click", ()=>collapse(false));
+  pill.addEventListener("click", ()=>{
+    collapse(false);
+    try{
+      const f = frames["chunks500"];
+      if(f && f.contentWindow && f.contentWindow.collapseFab && innerWidth < 800) f.contentWindow.collapseFab(true);
+    }catch(e){}
+  });
   collapse(prefs.min === undefined ? innerWidth < 600 : !!prefs.min);
 
   /* drag by the header, kept inside the window */
@@ -574,9 +587,14 @@ document.addEventListener("click", e=>{
     if(e.target.closest("button")) return;
     const r = box.getBoundingClientRect(), dx = e.clientX - r.left, dy = e.clientY - r.top;
     head.setPointerCapture(e.pointerId);
-    const move = ev=>place(ev.clientX - dx, ev.clientY - dy);
+    const move = ev=>{ box.dataset.userMoved = "1"; place(ev.clientX - dx, ev.clientY - dy); };
     const up = ()=>{ head.removeEventListener("pointermove", move); head.removeEventListener("pointerup", up); head.removeEventListener("pointercancel", up); savePrefs(); };
     head.addEventListener("pointermove", move); head.addEventListener("pointerup", up); head.addEventListener("pointercancel", up);
+  });
+  head.addEventListener("dblclick", e=>{
+    if(e.target.closest("button")) return;
+    box.style.left = ""; box.style.top = ""; box.style.right = ""; box.style.bottom = "";
+    delete prefs.x; delete prefs.y; delete box.dataset.userMoved; savePrefs();
   });
   if(typeof prefs.x === "number" && !prefs.min) requestAnimationFrame(()=>place(prefs.x*innerWidth, prefs.y*innerHeight));
   addEventListener("resize", ()=>{ if(box.style.left) place(parseFloat(box.style.left), parseFloat(box.style.top)); });

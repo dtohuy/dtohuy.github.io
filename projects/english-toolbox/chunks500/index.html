@@ -695,8 +695,20 @@ function placeFab(){
   const end=()=>{if(!d)return;d=null;head.style.cursor='';save()};
   head.addEventListener('pointerup',end);head.addEventListener('pointercancel',end);
   head.addEventListener('dblclick',()=>{S.fab={min:false};save();placeFab()});
+  window.collapseFab = (on=true)=>{
+    S.fab = Object.assign(S.fab||{}, {min:!!on});
+    save();
+    placeFab();
+  };
   $('rfMin').onclick=()=>{S.fab=Object.assign(S.fab||{},{min:true});save();placeFab()};
-  $('rfMax').onclick=()=>{S.fab=Object.assign(S.fab||{},{min:false});save();placeFab()};
+  $('rfMax').onclick=()=>{
+    S.fab=Object.assign(S.fab||{},{min:false});
+    save();
+    placeFab();
+    try{
+      if(window.parent && window.parent.collapseToolboxRecorder && innerWidth < 800) window.parent.collapseToolboxRecorder(true);
+    }catch(e){}
+  };
   addEventListener('resize',placeFab);
 })();
 
