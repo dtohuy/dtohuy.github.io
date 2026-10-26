@@ -123,6 +123,9 @@ body[data-tool="chunks500"] .rec-pill,body[data-tool="chunks"] .rec-pill{left:16
 .rec-seek input{width:100%;accent-color:var(--gold);margin:0;height:22px;cursor:pointer}
 .rec-seek input:disabled{cursor:default;opacity:.5}
 .rec-seek span{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.scrollbtns{position:fixed;z-index:40;right:max(10px,env(safe-area-inset-right,0px));top:50%;transform:translateY(-50%);display:grid;gap:10px}
+.scrollbtns button{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:16px;line-height:1;cursor:pointer;opacity:.82;box-shadow:0 2px 10px rgba(0,0,0,.18);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.scrollbtns button:hover,.scrollbtns button:active{opacity:1;border-color:var(--gold)}
 .rec-sub{display:flex;gap:8px}.rec-sub .rec-btn{flex:1;font-weight:500}
 .rec-ctx{font-size:13px;font-weight:600;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rec-takes{list-style:none;margin:0;padding:0;display:grid;gap:4px;max-height:132px;overflow:auto}
@@ -201,6 +204,10 @@ body[data-tool="chunks500"] .rec-pill,body[data-tool="chunks"] .rec-pill{left:16
   </div>
 </section>
 <audio id="recAudio" preload="metadata"></audio>
+<div class="scrollbtns" aria-label="捲動">
+  <button type="button" id="scrUp" aria-label="向上捲動" title="向上一頁（長按回到頂端）">▲</button>
+  <button type="button" id="scrDn" aria-label="向下捲動" title="向下一頁（長按到底部）">▼</button>
+</div>
 
 
 <script>
@@ -696,6 +703,32 @@ document.addEventListener("click", e=>{
 
   render();
   openKey("general", "", null);
+})();
+
+/* ---------- floating scroll buttons: page up / page down inside the open tool (tap = one page, hold = top / bottom) ---------- */
+(function(){
+  /* the scrolling document: the open tool's frame, or the frame nested inside it that fills the view (語塊 300 播放) */
+  function target(){
+    let w = window, f = Object.values(frames).find(x=>!x.hidden);
+    while(f){
+      let d; try{ d = f.contentDocument; w = f.contentWindow; }catch(e){ break; }
+      if(!d) break;
+      const inner = [...d.querySelectorAll("iframe")].find(x=>x.offsetParent && x.getBoundingClientRect().height > w.innerHeight*0.6);
+      f = inner || null;
+    }
+    return w;
+  }
+  function scrollBy(dir, edge){
+    const w = target(); let d; try{ d = w.document.scrollingElement || w.document.documentElement; }catch(e){ return; }
+    const top = edge ? (dir < 0 ? 0 : d.scrollHeight) : d.scrollTop + dir * w.innerHeight * 0.85;
+    w.scrollTo({top, behavior:"smooth"});
+  }
+  [["scrUp",-1],["scrDn",1]].forEach(([id,dir])=>{
+    const b = document.getElementById(id); let t = null, long = false;
+    b.addEventListener("pointerdown", ()=>{ long = false; t = setTimeout(()=>{ long = true; scrollBy(dir, true); }, 500); });
+    ["pointerup","pointerleave","pointercancel"].forEach(ev=>b.addEventListener(ev, ()=>clearTimeout(t)));
+    b.addEventListener("click", ()=>{ if(!long) scrollBy(dir, false); long = false; });
+  });
 })();
 
 const start = (location.hash || "").slice(1);
