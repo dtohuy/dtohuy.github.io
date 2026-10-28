@@ -84,6 +84,7 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
   </div>
   <p class="note" id="vnote"></p>
   <p class="note" id="vnoteZh"></p>
+  <p class="note">文字朗讀 v1.4.2</p>
 
   <div id="doc" hidden>
     <div class="title"><b id="docName"></b><span id="docInfo"></span></div>
@@ -119,7 +120,7 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
     let s = 0;
     if(/premium|enhanced|neural|natural|online|wavenet|studio/.test(n)) s += 50;
     if(/google|microsoft|siri/.test(n)) s += 20;
-    if(!v.localService) s += 5;
+    if(!v.localService) s += 30; /* cloud voices (Chrome's Google, Edge's Online) are neural */
     if(/^(en[-_]us|zh[-_]cn)/i.test(v.lang)) s += 4; else if(/^en[-_](gb|au|ca)/i.test(v.lang)) s += 2;
     if(/compact|eloquence|novelty|bad news|bells|boing|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|albert|bubbles|fred|junior|kathy|ralph/.test(n)) s -= 100;
     return s;
