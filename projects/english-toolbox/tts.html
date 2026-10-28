@@ -48,6 +48,7 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
 .paste summary{cursor:pointer;color:var(--gold-soft);font-size:14px}
 .paste textarea{width:100%;min-height:110px;margin-top:8px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px;resize:vertical}
 .note{font-size:12.5px;color:var(--faint);margin:10px 0 0}
+.hq{display:inline-block;font-size:11px;font-weight:600;color:var(--on-gold);background:var(--gold);border-radius:4px;padding:0 5px;margin-left:6px;vertical-align:1px}
 .note.warn{color:var(--gold-soft)}
 .title{margin:22px 0 8px;font-family:var(--f-display);font-size:19px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
 .title span{font-family:var(--f-body);font-size:13px;color:var(--muted);font-weight:400}
@@ -64,7 +65,7 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
 </style></head><body>
 <div class="wrap">
   <h1>文字朗讀</h1>
-  <p class="sub">上傳一個文字檔（.txt），馬上用最好的英文語音念出來。</p>
+  <p class="sub">上傳一個文字檔（.txt），馬上用最好的語音念出來。中英文混雜也行，英文用英文語音、中文用中文語音。</p>
 
   <label class="drop" id="drop" for="file">
     <b>點這裡選文字檔，或把檔案拖進來</b>
@@ -77,10 +78,12 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
   </details>
 
   <div class="row">
-    <label class="field">語音<select id="voice"></select></label>
+    <label class="field">英文語音<select id="voice"></select></label>
+    <label class="field">中文語音<select id="voiceZh"></select></label>
     <label class="field">速度 <b id="rateV">1.0×</b><input type="range" id="rate" min="0.6" max="1.6" step="0.05" value="1"></label>
   </div>
   <p class="note" id="vnote"></p>
+  <p class="note" id="vnoteZh"></p>
 
   <div id="doc" hidden>
     <div class="title"><b id="docName"></b><span id="docInfo"></span></div>
@@ -106,7 +109,7 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
   let prefs = {}; try{ prefs = JSON.parse(localStorage.getItem(KEY) || "{}"); }catch(e){}
   const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(prefs)); }catch(e){} };
 
-  let sents = [], idx = 0, state = "idle", token = 0, voices = [];
+  let sents = [], idx = 0, state = "idle", token = 0, voices = [], voicesZh = [];
 
   if(!synth){ $("vnote").textContent = "這個瀏覽器不支援語音朗讀。"; $("vnote").classList.add("warn"); }
 
@@ -117,24 +120,32 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
     if(/premium|enhanced|neural|natural|online|wavenet|studio/.test(n)) s += 50;
     if(/google|microsoft|siri/.test(n)) s += 20;
     if(!v.localService) s += 5;
-    if(/^en[-_]us/i.test(v.lang)) s += 4; else if(/^en[-_](gb|au|ca)/i.test(v.lang)) s += 2;
+    if(/^(en[-_]us|zh[-_]cn)/i.test(v.lang)) s += 4; else if(/^en[-_](gb|au|ca)/i.test(v.lang)) s += 2;
     if(/compact|eloquence|novelty|bad news|bells|boing|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|albert|bubbles|fred|junior|kathy|ralph/.test(n)) s -= 100;
     return s;
   }
+  const isHQ = v => score(v) >= 50;
+  function fill(selId, noteId, list, key, label){
+    const sel = $(selId), note = $(noteId);
+    sel.innerHTML = list.map((v,i)=>`<option value="${i}">${isHQ(v)?"★ ":""}${v.name.replace(/</g,"&lt;")} (${v.lang})${isHQ(v)?" · 高品質":""}</option>`).join("");
+    if(!list.length){ sel.innerHTML = '<option>（沒有可用語音）</option>'; note.textContent = `找不到${label}語音。請到系統設定安裝後重新整理。`; note.classList.add("warn"); return; }
+    const saved = list.findIndex(v=>v.voiceURI === prefs[key]);
+    sel.value = saved >= 0 ? saved : 0;
+    const hq = list.filter(isHQ).length;
+    note.classList.toggle("warn", !isHQ(list[+sel.value]));
+    note.innerHTML = isHQ(list[+sel.value]) ? `${label}：目前選的是<span class="hq">高品質</span>語音（★ 標記，共 ${hq} 個）。` : `${label}：目前選的是基本語音${hq ? "，清單中有 ★ 標記的高品質語音可換" : "，系統沒有高品質語音。可在系統設定下載「進階／Enhanced」語音，或改用 Chrome／Edge"}。`;
+  }
   function loadVoices(){
     if(!synth) return;
-    voices = synth.getVoices().filter(v=>/^en/i.test(v.lang)).sort((a,b)=>score(b)-score(a));
-    const sel = $("voice");
-    sel.innerHTML = voices.map((v,i)=>`<option value="${i}">${v.name.replace(/</g,"&lt;")} (${v.lang})${score(v)>=50?" ★":""}</option>`).join("");
-    if(!voices.length){ $("vnote").textContent = "找不到英文語音。請到系統設定安裝英文語音後重新整理。"; $("vnote").classList.add("warn"); return; }
-    const saved = voices.findIndex(v=>v.voiceURI === prefs.voice);
-    sel.value = saved >= 0 ? saved : 0;
-    const best = voices[+sel.value];
-    $("vnote").classList.toggle("warn", score(best) < 50);
-    $("vnote").textContent = score(best) >= 50 ? "★ 為高品質（神經網路／進階）語音。" : "目前只有基本語音。想要更自然的聲音，可在系統設定下載「進階／Enhanced」英文語音，或改用 Chrome／Edge。";
+    const all = synth.getVoices().filter(v=>score(v) > -50);
+    voices = all.filter(v=>/^en/i.test(v.lang)).sort((a,b)=>score(b)-score(a));
+    voicesZh = all.filter(v=>/^(zh|cmn|yue)/i.test(v.lang)).sort((a,b)=>score(b)-score(a));
+    fill("voice","vnote",voices,"voice","英文");
+    fill("voiceZh","vnoteZh",voicesZh,"voiceZh","中文");
   }
   if(synth){ loadVoices(); synth.addEventListener && synth.addEventListener("voiceschanged", loadVoices); }
-  $("voice").addEventListener("change", ()=>{ const v = voices[+$("voice").value]; if(v){ prefs.voice = v.voiceURI; save(); } if(state === "playing") speakFrom(idx); });
+  $("voice").addEventListener("change", ()=>{ const v = voices[+$("voice").value]; if(v){ prefs.voice = v.voiceURI; save(); } loadVoices(); if(state === "playing") speakFrom(idx); });
+  $("voiceZh").addEventListener("change", ()=>{ const v = voicesZh[+$("voiceZh").value]; if(v){ prefs.voiceZh = v.voiceURI; save(); } loadVoices(); if(state === "playing") speakFrom(idx); });
   $("rate").value = prefs.rate || 1; $("rateV").textContent = (+$("rate").value).toFixed(2).replace(/0$/,"") + "×";
   $("rate").addEventListener("input", ()=>{ $("rateV").textContent = (+$("rate").value).toFixed(2).replace(/0$/,"") + "×"; prefs.rate = +$("rate").value; save(); });
   $("rate").addEventListener("change", ()=>{ if(state === "playing") speakFrom(idx); });
@@ -169,24 +180,43 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
     $("play").textContent = state === "playing" ? "暫停" : (state === "paused" ? "繼續" : "播放");
   }
 
+  /* Split one sentence into Chinese and non-Chinese runs so each is read by a matching voice. Runs with no letters (digits, punctuation) stay with the run before them. */
+  const CJK = /[\u3400-\u9fff\u3000-\u303f\uff00-\uffef]/;
+  function toRuns(text){
+    const runs = [];
+    (text.match(/[\u3400-\u9fff\u3000-\u303f\uff00-\uffef]+|[^\u3400-\u9fff\u3000-\u303f\uff00-\uffef]+/g) || []).forEach(t=>{
+      const zh = CJK.test(t[0]);
+      if(!zh && !/[A-Za-z]/.test(t) && runs.length){ runs[runs.length-1].text += t; return; }
+      if(runs.length && runs[runs.length-1].zh === zh) runs[runs.length-1].text += t; else runs.push({zh, text:t});
+    });
+    return runs.filter(r=>r.text.trim());
+  }
   function speakFrom(i){
     if(!synth || !sents.length) return;
     const my = ++token;
     synth.cancel();
     idx = Math.max(0, Math.min(sents.length - 1, i));
     state = "playing"; mark();
-    const v = voices[+$("voice").value];
-    const u = new SpeechSynthesisUtterance(sents[idx]);
-    if(v){ u.voice = v; u.lang = v.lang; } else u.lang = "en-US";
-    u.rate = +$("rate").value;
-    u.onend = ()=>{
+    const runs = toRuns(sents[idx]);
+    let k = 0;
+    const next = ()=>{
       if(my !== token) return;
-      if(idx + 1 < sents.length) speakFrom(idx + 1);
-      else { state = "idle"; idx = 0; mark(); }
+      if(k >= runs.length){
+        if(idx + 1 < sents.length) speakFrom(idx + 1);
+        else { state = "idle"; idx = 0; mark(); }
+        return;
+      }
+      const r = runs[k++];
+      const v = r.zh ? voicesZh[+$("voiceZh").value] : voices[+$("voice").value];
+      const u = new SpeechSynthesisUtterance(r.text);
+      if(v){ u.voice = v; u.lang = v.lang; } else u.lang = r.zh ? "zh-CN" : "en-US";
+      u.rate = +$("rate").value;
+      u.onend = next;
+      u.onerror = e=>{ if(my === token && e.error !== "interrupted" && e.error !== "canceled") next(); };
+      synth.speak(u);
     };
-    u.onerror = e=>{ if(my === token && e.error !== "interrupted" && e.error !== "canceled"){ state = "idle"; mark(); } };
     /* a short delay after cancel() avoids Chrome dropping the next utterance */
-    setTimeout(()=>{ if(my === token) synth.speak(u); }, 30);
+    setTimeout(next, 30);
   }
   function pause(){ if(!synth) return; token++; synth.cancel(); state = "paused"; mark(); }
   function stop(){ token++; if(synth) synth.cancel(); state = "idle"; idx = 0; mark(); }
@@ -197,8 +227,8 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
     stop();
     sents = list; idx = 0;
     $("docName").textContent = name || "貼上的文字";
-    const words = (text.match(/[A-Za-z']+/g) || []).length;
-    $("docInfo").textContent = `${list.length} 句 · 約 ${words} 個英文單字`;
+    const words = (text.match(/[A-Za-z']+/g) || []).length, han = (text.match(/[\u3400-\u9fff]/g) || []).length;
+    $("docInfo").textContent = `${list.length} 句 · ${words} 個英文單字${han ? ` · ${han} 個中文字` : ""}`;
     render();
     if(!list.length){ $("vnote").textContent = "檔案裡沒有可朗讀的文字。"; $("vnote").classList.add("warn"); return; }
     speakFrom(0); /* start right away: the file pick counts as the user gesture */
