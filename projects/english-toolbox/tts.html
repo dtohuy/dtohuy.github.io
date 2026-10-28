@@ -1,0 +1,233 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>文字朗讀</title>
+<style>
+/* Layout: one column. Drop a text file, it starts reading at once; the sentence list below follows along and any sentence can be tapped to jump there. */
+:root{
+  --bg:#0e1b13; --surface:#18291e; --surface-2:#1f3326;
+  --ink:#f3ead9; --muted:#b9b09c; --faint:#8a8574;
+  --gold:#c9a769; --gold-soft:#e3cf9c; --on-gold:#0e1b13; --hl:rgba(201,167,105,.2);
+  --line:rgba(243,234,217,.14);
+  --f-display:'Playfair Display', Georgia, serif;
+  --f-body:'Inter','PingFang TC','Noto Sans TC','Microsoft JhengHei',system-ui,sans-serif;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#f3ead9; --surface:#fbf6ea; --surface-2:#efe4cc;
+    --ink:#1c2b22; --muted:#56604f; --faint:#7d7a68;
+    --gold:#8a6a2e; --gold-soft:#6f5220; --on-gold:#fbf6ea; --hl:rgba(138,106,46,.18);
+    --line:rgba(28,43,34,.16); color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#f3ead9; --surface:#fbf6ea; --surface-2:#efe4cc;
+  --ink:#1c2b22; --muted:#56604f; --faint:#7d7a68;
+  --gold:#8a6a2e; --gold-soft:#6f5220; --on-gold:#fbf6ea; --hl:rgba(138,106,46,.18);
+  --line:rgba(28,43,34,.16); color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}
+button,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+[hidden]{display:none!important}
+.wrap{max-width:760px;margin:0 auto;padding:22px 16px 140px}
+h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
+.sub{margin:0 0 16px;color:var(--muted);font-size:14px}
+.drop{display:grid;gap:6px;justify-items:center;text-align:center;border:2px dashed var(--line);border-radius:12px;padding:26px 16px;background:var(--surface);cursor:pointer}
+.drop.over,.drop:hover{border-color:var(--gold)}
+.drop b{font-size:16px}
+.drop span{font-size:13px;color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600;font-size:14px}
+.btn:hover:not(:disabled){border-color:var(--gold)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.go{background:var(--gold);border-color:var(--gold);color:var(--on-gold)}
+.field{display:grid;gap:2px;font-size:12.5px;color:var(--muted);min-width:0}
+.field select{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:14px;max-width:100%}
+.field input[type=range]{accent-color:var(--gold);width:150px}
+.paste{margin-top:10px}
+.paste summary{cursor:pointer;color:var(--gold-soft);font-size:14px}
+.paste textarea{width:100%;min-height:110px;margin-top:8px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px;resize:vertical}
+.note{font-size:12.5px;color:var(--faint);margin:10px 0 0}
+.note.warn{color:var(--gold-soft)}
+.title{margin:22px 0 8px;font-family:var(--f-display);font-size:19px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
+.title span{font-family:var(--f-body);font-size:13px;color:var(--muted);font-weight:400}
+.sents{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.sents li{padding:7px 10px;border-radius:8px;cursor:pointer;border-left:3px solid transparent}
+.sents li:hover{background:var(--surface)}
+.sents li.on{background:var(--hl);border-left-color:var(--gold);font-weight:500}
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}
+.dock-in{max-width:760px;margin:0 auto;display:grid;gap:8px}
+.prog{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;font-size:12.5px;color:var(--muted)}
+.prog input{width:100%;accent-color:var(--gold);margin:0}
+.ctl{display:flex;gap:8px;justify-content:center}
+.ctl .btn{min-width:64px}
+</style></head><body>
+<div class="wrap">
+  <h1>文字朗讀</h1>
+  <p class="sub">上傳一個文字檔（.txt），馬上用最好的英文語音念出來。</p>
+
+  <label class="drop" id="drop" for="file">
+    <b>點這裡選文字檔，或把檔案拖進來</b>
+    <span>支援 .txt／.md，檔案只在你的瀏覽器裡處理，不會上傳</span>
+  </label>
+  <input type="file" id="file" accept=".txt,.md,text/plain,text/markdown" hidden>
+  <details class="paste"><summary>或直接貼上文字</summary>
+    <textarea id="paste" placeholder="Paste English text here…"></textarea>
+    <div class="row"><button type="button" class="btn go" id="pasteGo">朗讀這段文字</button></div>
+  </details>
+
+  <div class="row">
+    <label class="field">語音<select id="voice"></select></label>
+    <label class="field">速度 <b id="rateV">1.0×</b><input type="range" id="rate" min="0.6" max="1.6" step="0.05" value="1"></label>
+  </div>
+  <p class="note" id="vnote"></p>
+
+  <div id="doc" hidden>
+    <div class="title"><b id="docName"></b><span id="docInfo"></span></div>
+    <ol class="sents" id="sents"></ol>
+  </div>
+</div>
+
+<div class="dock" id="dock" hidden><div class="dock-in">
+  <div class="prog"><input type="range" id="seek" min="0" max="0" step="1" value="0" aria-label="朗讀位置"><span id="pos">0 / 0</span></div>
+  <div class="ctl">
+    <button type="button" class="btn" id="prev" aria-label="上一句">⏮</button>
+    <button type="button" class="btn go" id="play">播放</button>
+    <button type="button" class="btn" id="next" aria-label="下一句">⏭</button>
+    <button type="button" class="btn" id="stop">停止</button>
+  </div>
+</div></div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const synth = window.speechSynthesis;
+  const KEY = "tts-prefs-v1";
+  let prefs = {}; try{ prefs = JSON.parse(localStorage.getItem(KEY) || "{}"); }catch(e){}
+  const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(prefs)); }catch(e){} };
+
+  let sents = [], idx = 0, state = "idle", token = 0, voices = [];
+
+  if(!synth){ $("vnote").textContent = "這個瀏覽器不支援語音朗讀。"; $("vnote").classList.add("warn"); }
+
+  /* Rank voices: neural/premium/enhanced ones sound far better than the default compact voice, so they go first. */
+  function score(v){
+    const n = (v.name + " " + (v.voiceURI || "")).toLowerCase();
+    let s = 0;
+    if(/premium|enhanced|neural|natural|online|wavenet|studio/.test(n)) s += 50;
+    if(/google|microsoft|siri/.test(n)) s += 20;
+    if(!v.localService) s += 5;
+    if(/^en[-_]us/i.test(v.lang)) s += 4; else if(/^en[-_](gb|au|ca)/i.test(v.lang)) s += 2;
+    if(/compact|eloquence|novelty|bad news|bells|boing|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|albert|bubbles|fred|junior|kathy|ralph/.test(n)) s -= 100;
+    return s;
+  }
+  function loadVoices(){
+    if(!synth) return;
+    voices = synth.getVoices().filter(v=>/^en/i.test(v.lang)).sort((a,b)=>score(b)-score(a));
+    const sel = $("voice");
+    sel.innerHTML = voices.map((v,i)=>`<option value="${i}">${v.name.replace(/</g,"&lt;")} (${v.lang})${score(v)>=50?" ★":""}</option>`).join("");
+    if(!voices.length){ $("vnote").textContent = "找不到英文語音。請到系統設定安裝英文語音後重新整理。"; $("vnote").classList.add("warn"); return; }
+    const saved = voices.findIndex(v=>v.voiceURI === prefs.voice);
+    sel.value = saved >= 0 ? saved : 0;
+    const best = voices[+sel.value];
+    $("vnote").classList.toggle("warn", score(best) < 50);
+    $("vnote").textContent = score(best) >= 50 ? "★ 為高品質（神經網路／進階）語音。" : "目前只有基本語音。想要更自然的聲音，可在系統設定下載「進階／Enhanced」英文語音，或改用 Chrome／Edge。";
+  }
+  if(synth){ loadVoices(); synth.addEventListener && synth.addEventListener("voiceschanged", loadVoices); }
+  $("voice").addEventListener("change", ()=>{ const v = voices[+$("voice").value]; if(v){ prefs.voice = v.voiceURI; save(); } if(state === "playing") speakFrom(idx); });
+  $("rate").value = prefs.rate || 1; $("rateV").textContent = (+$("rate").value).toFixed(2).replace(/0$/,"") + "×";
+  $("rate").addEventListener("input", ()=>{ $("rateV").textContent = (+$("rate").value).toFixed(2).replace(/0$/,"") + "×"; prefs.rate = +$("rate").value; save(); });
+  $("rate").addEventListener("change", ()=>{ if(state === "playing") speakFrom(idx); });
+
+  function split(text){
+    const out = [];
+    text.replace(/\r/g,"").split(/\n+/).forEach(line=>{
+      line = line.replace(/^\s*(#{1,6}|[-*>]|\d+[.)])\s+/, "").replace(/\s+/g," ").trim();
+      if(!line) return;
+      const parts = line.match(/[^.!?。！？]+(?:[.!?。！？]+["')\]”’]*|$)/g) || [line];
+      let buf = "";
+      parts.forEach(p=>{
+        buf += p;
+        if(buf.trim().length >= 12 || /[。！？]$/.test(buf)){ out.push(buf.trim()); buf = ""; }
+      });
+      if(buf.trim()) out.push(buf.trim());
+    });
+    return out;
+  }
+
+  function render(){
+    $("sents").innerHTML = sents.map((s,i)=>`<li data-i="${i}">${s.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</li>`).join("");
+    $("seek").max = Math.max(0, sents.length - 1);
+    $("doc").hidden = $("dock").hidden = !sents.length;
+    mark();
+  }
+  function mark(){
+    document.querySelectorAll("#sents li.on").forEach(e=>e.classList.remove("on"));
+    const el = document.querySelector(`#sents li[data-i="${idx}"]`);
+    if(el){ el.classList.add("on"); if(state === "playing") el.scrollIntoView({block:"center", behavior:"smooth"}); }
+    $("seek").value = idx; $("pos").textContent = sents.length ? `${idx+1} / ${sents.length}` : "0 / 0";
+    $("play").textContent = state === "playing" ? "暫停" : (state === "paused" ? "繼續" : "播放");
+  }
+
+  function speakFrom(i){
+    if(!synth || !sents.length) return;
+    const my = ++token;
+    synth.cancel();
+    idx = Math.max(0, Math.min(sents.length - 1, i));
+    state = "playing"; mark();
+    const v = voices[+$("voice").value];
+    const u = new SpeechSynthesisUtterance(sents[idx]);
+    if(v){ u.voice = v; u.lang = v.lang; } else u.lang = "en-US";
+    u.rate = +$("rate").value;
+    u.onend = ()=>{
+      if(my !== token) return;
+      if(idx + 1 < sents.length) speakFrom(idx + 1);
+      else { state = "idle"; idx = 0; mark(); }
+    };
+    u.onerror = e=>{ if(my === token && e.error !== "interrupted" && e.error !== "canceled"){ state = "idle"; mark(); } };
+    /* a short delay after cancel() avoids Chrome dropping the next utterance */
+    setTimeout(()=>{ if(my === token) synth.speak(u); }, 30);
+  }
+  function pause(){ if(!synth) return; token++; synth.cancel(); state = "paused"; mark(); }
+  function stop(){ token++; if(synth) synth.cancel(); state = "idle"; idx = 0; mark(); }
+
+  function load(text, name){
+    text = text.replace(/^﻿/, "");
+    const list = split(text);
+    stop();
+    sents = list; idx = 0;
+    $("docName").textContent = name || "貼上的文字";
+    const words = (text.match(/[A-Za-z']+/g) || []).length;
+    $("docInfo").textContent = `${list.length} 句 · 約 ${words} 個英文單字`;
+    render();
+    if(!list.length){ $("vnote").textContent = "檔案裡沒有可朗讀的文字。"; $("vnote").classList.add("warn"); return; }
+    speakFrom(0); /* start right away: the file pick counts as the user gesture */
+  }
+
+  async function readFile(f){
+    if(!f) return;
+    if(f.size > 2e6){ alert("檔案太大了（上限約 2 MB）。"); return; }
+    const buf = await f.arrayBuffer();
+    let text;
+    try{ text = new TextDecoder("utf-8", {fatal:true}).decode(buf); }
+    catch(e){ try{ text = new TextDecoder("big5").decode(buf); }catch(e2){ text = new TextDecoder().decode(buf); } }
+    load(text, f.name);
+  }
+  $("file").addEventListener("change", e=>{ readFile(e.target.files[0]); e.target.value = ""; });
+  const drop = $("drop");
+  ["dragenter","dragover"].forEach(t=>drop.addEventListener(t, e=>{ e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave","drop"].forEach(t=>drop.addEventListener(t, e=>{ e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", e=>readFile(e.dataTransfer.files[0]));
+  $("pasteGo").addEventListener("click", ()=>{ const t = $("paste").value.trim(); if(t) load(t, ""); });
+
+  $("play").addEventListener("click", ()=>{ if(state === "playing") pause(); else speakFrom(idx); });
+  $("stop").addEventListener("click", stop);
+  $("prev").addEventListener("click", ()=>speakFrom(idx - 1));
+  $("next").addEventListener("click", ()=>speakFrom(idx + 1));
+  $("seek").addEventListener("input", ()=>{ idx = +$("seek").value; mark(); });
+  $("seek").addEventListener("change", ()=>speakFrom(+$("seek").value));
+  $("sents").addEventListener("click", e=>{ const li = e.target.closest("li"); if(li) speakFrom(+li.dataset.i); });
+  window.addEventListener("pagehide", ()=>{ if(synth) synth.cancel(); });
+})();
+</script>
+</body></html>
