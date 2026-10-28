@@ -84,7 +84,8 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
   </div>
   <p class="note" id="vnote"></p>
   <p class="note" id="vnoteZh"></p>
-  <p class="note">文字朗讀 v1.4.2</p>
+  <p class="note" id="vcount"></p>
+  <p class="note">文字朗讀 v1.4.3</p>
 
   <div id="doc" hidden>
     <div class="title"><b id="docName"></b><span id="docInfo"></span></div>
@@ -129,24 +130,34 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
   function fill(selId, noteId, list, key, label){
     const sel = $(selId), note = $(noteId);
     sel.innerHTML = list.map((v,i)=>`<option value="${i}">${isHQ(v)?"★ ":""}${v.name.replace(/</g,"&lt;")} (${v.lang})${isHQ(v)?" · 高品質":""}</option>`).join("");
-    if(!list.length){ sel.innerHTML = '<option>（沒有可用語音）</option>'; note.textContent = `找不到${label}語音。請到系統設定安裝後重新整理。`; note.classList.add("warn"); return; }
+    if(!list.length){ sel.innerHTML = '<option>（系統預設語音）</option>'; note.textContent = `找不到${label}語音，會交給瀏覽器用系統預設語音念。請到系統設定安裝${label}語音後重新整理。`; note.classList.add("warn"); return; }
     const saved = list.findIndex(v=>v.voiceURI === prefs[key]);
     sel.value = saved >= 0 ? saved : 0;
     const hq = list.filter(isHQ).length;
     note.classList.toggle("warn", !isHQ(list[+sel.value]));
     note.innerHTML = isHQ(list[+sel.value]) ? `${label}：目前選的是<span class="hq">高品質</span>語音（★ 標記，共 ${hq} 個）。` : `${label}：目前選的是基本語音${hq ? "，清單中有 ★ 標記的高品質語音可換" : "，系統沒有高品質語音。可在系統設定下載「進階／Enhanced」語音，或改用 Chrome／Edge"}。`;
   }
+  const isZh = v => /^(zh|cmn|yue|wuu)/i.test(v.lang) || /chinese|mandarin|cantonese|putonghua|中文|普通话|普通話|國語|国语|粵語|粤语|台灣|台湾|香港/i.test(v.name);
+  const isEn = v => /^en/i.test(v.lang) || (!isZh(v) && /english/i.test(v.name));
+  let lastN = -1;
   function loadVoices(){
     if(!synth) return;
-    const all = synth.getVoices().filter(v=>score(v) > -50);
-    voices = all.filter(v=>/^en/i.test(v.lang)).sort((a,b)=>score(b)-score(a));
-    voicesZh = all.filter(v=>/^(zh|cmn|yue)/i.test(v.lang)).sort((a,b)=>score(b)-score(a));
+    const all = synth.getVoices();
+    /* some browsers (Safari, iOS) hand voices over late or without firing voiceschanged, so the lists are rebuilt whenever the count changes */
+    if(all.length === lastN && voices.length) return;
+    lastN = all.length;
+    voices = all.filter(isEn).sort((a,b)=>score(b)-score(a));
+    voicesZh = all.filter(isZh).sort((a,b)=>score(b)-score(a));
     fill("voice","vnote",voices,"voice","英文");
     fill("voiceZh","vnoteZh",voicesZh,"voiceZh","中文");
+    $("vcount").textContent = `系統回報 ${all.length} 個語音（英文 ${voices.length}、中文 ${voicesZh.length}）`;
   }
-  if(synth){ loadVoices(); synth.addEventListener && synth.addEventListener("voiceschanged", loadVoices); }
-  $("voice").addEventListener("change", ()=>{ const v = voices[+$("voice").value]; if(v){ prefs.voice = v.voiceURI; save(); } loadVoices(); if(state === "playing") speakFrom(idx); });
-  $("voiceZh").addEventListener("change", ()=>{ const v = voicesZh[+$("voiceZh").value]; if(v){ prefs.voiceZh = v.voiceURI; save(); } loadVoices(); if(state === "playing") speakFrom(idx); });
+  if(synth){
+    loadVoices(); synth.addEventListener && synth.addEventListener("voiceschanged", loadVoices);
+    let tries = 0; const poll = setInterval(()=>{ loadVoices(); if(++tries > 20) clearInterval(poll); }, 500);
+  }
+  $("voice").addEventListener("change", ()=>{ const v = voices[+$("voice").value]; if(v){ prefs.voice = v.voiceURI; save(); } lastN = -1; loadVoices(); if(state === "playing") speakFrom(idx); });
+  $("voiceZh").addEventListener("change", ()=>{ const v = voicesZh[+$("voiceZh").value]; if(v){ prefs.voiceZh = v.voiceURI; save(); } lastN = -1; loadVoices(); if(state === "playing") speakFrom(idx); });
   $("rate").value = prefs.rate || 1; $("rateV").textContent = (+$("rate").value).toFixed(2).replace(/0$/,"") + "×";
   $("rate").addEventListener("input", ()=>{ $("rateV").textContent = (+$("rate").value).toFixed(2).replace(/0$/,"") + "×"; prefs.rate = +$("rate").value; save(); });
   $("rate").addEventListener("change", ()=>{ if(state === "playing") speakFrom(idx); });
