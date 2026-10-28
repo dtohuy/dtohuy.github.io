@@ -85,7 +85,7 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
   <p class="note" id="vnote"></p>
   <p class="note" id="vnoteZh"></p>
   <p class="note" id="vcount"></p>
-  <p class="note">文字朗讀 v1.4.3</p>
+  <p class="note">文字朗讀 v1.4.4</p>
 
   <div id="doc" hidden>
     <div class="title"><b id="docName"></b><span id="docInfo"></span></div>
@@ -142,7 +142,9 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
   let lastN = -1;
   function loadVoices(){
     if(!synth) return;
-    const all = synth.getVoices();
+    /* the same voice can be reported more than once (per language tag or install), so keep one per name + language */
+    const seen = new Set();
+    const all = synth.getVoices().filter(v=>{ const k = v.name + "|" + v.lang.replace("_","-").toLowerCase(); if(seen.has(k)) return false; seen.add(k); return true; });
     /* some browsers (Safari, iOS) hand voices over late or without firing voiceschanged, so the lists are rebuilt whenever the count changes */
     if(all.length === lastN && voices.length) return;
     lastN = all.length;
