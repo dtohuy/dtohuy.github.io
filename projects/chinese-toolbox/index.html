@@ -1,0 +1,106 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Chinese Conversation Toolbox 中文对话工具箱</title>
+<style>
+:root{--bg:#0e1b13;--surface:#18291e;--ink:#f3ead9;--muted:#b9b09c;--gold:#c9a769;--line:rgba(243,234,217,.14);color-scheme:dark}
+@media (prefers-color-scheme:light){:root{--bg:#f3ead9;--surface:#fbf6ea;--ink:#1c2b22;--muted:#56604f;--gold:#8a6a2e;--line:rgba(28,43,34,.16);color-scheme:light}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 Inter,system-ui,"PingFang SC","Noto Sans SC",sans-serif}
+nav{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;border-bottom:1px solid var(--line)}
+nav b{margin-right:8px;color:var(--gold);padding:6px 0}nav button{background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:6px 10px;cursor:pointer}
+nav button[aria-current=true]{border-color:var(--gold);color:var(--gold)}
+main{max-width:760px;margin:0 auto;padding:16px}.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;margin:12px 0}
+.zh{font-size:28px}.py{color:var(--gold);font-size:18px}.m{color:var(--muted)}
+button.a{background:var(--gold);color:var(--bg);border:0;border-radius:8px;padding:8px 14px;margin:4px 4px 0 0;cursor:pointer;font:inherit}
+button.a.s{background:none;color:var(--ink);border:1px solid var(--line)}
+.t1{color:#8fb8c9}.t2{color:#9fc59a}.t3{color:#e3cf9c}.t4{color:#d9a0b8}
+textarea{width:100%;min-height:120px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit}
+.g{color:#9fc59a}.r{color:#d9a0b8}
+</style></head><body>
+<nav id="nav"><b>Chinese Toolbox 中文工具箱</b></nav><main id="app"></main>
+<script>
+// Data: [hanzi, pinyin, english, note]
+const CHUNKS=[
+["你好","nǐ hǎo","Hello","Safe in any setting."],
+["谢谢","xièxie","Thank you","Reply: 不客气 (bú kèqi)."],
+["不客气","bú kèqi","You're welcome","Literally 'don't be polite'."],
+["对不起","duìbuqǐ","Sorry","For real wrongdoing; 不好意思 is lighter."],
+["不好意思","bù hǎoyìsi","Excuse me / sorry to bother","Also used to soften requests."],
+["没关系","méi guānxi","It's fine / no problem","Reply to an apology."],
+["请问","qǐngwèn","Excuse me, may I ask…","Start of a polite question to a stranger."],
+["我想……","wǒ xiǎng…","I'd like to… / I'm thinking of…","Softer than 我要 (I want)."],
+["可以吗?","kěyǐ ma?","Is that OK?","Add after any request."],
+["你呢?","nǐ ne?","And you?","Hands the turn back; keeps conversation going."],
+["真的吗?","zhēn de ma?","Really?","Shows interest."],
+["是吗?","shì ma?","Is that so?","Mild, polite reaction."],
+["我也是","wǒ yě shì","Me too","Agreement."],
+["再说一遍","zài shuō yí biàn","Say it once more","Use when you didn't catch something."],
+["慢一点","màn yìdiǎn","A bit slower","Ask speakers to slow down."],
+["我不太明白","wǒ bú tài míngbai","I don't quite understand","'不太' is gentler than '不'."],
+["怎么说?","zěnme shuō?","How do you say it?","Pair with 'in Chinese'."],
+["随便","suíbiàn","Whatever / up to you","Can sound indifferent—tone matters."],
+["有点儿","yǒudiǎnr","a bit (negative nuance)","有点贵 = a bit expensive (complaint)."],
+["差不多","chàbuduō","about the same / roughly","Very common hedge."],
+["可能吧","kěnéng ba","Maybe","Soft non-commitment."],
+["我考虑一下","wǒ kǎolǜ yíxià","Let me think about it","Polite way to decline without saying no."],
+["下次吧","xià cì ba","Maybe next time","Common polite refusal."],
+["太好了","tài hǎo le","Great!","Enthusiastic reaction."],
+["加油","jiāyóu","Keep it up / you can do it","Encouragement."],
+["辛苦了","xīnkǔ le","Thanks for your hard work","Said to colleagues/service staff."],
+["麻烦你了","máfan nǐ le","Sorry to trouble you","Said when asking a favor."],
+["久仰","jiǔyǎng","Pleased to meet you (formal)","Formal first meeting."],
+["吃了吗?","chī le ma?","Have you eaten? (greeting)","A greeting, not a real invitation."],
+["改天聊","gǎitiān liáo","Let's talk another day","Wrap up a conversation."]];
+const TONES=[["mā","妈","mother",1],["má","麻","hemp",2],["mǎ","马","horse",3],["mà","骂","scold",4],["shuì","睡","sleep",4],["shuǐ","水","water",3],["wèn","问","ask",4],["wén","文","writing",2],["mǎi","买","buy",3],["mài","卖","sell",4]];
+const PRAG=[
+["Someone compliments you: 你的中文真好!","Say 哪里哪里 / 还差得远 (modest deflection).","Replying 谢谢 is fine and common now; modesty is the traditional norm."],
+["Declining an invitation","下次吧 / 我考虑一下 / 可能不行.","A flat 不去 sounds blunt; vagueness is polite."],
+["Addressing a stranger","Use 您 (formal you) for elders/service; 老师, 师傅, 先生/女士 as titles.","Using 你 with a senior may feel too familiar."],
+["Asking age/salary","Common small-talk in China (你多大?).","Fine locally, but read the room; you can deflect with a smile."],
+["Foreigner Chinese: 我很高兴认识你(literal)","Natural: 很高兴认识你 / 幸会 (no 我 needed).","Chinese drops subjects when clear from context."],
+["Foreigner Chinese: 我是饿了","Natural: 我饿了.","Don't use 是 before adjectives."],
+["Foreigner Chinese: 我有二十岁","Natural: 我二十岁.","Age doesn't take 有."],
+["Giving a gift","Offer with both hands; 一点小意思 'a small token'.","Recipient may politely refuse 2–3 times first."]];
+const $=s=>document.querySelector(s),app=$('#app');
+const store={get:(k,d)=>{try{return JSON.parse(localStorage.getItem('ct_'+k))??d}catch(e){return d}},set:(k,v)=>localStorage.setItem('ct_'+k,JSON.stringify(v))};
+const speak=(t,rate=.85)=>{if(!('speechSynthesis' in window))return alert('Speech synthesis not supported');speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='zh-CN';u.rate=rate;const v=speechSynthesis.getVoices().find(v=>/zh[-_]CN/i.test(v.lang));if(v)u.voice=v;speechSynthesis.speak(u)};
+speechSynthesis.getVoices&&(speechSynthesis.onvoiceschanged=()=>{});
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const views={
+home(){app.innerHTML=`<div class=card><h2>Chinese Conversation Toolbox</h2><p class=m>中文对话工具箱 · Five layers of conversational Chinese, mirrored from the English Conversation Toolbox.</p>
+<p><b>0 Words</b> → <b>1 Sentences</b> → <b>2 Responding</b> → <b>3 Listening &amp; tones</b> → <b>4 Sounding natural</b></p>
+<p class=m>Tools: Daily Review (spaced repetition) · Chunks 30 · Tones &amp; Pinyin · Text Reader · Pragmatics. Progress is stored only in your browser. v0.1 MVP.</p></div>`},
+review(){const st=store.get('srs',{}),now=Date.now();
+ const due=CHUNKS.map((c,i)=>i).filter(i=>!st[i]||st[i].due<=now);
+ if(!due.length){app.innerHTML=`<div class=card><h3>All done 🎉</h3><p class=m>No cards due. Come back later.</p></div>`;return}
+ const i=due[0],c=CHUNKS[i];let shown=false;
+ const draw=()=>{app.innerHTML=`<div class=card><p class=m>${due.length} due</p><div class=zh>${c[0]}</div>${shown?`<div class=py>${c[1]}</div><p>${esc(c[2])}</p><p class=m>${esc(c[3])}</p>
+ <button class="a s" data-r=0>Again</button><button class=a data-r=1>Good</button><button class="a s" data-r=2>Easy</button>`:`<button class=a id=sh>Show answer</button>`}
+ <button class="a s" id=pl>🔊</button></div>`;
+ $('#pl').onclick=()=>speak(c[0]);
+ if(shown)app.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{const r=+b.dataset.r,s=st[i]||{iv:0};
+  s.iv=r==0?0:Math.max(1,(s.iv||0)*(r==2?3:2)||1);s.due=now+(r==0?60e3:s.iv*864e5);st[i]=s;store.set('srs',st);views.review()});
+ else $('#sh').onclick=()=>{shown=true;draw()}};draw()},
+chunks(){app.innerHTML=CHUNKS.map(c=>`<div class=card><span class=zh>${c[0]}</span> <button class="a s" data-s="${c[0]}">🔊</button><div class=py>${c[1]}</div><div>${esc(c[2])}</div><div class=m>${esc(c[3])}</div></div>`).join('');
+ app.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>speak(b.dataset.s))},
+tones(){app.innerHTML=`<div class=card><h3>The four tones</h3><p><span class=t1>mā ¯ 1st high-flat</span> · <span class=t2>má ´ 2nd rising</span> · <span class=t3>mǎ ˇ 3rd dip</span> · <span class=t4>mà 4th falling</span></p>
+ <p class=m>Tone changes the word. Neutral tone is short and light (e.g. 吗 ma).</p></div>
+ <div class=card><h3>Listening drill</h3><p class=m>Press play, then choose the pinyin you heard.</p><div id=q></div></div>
+ <div class=card><h3>Minimal pairs</h3>${TONES.map(t=>`<div><span class=t${t[3]}>${t[0]}</span> ${t[1]} ${t[2]} <button class="a s" data-s="${t[1]}">🔊</button></div>`).join('')}</div>`;
+ app.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>speak(b.dataset.s,.7));
+ let sc=store.get('toneScore',[0,0]);const q=()=>{const a=TONES[Math.floor(Math.random()*TONES.length)];
+  const opts=[...TONES].sort(()=>Math.random()-.5).slice(0,3);if(!opts.includes(a))opts[0]=a;opts.sort(()=>Math.random()-.5);
+  $('#q').innerHTML=`<button class=a id=pp>▶ Play</button> ${opts.map((o,k)=>`<button class="a s" data-k=${k}>${o[0]}</button>`).join('')}<p class=m>Score: ${sc[0]}/${sc[1]}</p><p id=fb></p>`;
+  setTimeout(()=>speak(a[1],.7),0);$('#pp').onclick=()=>speak(a[1],.7);
+  $('#q').querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const ok=opts[+b.dataset.k]===a;sc[1]++;if(ok)sc[0]++;store.set('toneScore',sc);
+   $('#fb').innerHTML=ok?'<span class=g>Correct!</span>':`<span class=r>It was ${a[0]} (${a[1]} ${a[2]})</span>`;setTimeout(q,1200)})};q()},
+reader(){app.innerHTML=`<div class=card><h3>Text Reader</h3><p class=m>Paste Chinese text; it is read sentence by sentence.</p><textarea id=tx placeholder="今天天气很好。我们去公园吧。"></textarea>
+ <p><label>Speed <input id=sp type=range min=.5 max=1.2 step=.05 value=.85></label></p><button class=a id=go>▶ Read</button><button class="a s" id=st>■ Stop</button><div id=out></div></div>`;
+ $('#st').onclick=()=>speechSynthesis.cancel();
+ $('#go').onclick=()=>{const ss=($('#tx').value.match(/[^。!?!?\n]+[。!?!?]?/g)||[]).map(s=>s.trim()).filter(Boolean);
+  $('#out').innerHTML=ss.map((s,i)=>`<p><button class="a s" data-i=${i}>🔊</button> ${esc(s)}</p>`).join('');
+  $('#out').querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>speak(ss[+b.dataset.i],+$('#sp').value));
+  speechSynthesis.cancel();ss.forEach(s=>{const u=new SpeechSynthesisUtterance(s);u.lang='zh-CN';u.rate=+$('#sp').value;speechSynthesis.speak(u)})}},
+prag(){app.innerHTML=PRAG.map(p=>`<div class=card><b>${esc(p[0])}</b><p>${esc(p[1])}</p><p class=m>${esc(p[2])}</p></div>`).join('')}};
+const tabs=[['home','Home'],['review','Daily Review'],['chunks','Chunks 30'],['tones','Tones & Pinyin'],['reader','Text Reader'],['prag','Pragmatics']];
+function go(k){speechSynthesis.cancel();[...$('#nav').querySelectorAll('button')].forEach(b=>b.setAttribute('aria-current',b.dataset.k==k));views[k]();location.hash=k}
+tabs.forEach(t=>{const b=document.createElement('button');b.textContent=t[1];b.dataset.k=t[0];b.onclick=()=>go(t[0]);$('#nav').append(b)});
+go(views[location.hash.slice(1)]?location.hash.slice(1):'home');
+</script></body></html>

@@ -50,5 +50,32 @@
       "English",
       "Learning"
     ]
+  },
+  {
+    "id": "chinese-toolbox",
+    "category": "tool",
+    "date": "2026-10-30",
+    "time": "17:30",
+    "featured": false,
+    "version": "0.1.0",
+    "title": {
+      "zh-Hant": "中文對話工具箱",
+      "zh-Hans": "中文对话工具箱",
+      "en": "Chinese Conversation Toolbox"
+    },
+    "meta": {
+      "zh-Hant": "個人專案",
+      "zh-Hans": "个人项目",
+      "en": "Side project"
+    },
+    "description": {
+      "zh-Hant": "英文對話工具箱的反向版本：給學中文的人。每日間隔複習、30 個中文語塊（拼音＋英文）、聲調聽辨、文字朗讀與語用文化。練習紀錄只存在你自己的瀏覽器裡。",
+      "zh-Hans": "英文对话工具箱的反向版本：给学中文的人。每日间隔复习、30 个中文语块（拼音＋英文）、声调听辨、文字朗读与语用文化。练习记录只存在你自己的浏览器里。",
+      "en": "The mirror of the English Conversation Toolbox, for learners of Chinese: daily spaced review, 30 chunks with pinyin, tone listening drills, a text reader and pragmatics. Practice records stay in your own browser."
+    },
+    "tags": [
+      "Chinese",
+      "Learning"
+    ]
   }
 ]
