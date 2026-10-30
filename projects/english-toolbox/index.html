@@ -45,6 +45,8 @@ button{font:inherit;color:inherit}
 .home-btn .ver{font-family:var(--f-body);font-style:italic;font-weight:500;font-size:12px;color:var(--muted);margin-left:6px}
 .foot{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);font-size:12.5px;color:var(--faint)}
 .home-btn[aria-current="page"]{color:var(--gold-soft)}
+.fs-btn{flex:0 0 auto;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:14px;color:var(--ink);white-space:nowrap}
+.fs-btn:hover{border-color:var(--gold)}
 .pick{flex:1;min-width:0;position:relative;display:flex;justify-content:flex-start}
 .pick-btn{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:14px;display:flex;gap:8px;align-items:center;max-width:100%;min-width:0}
 .pick-btn:hover,.pick-btn[aria-expanded="true"]{border-color:var(--gold)}
@@ -171,6 +173,7 @@ body[data-tool="chunks500"] .rec-pill,body[data-tool="chunks"] .rec-pill{left:16
       <div id="menuList"></div>
     </div>
   </div>
+  <button type="button" class="fs-btn" id="fsBtn" aria-label="全螢幕" title="全螢幕" hidden>⛶ 全螢幕</button>
 </header>
 <main>
   <div id="home">
@@ -386,6 +389,22 @@ document.addEventListener("click", e=>{
   const b = e.target.closest("[data-open]"); if(b){ open(b.dataset.open); return; }
   if(e.target.closest("#homeBtn")) open("");
 });
+
+/* ---------- one-tap fullscreen ---------- */
+(function(){
+  const btn = document.getElementById("fsBtn"), root = document.documentElement;
+  const req = root.requestFullscreen || root.webkitRequestFullscreen;
+  if(!req) return;
+  const cur = () => document.fullscreenElement || document.webkitFullscreenElement;
+  const sync = ()=>{ const on = !!cur(); btn.textContent = on ? "⛶ 結束全螢幕" : "⛶ 全螢幕"; btn.title = btn.ariaLabel = on ? "結束全螢幕" : "全螢幕"; };
+  btn.hidden = false;
+  btn.addEventListener("click", ()=>{
+    if(cur()){ (document.exitFullscreen || document.webkitExitFullscreen).call(document); }
+    else{ const r = req.call(root); if(r && r.catch) r.catch(()=>{}); }
+  });
+  document.addEventListener("fullscreenchange", sync);
+  document.addEventListener("webkitfullscreenchange", sync);
+})();
 
 /* ---------- floating recorder: keeps the latest few takes per context (a tool item, or "general") ---------- */
 (function(){
