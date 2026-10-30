@@ -45,6 +45,9 @@ button{font:inherit;color:inherit}
 .home-btn .ver{font-family:var(--f-body);font-style:italic;font-weight:500;font-size:12px;color:var(--muted);margin-left:6px}
 .foot{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);font-size:12.5px;color:var(--faint)}
 .home-btn[aria-current="page"]{color:var(--gold-soft)}
+.upd{flex:0 0 auto;font-size:12px;color:var(--faint);white-space:nowrap;font-variant-numeric:tabular-nums}
+body[data-tool]:not([data-tool=""]) .upd{display:none}
+@media (max-width:560px){.upd{display:none}}
 .fs-btn{flex:0 0 auto;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:14px;color:var(--ink);white-space:nowrap}
 .fs-btn:hover{border-color:var(--gold)}
 .pick{flex:1;min-width:0;position:relative;display:flex;justify-content:flex-start}
@@ -173,6 +176,7 @@ body[data-tool="chunks500"] .rec-pill,body[data-tool="chunks"] .rec-pill{left:16
       <div id="menuList"></div>
     </div>
   </div>
+  <span class="upd" id="updAt">更新 2026-10-30 22:35</span>
   <button type="button" class="fs-btn" id="fsBtn" aria-label="全螢幕" title="全螢幕" hidden>⛶ 全螢幕</button>
 </header>
 <main>
@@ -209,7 +213,7 @@ body[data-tool="chunks500"] .rec-pill,body[data-tool="chunks"] .rec-pill{left:16
         <div class="link"><b>800 詞應答地圖 → 所有工具</b><span>其他工具的例句幾乎都能用這 800 多個核心詞看懂；查不到的字，先試著用核心詞換個說法。</span></div>
       </div></div>
       <p class="note">所有練習紀錄都只存在你目前這台裝置的瀏覽器裡。朗讀功能使用瀏覽器內建的英文語音，聲音會依裝置而不同。開口流利和語用與文化裡的「請 Claude 猜／改寫」第一次使用時會先請你同意。</p>
-      <footer class="foot">更新時間 2026-10-28 20:40</footer>
+      <footer class="foot">更新時間 2026-10-30 22:35</footer>
     </div>
   </div>
 </main>
