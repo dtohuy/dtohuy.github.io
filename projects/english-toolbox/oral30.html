@@ -106,7 +106,7 @@ textarea{min-height:90px;resize:vertical}
 .diag .ev{display:grid;grid-template-columns:72px minmax(0,1fr);gap:8px;font-size:14px}
 .diag .ev b{color:var(--accent);font-weight:600}
 .svgbox{overflow-x:auto}
-.svgbox svg{display:block;width:100%;height:auto;min-width:300px}
+.svgbox svg{display:block;width:100%;height:auto;min-width:300px;max-height:140px;margin:0 auto}
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
 .cal button{aspect-ratio:1;max-width:100%;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted)}
 .cal button.done{background:var(--green);color:var(--on-green);border-color:var(--green)}
@@ -326,7 +326,7 @@ function loopSvg(){const items=['录 1 分钟','听回放','记卡词','查正�
 function trendSvg(){
   const pts=DATA.days.map(d=>{const u=+S.uh[d.d],s=+S.secs[d.d];return (S.uh[d.d]!==undefined&&S.uh[d.d]!==''&&s>0)?{d:d.d,v:u/(s/60)}:null;}).filter(Boolean);
   if(pts.length<2)return `<div class="empty">在每天的“录音记录”里填 uh 次数和录音秒数，这里会画出你每分钟 uh 次数的变化。${pts.length?'再记一天就能看到趋势。':''}<br>参考：你今天那段录音大约每分钟 15 次以上。</div>`;
-  const W=600,H=200,L=36,B=28,maxV=Math.max(5,Math.ceil(Math.max(...pts.map(p=>p.v))/5)*5);
+  const W=600,H=130,L=36,B=24,maxV=Math.max(5,Math.ceil(Math.max(...pts.map(p=>p.v))/5)*5);
   const X=d=>L+(d-1)*(W-L-10)/29,Y=v=>H-B-(v/maxV)*(H-B-12);
   const path=pts.map((p,i)=>`${i?'L':'M'}${X(p.d).toFixed(1)} ${Y(p.v).toFixed(1)}`).join(' ');
   const ticks=[0,maxV/2,maxV];const last=pts[pts.length-1];

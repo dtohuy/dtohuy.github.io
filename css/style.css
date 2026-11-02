@@ -180,6 +180,14 @@ a:hover { text-decoration: underline; }
   margin: 0 0 12px;
   letter-spacing: -0.02em;
 }
+.hero h1 .site-ver {
+  font-size: .8rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--text-muted);
+  vertical-align: middle;
+  margin-left: 6px;
+}
 .hero-tagline {
   color: var(--text-muted);
   font-size: 1.15rem;
