@@ -127,6 +127,9 @@ body[data-tool="chunks500"] .rec,body[data-tool="chunks"] .rec{left:16px;right:a
 body[data-tool="chunks500"] .rec-pill,body[data-tool="chunks"] .rec-pill{left:16px;right:auto;bottom:calc(var(--barh,90px) + 12px + env(safe-area-inset-bottom,0px))}
 /* floating recorder */
 .rec{position:fixed;z-index:50;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(236px,calc(100% - 32px));background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);touch-action:none}
+.rec.sized{display:flex;flex-direction:column;max-width:none}
+.rec.sized .rec-b{overflow:auto;flex:1;min-height:0}
+.rec-grip{position:absolute;right:0;bottom:0;width:22px;height:22px;cursor:nwse-resize;touch-action:none;background:linear-gradient(135deg,transparent 55%,var(--faint) 55%,var(--faint) 62%,transparent 62%,transparent 72%,var(--faint) 72%,var(--faint) 79%,transparent 79%);border-radius:0 0 12px 0}
 .rec-h{display:flex;align-items:center;gap:8px;padding:5px 6px 5px 12px;cursor:grab;user-select:none;border-bottom:1px solid var(--line)}
 .rec-h:active{cursor:grabbing}
 .rec-h b{font-size:13px}
@@ -170,7 +173,7 @@ body[data-tool="chunks500"] .rec-pill,body[data-tool="chunks"] .rec-pill{left:16
 </style></head><body>
 
 <header class="bar">
-  <button type="button" class="home-btn" id="homeBtn" aria-current="page">工具箱<i class="ver">v1.4.8</i></button>
+  <button type="button" class="home-btn" id="homeBtn" aria-current="page">工具箱<i class="ver">v1.4.9</i></button>
   <div class="pick" id="pick">
     <button type="button" class="pick-btn" id="pickBtn" aria-haspopup="true" aria-expanded="false"><span id="pickName">全部工具</span></button>
     <div class="menu" id="menu" hidden>
@@ -776,9 +779,26 @@ document.addEventListener("click", e=>{
     const up = ()=>{ head.removeEventListener("pointermove", move); head.removeEventListener("pointerup", up); head.removeEventListener("pointercancel", up); savePrefs(); };
     head.addEventListener("pointermove", move); head.addEventListener("pointerup", up); head.addEventListener("pointercancel", up);
   });
+  /* resize by dragging the bottom-right corner */
+  const grip = document.createElement("div"); grip.className = "rec-grip"; grip.setAttribute("aria-label","拖曳縮放"); box.appendChild(grip);
+  function size(w, h){
+    w = Math.min(Math.max(200, w), Math.min(640, innerWidth - 16)); h = Math.min(Math.max(150, h), innerHeight - 16);
+    box.classList.add("sized"); box.style.width = w+"px"; box.style.height = h+"px"; prefs.w = w; prefs.h = h;
+  }
+  grip.addEventListener("pointerdown", e=>{
+    e.preventDefault(); e.stopPropagation();
+    const r = box.getBoundingClientRect(); place(r.left, r.top); box.dataset.userMoved = "1";
+    const sx = e.clientX, sy = e.clientY, w0 = r.width, h0 = r.height;
+    grip.setPointerCapture(e.pointerId);
+    const move = ev=>{ size(w0 + ev.clientX - sx, h0 + ev.clientY - sy); };
+    const up = ()=>{ grip.removeEventListener("pointermove", move); grip.removeEventListener("pointerup", up); grip.removeEventListener("pointercancel", up); place(box.getBoundingClientRect().left, box.getBoundingClientRect().top); savePrefs(); };
+    grip.addEventListener("pointermove", move); grip.addEventListener("pointerup", up); grip.addEventListener("pointercancel", up);
+  });
+  if(typeof prefs.w === "number") size(prefs.w, prefs.h);
   head.addEventListener("dblclick", e=>{
     if(e.target.closest("button")) return;
     box.style.left = ""; box.style.top = ""; box.style.right = ""; box.style.bottom = "";
+    box.classList.remove("sized"); box.style.width = ""; box.style.height = ""; delete prefs.w; delete prefs.h;
     delete prefs.x; delete prefs.y; delete box.dataset.userMoved; savePrefs();
   });
   if(typeof prefs.x === "number" && !prefs.min) requestAnimationFrame(()=>place(prefs.x*innerWidth, prefs.y*innerHeight));
