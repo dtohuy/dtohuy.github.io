@@ -126,25 +126,25 @@ body.play-tool .rec,body.play-tool .rec-pill{bottom:calc(100px + env(safe-area-i
 body[data-tool="chunks500"] .rec,body[data-tool="chunks"] .rec{left:16px;right:auto;bottom:calc(var(--barh,90px) + 12px + env(safe-area-inset-bottom,0px))}
 body[data-tool="chunks500"] .rec-pill,body[data-tool="chunks"] .rec-pill{left:16px;right:auto;bottom:calc(var(--barh,90px) + 12px + env(safe-area-inset-bottom,0px))}
 /* floating recorder */
-.rec{position:fixed;z-index:50;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(300px,calc(100% - 32px));background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.28);touch-action:none}
-.rec-h{display:flex;align-items:center;gap:8px;padding:9px 10px 9px 14px;cursor:grab;user-select:none;border-bottom:1px solid var(--line)}
+.rec{position:fixed;z-index:50;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(236px,calc(100% - 32px));background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);touch-action:none}
+.rec-h{display:flex;align-items:center;gap:8px;padding:5px 6px 5px 12px;cursor:grab;user-select:none;border-bottom:1px solid var(--line)}
 .rec-h:active{cursor:grabbing}
-.rec-h b{font-size:14px;flex:1}
+.rec-h b{font-size:13px;flex:1}
 .rec-h .dot{width:9px;height:9px;border-radius:50%;background:var(--faint)}
 .rec.recording .rec-h .dot{background:#e0594a;animation:pulse 1s infinite}
 @keyframes pulse{50%{opacity:.35}}
 .rec-x{background:none;border:0;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 6px;border-radius:6px}
 .rec-x:hover{color:var(--ink);background:var(--bg)}
-.rec-b{padding:12px 14px 14px;display:grid;gap:10px}
-.rec-time{font-family:var(--f-display);font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;text-align:center}
-.rec-btns{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:8px}
-.rec-btn{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:9px 6px;cursor:pointer;font-size:14px;font-weight:600;display:flex;justify-content:center;gap:6px;align-items:center}
+.rec-b{padding:8px 10px 10px;display:grid;gap:6px}
+.rec-time{font-family:var(--f-display);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;text-align:center}
+.rec-btns{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:6px}
+.rec-btn{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:6px 4px;cursor:pointer;font-size:13px;font-weight:600;display:flex;justify-content:center;gap:6px;align-items:center}
 .rec-btn:hover:not(:disabled){border-color:var(--gold)}
 .rec-btn:disabled{opacity:.45;cursor:default}
 .rec-btn.go{background:var(--gold);border-color:var(--gold);color:var(--on-gold)}
 .rec.recording .rec-btn.go{background:#c2483a;border-color:#c2483a;color:#fff}
 .rec-seek{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
-.rec-seek input{width:100%;accent-color:var(--gold);margin:0;height:22px;cursor:pointer}
+.rec-seek input{width:100%;accent-color:var(--gold);margin:0;height:16px;cursor:pointer}
 .rec-seek input:disabled{cursor:default;opacity:.5}
 .rec-seek span{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .scrollbtns{position:fixed;z-index:40;right:max(10px,env(safe-area-inset-right,0px));top:50%;transform:translateY(-50%);display:grid;gap:10px}
@@ -152,10 +152,10 @@ body[data-tool="chunks500"] .rec-pill,body[data-tool="chunks"] .rec-pill{left:16
 .scrollbtns button:hover,.scrollbtns button:active{opacity:1;border-color:var(--gold)}
 .rec-sub{display:flex;gap:8px}.rec-sub .rec-btn{flex:1;font-weight:500}
 .rec-ctx{font-size:13px;font-weight:600;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rec-takes{list-style:none;margin:0;padding:0;display:grid;gap:4px;max-height:132px;overflow:auto}
+.rec-takes{list-style:none;margin:0;padding:0;display:grid;gap:4px;max-height:72px;overflow:auto}
 .rec-takes:empty{display:none}
 .rec-takes li{display:flex;gap:4px}
-.rec-take{flex:1;text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:6px 10px;font-size:12.5px;cursor:pointer;color:inherit}
+.rec-take{flex:1;text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:4px 8px;font-size:12px;cursor:pointer;color:inherit}
 .rec-takes li.on .rec-take{border-color:var(--gold);font-weight:600}
 .rec-del{border:1px solid var(--line);background:var(--bg);border-radius:8px;width:32px;cursor:pointer;color:var(--muted)}
 .rec-msg{font-size:12.5px;color:var(--muted);text-align:center;min-height:1.2em}
@@ -168,7 +168,7 @@ body[data-tool="chunks500"] .rec-pill,body[data-tool="chunks"] .rec-pill{left:16
 </style></head><body>
 
 <header class="bar">
-  <button type="button" class="home-btn" id="homeBtn" aria-current="page">工具箱<i class="ver">v1.4.6</i></button>
+  <button type="button" class="home-btn" id="homeBtn" aria-current="page">工具箱<i class="ver">v1.4.7</i></button>
   <div class="pick" id="pick">
     <button type="button" class="pick-btn" id="pickBtn" aria-haspopup="true" aria-expanded="false"><span id="pickName">全部工具</span></button>
     <div class="menu" id="menu" hidden>
