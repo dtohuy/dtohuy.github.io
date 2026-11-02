@@ -129,14 +129,14 @@ body[data-tool="chunks500"] .rec-pill,body[data-tool="chunks"] .rec-pill{left:16
 .rec{position:fixed;z-index:50;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(236px,calc(100% - 32px));background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);touch-action:none}
 .rec-h{display:flex;align-items:center;gap:8px;padding:5px 6px 5px 12px;cursor:grab;user-select:none;border-bottom:1px solid var(--line)}
 .rec-h:active{cursor:grabbing}
-.rec-h b{font-size:13px;flex:1}
+.rec-h b{font-size:13px}
 .rec-h .dot{width:9px;height:9px;border-radius:50%;background:var(--faint)}
 .rec.recording .rec-h .dot{background:#e0594a;animation:pulse 1s infinite}
 @keyframes pulse{50%{opacity:.35}}
 .rec-x{background:none;border:0;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 6px;border-radius:6px}
 .rec-x:hover{color:var(--ink);background:var(--bg)}
 .rec-b{padding:8px 10px 10px;display:grid;gap:6px}
-.rec-time{font-family:var(--f-display);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;text-align:center}
+.rec-time{font-family:var(--f-display);font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;flex:1;text-align:center}
 .rec-btns{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:6px}
 .rec-btn{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:6px 4px;cursor:pointer;font-size:13px;font-weight:600;display:flex;justify-content:center;gap:6px;align-items:center}
 .rec-btn:hover:not(:disabled){border-color:var(--gold)}
@@ -157,6 +157,8 @@ body[data-tool="chunks500"] .rec-pill,body[data-tool="chunks"] .rec-pill{left:16
 .rec-takes li{display:flex;gap:4px}
 .rec-take{flex:1;text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:4px 8px;font-size:12px;cursor:pointer;color:inherit}
 .rec-takes li.on .rec-take{border-color:var(--gold);font-weight:600}
+.rec-pin{border:1px solid var(--line);background:var(--bg);border-radius:8px;width:32px;cursor:pointer;opacity:.45;filter:grayscale(1)}
+.rec-pin.on{opacity:1;filter:none;border-color:var(--gold)}
 .rec-del{border:1px solid var(--line);background:var(--bg);border-radius:8px;width:32px;cursor:pointer;color:var(--muted)}
 .rec-msg{font-size:12.5px;color:var(--muted);text-align:center;min-height:1.2em}
 .rec-log{font:11px/1.35 ui-monospace,Menlo,monospace;color:var(--muted);max-height:180px;overflow:auto;white-space:pre-wrap;word-break:break-all;border-top:1px solid var(--line);padding-top:6px;margin:0;user-select:text}
@@ -168,7 +170,7 @@ body[data-tool="chunks500"] .rec-pill,body[data-tool="chunks"] .rec-pill{left:16
 </style></head><body>
 
 <header class="bar">
-  <button type="button" class="home-btn" id="homeBtn" aria-current="page">工具箱<i class="ver">v1.4.7</i></button>
+  <button type="button" class="home-btn" id="homeBtn" aria-current="page">工具箱<i class="ver">v1.4.8</i></button>
   <div class="pick" id="pick">
     <button type="button" class="pick-btn" id="pickBtn" aria-haspopup="true" aria-expanded="false"><span id="pickName">全部工具</span></button>
     <div class="menu" id="menu" hidden>
@@ -219,9 +221,8 @@ body[data-tool="chunks500"] .rec-pill,body[data-tool="chunks"] .rec-pill{left:16
 </main>
 <button type="button" class="rec-pill" id="recPill" hidden aria-label="打開錄音框"><i></i>錄音</button>
 <section class="rec" id="rec" aria-label="錄音框">
-  <div class="rec-h" id="recHead"><span class="dot"></span><b>錄音</b><button type="button" class="rec-x" id="recMin" aria-label="收合錄音框">收合</button></div>
+  <div class="rec-h" id="recHead"><span class="dot"></span><b>錄音</b><span class="rec-time" id="recTime" aria-live="polite">0:00</span><button type="button" class="rec-x" id="recMin" aria-label="收合錄音框">收合</button></div>
   <div class="rec-b">
-    <div class="rec-time" id="recTime" aria-live="polite">0:00</div>
     <div class="rec-seek"><input type="range" id="recSeek" min="0" max="1000" step="1" value="0" disabled aria-label="播放位置"><span id="recPos">0:00 / 0:00</span></div>
     <div class="rec-btns">
       <button type="button" class="rec-btn go" id="recGo">開始錄音</button>
@@ -231,7 +232,7 @@ body[data-tool="chunks500"] .rec-pill,body[data-tool="chunks"] .rec-pill{left:16
     <div class="rec-sub"><label class="rec-btn" for="recFile">📁 文件</label><input type="file" id="recFile" accept="audio/*,video/*" hidden><button type="button" class="rec-btn" id="recCmp" hidden disabled>⇄ 對比原聲</button></div>
     <div class="rec-ctx" id="recCtx" hidden></div>
     <ul class="rec-takes" id="recTakes"></ul>
-    <div class="rec-msg" id="recMsg">每段保留最近 5 遍，新錄的不會蓋掉舊的。</div>
+    <div class="rec-msg" id="recMsg">只留近 5 筆（釘住的不算）。</div>
     <button type="button" class="rec-btn" id="recCopy" hidden>複製紀錄</button>
     <pre class="rec-log" id="recLog" hidden></pre>
   </div>
@@ -472,19 +473,23 @@ document.addEventListener("click", e=>{
     if(key !== ctxKey) return;
     takes = arr; sel = 0; showSel(); renderTakes();
   }
+  /* pinned takes are never dropped; only the newest KEEP unpinned ones stay */
+  const MAXPIN = 4;
+  function trim(arr){ let n = 0; return arr.filter(t=>t.pin || ++n <= KEEP); }
   function showSel(){ const t = takes[sel]; if(t) setClip(t.blob, t.at, t.dur); else clearClip(); }
   async function addTake(key, blob, at, dur){
-    if(key !== ctxKey){ const arr = await getTakes(key); arr.unshift({at, dur, blob}); putTakes(key, arr.slice(0, KEEP)); return; }
-    takes.unshift({at, dur, blob}); takes = takes.slice(0, KEEP); sel = 0; putTakes(key, takes); showSel(); renderTakes();
+    if(key !== ctxKey){ const arr = await getTakes(key); arr.unshift({at, dur, blob}); putTakes(key, trim(arr)); return; }
+    takes.unshift({at, dur, blob}); takes = trim(takes); sel = 0; putTakes(key, takes); showSel(); renderTakes();
   }
   function renderTakes(){
     ctxEl.hidden = !ctxLabel; ctxEl.textContent = ctxLabel;
     cmpBtn.hidden = !ctxModel; cmpBtn.disabled = !takes.length || state !== "idle";
-    takesEl.innerHTML = takes.map((t,i)=>`<li class="${i===sel?"on":""}"><button type="button" class="rec-take" data-i="${i}">第 ${takes.length-i} 遍 · ${t.dur.toFixed(1)} 秒 · ${when(t.at)}</button><button type="button" class="rec-del" data-d="${i}" aria-label="刪除這一遍">✕</button></li>`).join("");
+    takesEl.innerHTML = takes.map((t,i)=>`<li class="${i===sel?"on":""}"><button type="button" class="rec-take" data-i="${i}">第 ${takes.length-i} 遍 · ${t.dur.toFixed(1)} 秒 · ${when(t.at)}</button><button type="button" class="rec-pin${t.pin?" on":""}" data-p="${i}" aria-pressed="${!!t.pin}" aria-label="釘住這一遍">📌</button><button type="button" class="rec-del" data-d="${i}" aria-label="刪除這一遍">✕</button></li>`).join("");
   }
   takesEl.addEventListener("click", e=>{
     const b = e.target.closest("button"); if(!b || state !== "idle") return;
     if(b.dataset.i !== undefined){ sel = +b.dataset.i; showSel(); renderTakes(); playBtn.click(); }
+    else if(b.dataset.p !== undefined){ const t = takes[+b.dataset.p]; if(!t.pin && takes.filter(x=>x.pin).length >= MAXPIN){ msg.textContent = "最多釘住 "+MAXPIN+" 筆。"; return; } t.pin = !t.pin; putTakes(ctxKey, takes); renderTakes(); }
     else if(b.dataset.d !== undefined){ takes.splice(+b.dataset.d, 1); sel = Math.min(sel, Math.max(takes.length-1, 0)); putTakes(ctxKey, takes); showSel(); renderTakes(); }
   });
   cmpBtn.addEventListener("click", async ()=>{
@@ -535,13 +540,13 @@ document.addEventListener("click", e=>{
     knownDur = dur || 0; probing = false; clipBlob = blob; clipAt = at;
     audio.src = url;
     showPos(0); showTime(knownDur);
-    msg.textContent = "已選："+when(at)+"。每段保留最近 "+KEEP+" 遍。";
+    msg.textContent = "已選："+when(at)+"。只留近 "+KEEP+" 筆。";
     render();
   }
   function clearClip(){
     if(url) URL.revokeObjectURL(url);
     url = null; clipBlob = null; knownDur = 0; probing = false; audio.pause(); audio.removeAttribute("src");
-    showPos(0); showTime(0); msg.textContent = "每段保留最近 "+KEEP+" 遍，新錄的不會蓋掉舊的。";
+    showPos(0); showTime(0); msg.textContent = "只留近 "+KEEP+" 筆（釘住的不算）。";
     render();
   }
   function showTime(s){ timeEl.textContent = fmt(s); }
