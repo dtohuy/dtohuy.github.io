@@ -39,3 +39,6 @@ apps/web/dist/
 worktrees/
 .agents/worktrees/
 .typert-*/
+
+# english-toolbox: scratch output of scripts/toolbox-tools.py extract
+projects/english-toolbox/.tools/
