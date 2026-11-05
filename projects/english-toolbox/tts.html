@@ -44,9 +44,9 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
 .field{display:grid;gap:2px;font-size:12.5px;color:var(--muted);min-width:0}
 .field select{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:14px;max-width:100%}
 .field input[type=range]{accent-color:var(--gold);width:150px}
-.paste{margin-top:10px}
-.paste summary{cursor:pointer;color:var(--gold-soft);font-size:14px}
-.paste textarea{width:100%;min-height:110px;margin-top:8px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px;resize:vertical}
+.paste{margin-top:14px}
+.paste label{font-size:14px;color:var(--gold-soft)}
+.paste textarea{width:100%;min-height:130px;margin-top:8px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px;resize:vertical}
 .note{font-size:12.5px;color:var(--faint);margin:10px 0 0}
 .hq{display:inline-block;font-size:11px;font-weight:600;color:var(--on-gold);background:var(--gold);border-radius:4px;padding:0 5px;margin-left:6px;vertical-align:1px}
 .note.warn{color:var(--gold-soft)}
@@ -65,17 +65,18 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
 </style></head><body>
 <div class="wrap">
   <h1>文字朗讀</h1>
-  <p class="sub">上傳一個文字檔（.txt），馬上用最好的語音念出來。中英文混雜也行，英文用英文語音、中文用中文語音。</p>
+  <p class="sub">上傳文字檔（.txt），或直接手動輸入文字，馬上用最好的語音念出來。中英文混雜也行，英文用英文語音、中文用中文語音。</p>
 
   <label class="drop" id="drop" for="file">
     <b>點這裡選文字檔，或把檔案拖進來</b>
     <span>支援 .txt／.md，檔案只在你的瀏覽器裡處理，不會上傳</span>
   </label>
   <input type="file" id="file" accept=".txt,.md,text/plain,text/markdown" hidden>
-  <details class="paste"><summary>或直接貼上文字</summary>
-    <textarea id="paste" placeholder="Paste English text here…"></textarea>
-    <div class="row"><button type="button" class="btn go" id="pasteGo">朗讀這段文字</button></div>
-  </details>
+  <section class="paste">
+    <label for="paste"><b>手動輸入文字</b></label>
+    <textarea id="paste" placeholder="在這裡輸入或貼上要朗讀的文字（中英文皆可）…" spellcheck="false"></textarea>
+    <div class="row"><button type="button" class="btn go" id="pasteGo" disabled>朗讀這段文字</button><button type="button" class="btn" id="pasteClear" disabled>清除</button><span class="note" id="pasteCount" style="margin:0"></span></div>
+  </section>
 
   <div class="row">
     <label class="field">英文語音<select id="voice"></select></label>
@@ -85,7 +86,7 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
   <p class="note" id="vnote"></p>
   <p class="note" id="vnoteZh"></p>
   <p class="note" id="vcount"></p>
-  <p class="note">文字朗讀 v1.4.4</p>
+  <p class="note">文字朗讀 v1.5.0</p>
 
   <div id="doc" hidden>
     <div class="title"><b id="docName"></b><span id="docInfo"></span></div>
@@ -262,7 +263,11 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
   ["dragenter","dragover"].forEach(t=>drop.addEventListener(t, e=>{ e.preventDefault(); drop.classList.add("over"); }));
   ["dragleave","drop"].forEach(t=>drop.addEventListener(t, e=>{ e.preventDefault(); drop.classList.remove("over"); }));
   drop.addEventListener("drop", e=>readFile(e.dataTransfer.files[0]));
-  $("pasteGo").addEventListener("click", ()=>{ const t = $("paste").value.trim(); if(t) load(t, ""); });
+  const syncPaste = ()=>{ const n = $("paste").value.trim().length; $("pasteGo").disabled = $("pasteClear").disabled = !n; $("pasteCount").textContent = n ? `${n} 字` : ""; };
+  $("paste").addEventListener("input", syncPaste);
+  $("paste").addEventListener("keydown", e=>{ if((e.ctrlKey || e.metaKey) && e.key === "Enter"){ e.preventDefault(); $("pasteGo").click(); } });
+  $("pasteGo").addEventListener("click", ()=>{ const t = $("paste").value.trim(); if(t) load(t, "手動輸入的文字"); });
+  $("pasteClear").addEventListener("click", ()=>{ $("paste").value = ""; syncPaste(); $("paste").focus(); });
 
   $("play").addEventListener("click", ()=>{ if(state === "playing") pause(); else speakFrom(idx); });
   $("stop").addEventListener("click", stop);
