@@ -167,7 +167,7 @@ a:hover { text-decoration: underline; }
    Hero
    =========================================================== */
 .hero {
-  padding-block: 96px 64px;
+  padding-block: 60px 40px;
 }
 .eyebrow {
   color: var(--accent);
@@ -192,7 +192,7 @@ a:hover { text-decoration: underline; }
   color: var(--text-muted);
   font-size: 1.15rem;
   max-width: 46ch;
-  margin: 0 0 32px;
+  margin: 0 0 22px;
 }
 .hero-actions {
   display: flex;
@@ -225,7 +225,8 @@ a:hover { text-decoration: underline; }
    Sections
    =========================================================== */
 .section {
-  padding-block: 64px;
+  padding-block: 38px;
+  scroll-margin-top: 76px;
   border-top: 1px solid var(--border);
 }
 
@@ -234,7 +235,7 @@ a:hover { text-decoration: underline; }
   align-items: baseline;
   gap: 10px;
   font-size: 1.5rem;
-  margin: 0 0 28px;
+  margin: 0 0 18px;
 }
 
 /* About */
@@ -267,8 +268,8 @@ a:hover { text-decoration: underline; }
 /* Projects */
 .project-tools {
   display: grid;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: 10px;
+  margin-bottom: 18px;
 }
 .project-tools[hidden],
 .chip-row[hidden] { display: none; }
@@ -374,14 +375,14 @@ a:hover { text-decoration: underline; }
 
 .project-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
 }
 .project-card {
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 22px;
+  padding: 18px;
   box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
@@ -429,7 +430,7 @@ a:hover { text-decoration: underline; }
 .skills-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 16px;
+  gap: 12px;
 }
 .skill-item {
   background: var(--bg-soft);
@@ -471,7 +472,7 @@ a:hover { text-decoration: underline; }
 
 /* Footer */
 .site-footer {
-  padding-block: 32px 48px;
+  padding-block: 24px 32px;
   color: var(--text-muted);
   font-size: .85rem;
   border-top: 1px solid var(--border);
@@ -482,6 +483,10 @@ a:hover { text-decoration: underline; }
    =========================================================== */
 @media (max-width: 720px) {
   .about-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .project-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
@@ -499,5 +504,6 @@ a:hover { text-decoration: underline; }
     display: none;
   }
   .nav-links.open { display: flex; }
-  .hero { padding-block: 64px 40px; }
+  .hero { padding-block: 42px 30px; }
+  .section { padding-block: 30px; }
 }
