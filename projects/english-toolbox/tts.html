@@ -86,7 +86,7 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
   <p class="note" id="vnote"></p>
   <p class="note" id="vnoteZh"></p>
   <p class="note" id="vcount"></p>
-  <p class="note">文字朗讀 v1.5.0</p>
+  <p class="note">文字朗讀 v1.5.1</p>
 
   <div id="doc" hidden>
     <div class="title"><b id="docName"></b><span id="docInfo"></span></div>
@@ -133,7 +133,8 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
     sel.innerHTML = list.map((v,i)=>`<option value="${i}">${isHQ(v)?"★ ":""}${v.name.replace(/</g,"&lt;")} (${v.lang})${isHQ(v)?" · 高品質":""}</option>`).join("");
     if(!list.length){ sel.innerHTML = '<option>（系統預設語音）</option>'; note.textContent = `找不到${label}語音，會交給瀏覽器用系統預設語音念。請到系統設定安裝${label}語音後重新整理。`; note.classList.add("warn"); return; }
     const saved = list.findIndex(v=>v.voiceURI === prefs[key]);
-    sel.value = saved >= 0 ? saved : 0;
+    const pref = key === "voice" ? list.findIndex(v=>/samantha/i.test(v.name)) : -1; /* English defaults to Samantha when installed and nothing was chosen before */
+    sel.value = saved >= 0 ? saved : (pref >= 0 ? pref : 0);
     const hq = list.filter(isHQ).length;
     note.classList.toggle("warn", !isHQ(list[+sel.value]));
     note.innerHTML = isHQ(list[+sel.value]) ? `${label}：目前選的是<span class="hq">高品質</span>語音（★ 標記，共 ${hq} 個）。` : `${label}：目前選的是基本語音${hq ? "，清單中有 ★ 標記的高品質語音可換" : "，系統沒有高品質語音。可在系統設定下載「進階／Enhanced」語音，或改用 Chrome／Edge"}。`;
