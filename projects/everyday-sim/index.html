@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>生活模拟实验室</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* 布局：左侧模型树 + 顶部视图 tab（右侧中英切换）+ 内容。配色取自工程图纸：蓝灰底、深墨线、橙色表示"正在发生" */
+:root{
+  color-scheme:light;
+  --bg:#f3f5f7; --panel:#ffffff; --ink:#1b2430; --muted:#5d6977; --line:#d9dfe6; --soft:#eaeef2;
+  --accent:#1f5f99; --accent-soft:#e3edf7; --live:#d9822b; --live-soft:#fbeedd;
+  --good:#2b7a4b; --bad:#b23a3a;
+  --p1:#1f5f99; --p2:#d9822b; --p3:#2b7a4b; --p4:#8a4fc0; --p5:#b23a3a; --p6:#5b6a7a;
+  --f-body:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11161c; --panel:#18202a; --ink:#e3e9ef; --muted:#9aa7b4; --line:#2a3542; --soft:#202a35;
+  --accent:#7fb2e5; --accent-soft:#1c2c3d; --live:#f0a25a; --live-soft:#3a2a18;
+  --good:#62c98b; --bad:#ef8080;
+  --p1:#7fb2e5; --p2:#f0a25a; --p3:#62c98b; --p4:#c39af0; --p5:#ef8080; --p6:#a8b4c0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161c; --panel:#18202a; --ink:#e3e9ef; --muted:#9aa7b4; --line:#2a3542; --soft:#202a35;
+  --accent:#7fb2e5; --accent-soft:#1c2c3d; --live:#f0a25a; --live-soft:#3a2a18;
+  --good:#62c98b; --bad:#ef8080;
+  --p1:#7fb2e5; --p2:#f0a25a; --p3:#62c98b; --p4:#c39af0; --p5:#ef8080; --p6:#a8b4c0; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.65 var(--f-body)}
+[hidden]{display:none!important}
+.shell{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:100vh}
+aside{background:var(--panel);border-right:1px solid var(--line);position:sticky;top:0;height:100vh;overflow:auto;padding:18px 12px 24px max(14px,env(safe-area-inset-left,0px))}
+.brand{font-weight:700;font-size:16px;margin:0}
+.sub{font-size:12px;color:var(--muted);margin:2px 0 12px}
+.tree{list-style:none;padding:0;margin:0;font-size:14px}
+.tree ul{list-style:none;margin:0 0 0 9px;padding-left:12px;border-left:1px dashed var(--line)}
+.tree button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;gap:6px;align-items:center;width:100%;padding:3px 6px;border-radius:6px}
+.tree button:hover{background:var(--soft)}
+.tree button:focus-visible{outline:2px solid var(--accent)}
+.tree button.on{background:var(--accent-soft);color:var(--accent);font-weight:700}
+.tree .car{width:11px;font-size:9px;color:var(--muted);flex:none;transition:transform .15s}
+.tree li.closed>ul{display:none}
+.tree li.closed>button .car{transform:rotate(-90deg)}
+.mtag{font:600 10px/1 var(--f-mono);padding:3px 5px;border-radius:4px;background:var(--soft);color:var(--muted);flex:none}
+main{min-width:0;padding-block:0 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);display:flex;align-items:flex-end;gap:8px}
+.tabs{display:flex;gap:2px;overflow-x:auto;padding-top:10px;flex:1;min-width:0}
+.tabs button{all:unset;cursor:pointer;white-space:nowrap;padding:8px 14px;color:var(--muted);font-weight:500;border-bottom:2px solid transparent}
+.tabs button.on{color:var(--accent);border-bottom-color:var(--accent)}
+.tabs button:focus-visible{outline:2px solid var(--accent)}
+.menu{display:none}
+.lang{all:unset;cursor:pointer;flex:none;display:inline-flex;border:1px solid var(--line);border-radius:99px;overflow:hidden;margin-bottom:6px;font-size:13px;background:var(--panel)}
+.lang span{padding:4px 10px;color:var(--muted)}
+.lang span.on{background:var(--accent);color:var(--panel);font-weight:700}
+.lang:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+section.pane{max-width:1060px;padding-top:20px}
+h1{font-size:clamp(22px,3.2vw,28px);line-height:1.25;margin:0 0 4px;text-wrap:balance}
+h2{font-size:18px;margin:26px 0 10px}
+.q{color:var(--muted);margin:0 0 14px;max-width:70ch}
+.q::before{content:attr(data-q);color:var(--ink);font-weight:700}
+.note{background:var(--live-soft);border-radius:8px;padding:8px 12px;font-size:14px;margin:10px 0}
+.fig{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;overflow-x:auto;margin:12px 0}
+.fig svg{display:block;height:auto}
+.fig canvas{display:block;max-width:100%}
+.ctrl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:8px 0}
+.ctrl input[type=range]{flex:1;min-width:160px;accent-color:var(--accent)}
+.clock{font:600 14px var(--f-mono);min-width:120px;font-variant-numeric:tabular-nums}
+.btn{all:unset;cursor:pointer;background:var(--accent);color:var(--panel);padding:7px 14px;border-radius:8px;font-weight:700;font-size:14px}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+select{font:14px var(--f-body);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 6px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:12px 0}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.kpi span{display:block;font-size:13px;color:var(--muted)}
+.kpi b{display:block;font-size:24px;line-height:1.2;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi b small{font-size:13px;font-weight:500;color:var(--muted);margin-left:3px}
+.kpi i{display:block;font-style:normal;font-size:12px;color:var(--muted);margin-top:2px}
+.ins{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:0 10px 10px 0;padding:10px 16px;margin:12px 0}
+.ins ul{margin:4px 0;padding-left:20px}
+.ins p{margin:0;font-size:12px;color:var(--muted)}
+.wi{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:16px;align-items:start}
+.sliders{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.sl{margin:10px 0}
+.sl label{display:flex;justify-content:space-between;gap:8px;font-size:14px}
+.sl label b{font-variant-numeric:tabular-nums;color:var(--accent);white-space:nowrap}
+.sl label b.chg{color:var(--live)}
+.sl input{width:100%;accent-color:var(--accent)}
+.tbl{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
+th{font-size:12px;color:var(--muted);font-weight:600}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.up{color:var(--good);font-weight:700}.down{color:var(--bad);font-weight:700}.flat{color:var(--muted)}
+.method{display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.method b{white-space:nowrap}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.cols>div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 16px;min-width:0}
+.cols h3{margin:0 0 6px;font-size:15px}
+.cols ul{margin:0;padding-left:20px}
+textarea{width:100%;min-height:130px;font:15px/1.6 var(--f-body);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;resize:vertical}
+textarea:focus{outline:2px solid var(--accent);border-color:transparent}
+.status{font-size:13px;color:var(--muted)}
+.fb{list-style:none;padding:0}
+.fb li{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:6px 0}
+.fb small{font:12px var(--f-mono);color:var(--muted)}
+.about{max-width:760px}
+svg text{font-family:var(--f-body)}
+@media (max-width:860px){
+  .shell{grid-template-columns:1fr}
+  aside{position:fixed;inset:0 auto 0 0;width:min(300px,86vw);z-index:20;transform:translateX(-100%);transition:transform .2s;box-shadow:0 0 30px rgba(0,0,0,.25);padding-top:calc(18px + env(safe-area-inset-top,0px))}
+  aside.open{transform:none}
+  .menu{display:inline-block;all:unset;cursor:pointer;padding:8px 10px;color:var(--accent);font-weight:700;flex:none}
+  .wi{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+</style>
+</head>
+<body>
+<script id="sim-data" type="application/json">{"title": {"zh": "生活模拟实验室", "en": "Everyday Simulation Lab"}, "lang": "zh", "models": [{"id": "coffee", "title": {"zh": "咖啡店午间要几个店员", "en": "How many baristas for the lunch rush?"}, "question": {"zh": "午餐时间客人很多，两个店员够不够？要不要再加一个人？", "en": "Lunch is busy. Are two baristas enough, or should we add one more?"}, "method": "des", "time": {"unit": {"zh": "分钟", "en": "min"}, "horizon": 180, "points": 180}, "replications": 30, "params": [{"id": "arriveEvery", "label": {"zh": "平均几分钟来一位客人", "en": "Minutes between customers (average)"}, "value": 1.5, "min": 0.5, "max": 5, "step": 0.1, "unit": {"zh": "分钟", "en": "min"}}, {"id": "baristas", "label": {"zh": "店员人数", "en": "Baristas"}, "value": 2, "min": 1, "max": 5, "step": 1, "unit": {"zh": "人", "en": "people"}}, {"id": "makeTime", "label": {"zh": "做一杯平均要几分钟", "en": "Minutes per drink (average)"}, "value": 3.3, "min": 1, "max": 6, "step": 0.1, "unit": {"zh": "分钟", "en": "min"}}, {"id": "patience", "label": {"zh": "队伍超过几人，新客人就走", "en": "New customers leave if the line reaches"}, "value": 12, "min": 3, "max": 30, "step": 1, "unit": {"zh": "人", "en": "people"}}, {"id": "dineIn", "label": {"zh": "堂食比例", "en": "Share eating in"}, "value": 0.4, "min": 0, "max": 1, "step": 0.05}, {"id": "seats", "label": {"zh": "座位数", "en": "Seats"}, "value": 10, "min": 2, "max": 30, "step": 1, "unit": {"zh": "个", "en": ""}}], "blocks": [{"id": "door", "type": "source", "label": {"zh": "客人进门", "en": "Customers arrive"}, "interarrival": {"dist": "exp", "mean": "arriveEvery"}, "next": "counter"}, {"id": "counter", "type": "service", "label": {"zh": "点单和制作", "en": "Order and make drink"}, "capacity": "baristas", "queueMax": "patience", "duration": {"dist": "tri", "min": "makeTime*0.6", "mode": "makeTime", "max": "makeTime*1.4"}, "next": "choice"}, {"id": "choice", "type": "select", "label": {"zh": "外带还是堂食", "en": "Take away or eat in"}, "branches": [{"p": "dineIn", "next": "table"}, {"p": "rest", "next": "out"}]}, {"id": "table", "type": "service", "label": {"zh": "座位", "en": "Seats"}, "capacity": "seats", "duration": {"dist": "tri", "min": 10, "mode": 20, "max": 40}, "next": "out"}, {"id": "out", "type": "sink", "label": {"zh": "离开", "en": "Leave"}}], "assumptions": {"zh": ["客人随机到店，平均间隔固定（没有模拟 12 点整的高峰）", "每杯制作时间在平均值的 60%~140% 之间", "队伍达到上限时，新来的客人直接离开", "没有座位的堂食客人会站着等座位"], "en": ["Customers arrive at random with a fixed average gap (no spike at 12:00 sharp)", "Each drink takes 60% to 140% of the average time", "When the line is full, new customers walk away", "Eat-in customers without a seat wait for one"]}, "limits": {"zh": ["没有考虑店员休息和换班", "没有考虑外卖平台订单"], "en": ["Staff breaks and shift changes", "Delivery app orders"]}, "insights": {"zh": ["2 位店员时，店员 96% 的时间都在忙，平均排队约 10 分钟；3 小时里平均有 7 位客人嫌队长直接离开，运气差时超过 20 位。", "加到 3 位店员后，平均排队降到约 1 分钟，几乎没人离开，多服务约 13 位客人。", "10 个座位够用，瓶颈在柜台。"], "en": ["With 2 baristas, they are busy 96% of the time and the average wait is about 10 minutes. Over 3 hours about 7 customers walk away because of the line, and on a bad day more than 20.", "With 3 baristas, the average wait drops to about 1 minute, almost nobody leaves, and about 13 more customers are served.", "10 seats are enough. The bottleneck is the counter."]}}, {"id": "savings", "title": {"zh": "多久能存够首付", "en": "How long to save a down payment?"}, "question": {"zh": "每个月能存 8000，放在年化 3% 的理财里，多久能存到 60 万首付？", "en": "If I save 8,000 a month at 3% a year, how long until I have 600,000 for a down payment?"}, "method": "sd", "time": {"unit": {"zh": "月", "en": "months"}, "horizon": 120, "dt": 1, "points": 120}, "params": [{"id": "start", "label": {"zh": "现在已有存款", "en": "Savings today"}, "value": 50000, "min": 0, "max": 500000, "step": 10000, "unit": {"zh": "元", "en": "yuan"}}, {"id": "monthly", "label": {"zh": "每月结余", "en": "Saved each month"}, "value": 8000, "min": 1000, "max": 30000, "step": 500, "unit": {"zh": "元", "en": "yuan"}}, {"id": "yieldPct", "label": {"zh": "年化收益", "en": "Yearly return"}, "value": 3, "min": 0, "max": 8, "step": 0.25, "unit": "%"}, {"id": "raisePct", "label": {"zh": "每年结余增长", "en": "Yearly growth in savings"}, "value": 3, "min": 0, "max": 10, "step": 0.5, "unit": "%"}, {"id": "goal", "label": {"zh": "首付目标", "en": "Down payment goal"}, "value": 600000, "min": 100000, "max": 2000000, "step": 50000, "unit": {"zh": "元", "en": "yuan"}}], "stocks": [{"id": "balance", "label": {"zh": "存款", "en": "Savings"}, "initial": "start", "unit": {"zh": "元", "en": "yuan"}}], "flows": [{"id": "save", "label": {"zh": "每月存入", "en": "Monthly deposit"}, "to": "balance", "rate": "monthly * (1 + raisePct/100) ^ floor(t/12)"}, {"id": "interest", "label": {"zh": "理财收益", "en": "Returns"}, "to": "balance", "rate": "balance * yieldPct / 100 / 12"}], "aux": [{"id": "gap", "label": {"zh": "距离目标还差", "en": "Still needed"}, "expr": "max(0, goal - balance)"}], "kpis": [{"id": "reach", "label": {"zh": "存够首付需要", "en": "Time to reach the goal"}, "var": "balance", "type": "firstTime", "op": ">=", "value": 600000, "valueParam": "goal", "unit": {"zh": "月", "en": "months"}, "good": "low", "digits": 0}, {"id": "after5", "label": {"zh": "10 年后存款", "en": "Savings after 10 years"}, "var": "balance", "type": "final", "unit": {"zh": "元", "en": "yuan"}, "good": "high", "digits": 0}], "charts": [{"title": {"zh": "存款变化", "en": "Savings over time"}, "vars": ["balance"]}, {"title": {"zh": "每月进账来源", "en": "Where each month's money comes from"}, "vars": ["save", "interest"]}], "assumptions": {"zh": ["收益按月复利", "每年结余按固定比例增长", "没有大额意外支出"], "en": ["Returns compound monthly", "Monthly savings grow by a fixed rate each year", "No large unexpected expenses"]}, "limits": {"zh": ["没有考虑房价变化", "没有考虑通货膨胀"], "en": ["Changes in house prices", "Inflation"]}, "insights": {"zh": ["按默认设定，第 60 个月左右（5 年）存够 60 万。", "每月多存 2000 元（结余 1 万），能提前约 11 个月；收益率从 3% 提到 5%，只提前约 3 个月。多存比追求高收益更有用。"], "en": ["With the default settings you reach 600,000 around month 60 (5 years).", "Saving 2,000 more a month (10,000 total) gets you there about 11 months sooner. Raising the return from 3% to 5% saves only about 3 months. Saving more matters more than chasing returns."]}}, {"id": "wordofmouth", "title": {"zh": "新店开业靠口碑多久能火", "en": "How fast will word of mouth spread?"}, "question": {"zh": "社区里新开一家店，靠广告加老客推荐，几个月能让一半居民成为顾客？", "en": "A new shop opens in the neighborhood. With ads and recommendations, how long until half the residents have been customers?"}, "method": "abm", "time": {"unit": {"zh": "天", "en": "days"}, "horizon": 180, "dt": 1, "points": 180}, "replications": 10, "population": "residents", "params": [{"id": "residents", "label": {"zh": "社区居民", "en": "Residents"}, "value": 1000, "min": 200, "max": 3000, "step": 100, "unit": {"zh": "人", "en": "people"}}, {"id": "adEffect", "label": {"zh": "广告每天打动的比例", "en": "Share won over by ads each day"}, "value": 0.2, "min": 0, "max": 2, "step": 0.05, "unit": "%"}, {"id": "talksPerDay", "label": {"zh": "每人每天和几个人聊天", "en": "People each resident talks to per day"}, "value": 3, "min": 0, "max": 15, "step": 0.5, "unit": {"zh": "人", "en": "people"}}, {"id": "convince", "label": {"zh": "老客推荐的成功率", "en": "Chance a recommendation works"}, "value": 2, "min": 0, "max": 20, "step": 0.5, "unit": "%"}, {"id": "churnDays", "label": {"zh": "顾客平均多久后不再来", "en": "Days until a customer stops coming (average)"}, "value": 120, "min": 10, "max": 720, "step": 10, "unit": {"zh": "天", "en": "days"}}], "states": [{"id": "potential", "label": {"zh": "还没来过", "en": "Not yet"}, "color": "#9aa0a6"}, {"id": "customer", "label": {"zh": "常客", "en": "Regular"}, "color": "#d9822b"}, {"id": "lapsed", "label": {"zh": "不再来", "en": "Stopped coming"}, "color": "#5b6abf"}], "initial": {"customer": 5}, "transitions": [{"from": "potential", "to": "customer", "type": "rate", "rate": "adEffect/100", "label": {"zh": "看到广告", "en": "Sees an ad"}}, {"from": "potential", "to": "customer", "type": "contact", "contacts": "talksPerDay", "with": "customer", "prob": "convince/100", "label": {"zh": "朋友推荐", "en": "Friend recommends"}}, {"from": "customer", "to": "lapsed", "type": "rate", "rate": "1/churnDays", "label": {"zh": "慢慢不来了", "en": "Drifts away"}}], "kpis": [{"id": "peak", "label": {"zh": "常客最多时", "en": "Most regulars at once"}, "var": "customer", "type": "max", "unit": {"zh": "人", "en": "people"}, "good": "high", "digits": 0}, {"id": "peakDay", "label": {"zh": "常客最多是在第", "en": "Peak happens on day"}, "var": "customer", "type": "timeOfMax", "unit": {"zh": "天", "en": ""}, "good": "low", "digits": 0}, {"id": "half", "label": {"zh": "一半居民来过需要", "en": "Time until half have visited"}, "var": "potential", "type": "firstTime", "op": "<=", "value": 500, "unit": {"zh": "天", "en": "days"}, "good": "low", "digits": 0}], "charts": [{"title": {"zh": "三类居民人数", "en": "Residents by group"}, "vars": ["potential", "customer", "lapsed"]}], "assumptions": {"zh": ["居民随机和社区里其他人聊天", "只有常客会推荐，不再来的人不推荐", "广告效果每天相同"], "en": ["Residents talk to random other residents", "Only regulars recommend the shop", "Ads work equally well every day"]}, "limits": {"zh": ["没有区分不同年龄和住得远近", "不再来的人不会回流"], "en": ["Differences in age or distance from the shop", "People who stopped coming never return"]}, "insights": {"zh": ["前一个月主要靠广告，增长很慢；常客多起来以后，推荐带来的新客会加速增长，大约第 60 天一半居民来过。", "推荐成功率从 2% 提到 4%，这个时间缩短到约 36 天；广告效果翻倍只缩短到约 47 天。让老客愿意推荐比加大广告更有效。"], "en": ["In the first month growth comes mostly from ads and is slow. Once there are more regulars, recommendations speed things up, and around day 60 half the residents have visited.", "Raising the recommendation success rate from 2% to 4% cuts that to about 36 days. Doubling the ad effect only cuts it to about 47 days. Getting regulars to recommend the shop beats spending more on ads."]}}], "generated_at": "2026-11-05T07:04:06Z", "about": {"zh": "<h1>平民版 AnyLogic：everyday-sim<\/h1>\n<p class=\"q\" style=\"display:block\">把一句生活或小生意里的问题，变成可以播放、可以调参数的模拟。<\/p>\n<p>你不用会建模。告诉 agent 你的问题，比如「中午要几个店员」「多久能存够首付」「新店靠口碑多久能火」，它会选一种建模方法、问你最多 3 个关键数字，然后生成这样一个页面：<\/p>\n<ul>\n  <li><b>动画<\/b>：看过程怎么发生，比如队伍什么时候排起来。<\/li>\n  <li><b>结果<\/b>：关键数字和「多数情况下」的范围，因为现实有运气成分。<\/li>\n  <li><b>假如…<\/b>：拖滑块马上重算，和原方案对比。<\/li>\n  <li><b>模型结构<\/b>：模型假设了什么、没考虑什么，方便你判断能不能信。<\/li>\n<\/ul>\n<h2>和 AnyLogic 的对应<\/h2>\n<div class=\"tbl\"><table>\n<thead><tr><th>AnyLogic<\/th><th>这里叫<\/th><th>适合的问题<\/th><th>示例<\/th><\/tr><\/thead>\n<tbody>\n<tr><td>离散事件（Process Modeling Library：Source、Queue、Service、Delay、SelectOutput、Sink）<\/td><td>流程模型<\/td><td>排队、人手够不够、流程卡在哪<\/td><td>咖啡店、诊所、办证窗口、仓库出货<\/td><\/tr>\n<tr><td>系统动力学（Stock、Flow、Dynamic Variable）<\/td><td>存量模型<\/td><td>总量随时间怎么累积<\/td><td>存钱、还贷、库存、体重、习惯<\/td><\/tr>\n<tr><td>智能体（Agent、Statechart）<\/td><td>个体模型<\/td><td>人和人互相影响<\/td><td>口碑传播、流感、谣言、换工作<\/td><\/tr>\n<tr><td>Parameter Variation / Optimization 实验<\/td><td>假如…滑块<\/td><td>改一个条件会怎样<\/td><td>多一个店员、多存 2000<\/td><\/tr>\n<tr><td>Monte Carlo 多次运行<\/td><td>「多数情况」范围<\/td><td>运气好坏差多少<\/td><td>每个随机模型默认跑 20~30 次<\/td><\/tr>\n<\/tbody><\/table><\/div>\n<h2>刻意不做的<\/h2>\n<ul>\n  <li>不做拖拽式建模画布：一般人画不对，改成用对话描述，由 agent 写模型文件。<\/li>\n  <li>不做 3D 和地图：成本高，对回答问题帮助小。<\/li>\n  <li>不追求精确预测：目标是比较方案、看清趋势，所以每个页面都写明假设和边界。<\/li>\n<\/ul>\n\n<h2>使用与下载<\/h2><p><a href=\"everyday-sim.zip\" download>下载 everyday-sim skill（ZIP）<\/a>，解压后交给支持技能的 AI agent 使用。生成页面需要 Python 3.8+ 和 Node 16+，无需安装额外软件包。<\/p><p>这里的数字只是示例假设，并非对真实情况的预测；请在「假如…」中修改参数，并查看模型假设和限制。<\/p><p><a href=\"../../index.html\">返回个人项目<\/a><\/p>\n", "en": "<h1>AnyLogic for everyone: everyday-sim<\/h1>\n<p>Turn a question from daily life or a small business into a simulation you can play and adjust.<\/p>\n<p>You don't need to know modeling. Tell the agent your question, such as \"how many staff at lunch?\", \"how long to save a down payment?\" or \"how fast will word of mouth spread?\". It picks a modeling method, asks you for at most 3 key numbers, and builds a page like this one:<\/p>\n<ul>\n  <li><b>Animation<\/b>: watch how things unfold, for example when the line starts to build.<\/li>\n  <li><b>Results<\/b>: the key numbers plus the range you'd see in most runs, because real life involves luck.<\/li>\n  <li><b>What if…<\/b>: drag a slider, the model re-runs right away and is compared with the default.<\/li>\n  <li><b>Model<\/b>: what the model assumes and what it leaves out, so you can judge how far to trust it.<\/li>\n<\/ul>\n<h2>How it maps to AnyLogic<\/h2>\n<div class=\"tbl\"><table>\n<thead><tr><th>AnyLogic<\/th><th>Here<\/th><th>Good for<\/th><th>Examples<\/th><\/tr><\/thead>\n<tbody>\n<tr><td>Discrete event (Process Modeling Library: Source, Queue, Service, Delay, SelectOutput, Sink)<\/td><td>Flow model<\/td><td>Queues, staffing, bottlenecks<\/td><td>Coffee shop, clinic, service desk, warehouse<\/td><\/tr>\n<tr><td>System dynamics (Stock, Flow, Dynamic Variable)<\/td><td>Stock model<\/td><td>Totals that build up over time<\/td><td>Savings, loans, inventory, weight, habits<\/td><\/tr>\n<tr><td>Agent-based (Agent, Statechart)<\/td><td>People model<\/td><td>People influencing each other<\/td><td>Word of mouth, flu, rumors, job changes<\/td><\/tr>\n<tr><td>Parameter variation / optimization experiments<\/td><td>What if… sliders<\/td><td>What happens if one thing changes<\/td><td>One more barista, save 2,000 more<\/td><\/tr>\n<tr><td>Monte Carlo runs<\/td><td>\"Usually\" ranges<\/td><td>How much luck matters<\/td><td>Random models run 20–30 times by default<\/td><\/tr>\n<\/tbody><\/table><\/div>\n<h2>Left out on purpose<\/h2>\n<ul>\n  <li>No drag-and-drop modeling canvas. Most people can't draw a correct model, so you describe it in conversation and the agent writes the model file.<\/li>\n  <li>No 3D or maps. They cost a lot and help little with answering the question.<\/li>\n  <li>No claim of exact prediction. The goal is to compare options and see trends, so every page states its assumptions and limits.<\/li>\n<\/ul>\n\n<h2>Use and download<\/h2><p><a href=\"everyday-sim.zip\" download>Download the everyday-sim skill (ZIP)<\/a> and unpack it for an AI agent that supports skills. Building pages requires Python 3.8+ and Node 16+, with no extra packages.<\/p><p>These numbers are illustrative assumptions, not forecasts. Change the inputs in What if, and review the model assumptions and limitations.<\/p><p><a href=\"../../index.html\">Back to projects<\/a><\/p>\n"}}</script>
+<script>/* everyday-sim engine: discrete-event (des), system dynamics (sd), agent-based (abm).
+   Zero dependencies. Works in the browser (window.SimEngine) and in Node (require). */
+(function (root) {
+  "use strict";
+
+  /* ---------- seeded RNG ---------- */
+  function rng(seed) {
+    let a = seed >>> 0;
+    return function () {
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  /* ---------- expression language ----------
+     numbers, identifiers, + - * / ^, ( ), < > <= >= == !=, && || !,
+     functions: min max abs exp ln sqrt floor ceil round pow if(c,a,b) */
+  const FN = {
+    min: Math.min, max: Math.max, abs: Math.abs, exp: Math.exp, ln: Math.log, sqrt: Math.sqrt,
+    floor: Math.floor, ceil: Math.ceil, round: Math.round, pow: Math.pow,
+  };
+  function tokenize(src) {
+    const re = /\s*(?:(\d+\.?\d*(?:[eE][+-]?\d+)?|\.\d+)|([A-Za-z_][A-Za-z0-9_]*)|(<=|>=|==|!=|&&|\|\||[-+*/^(),<>!]))/y;
+    const out = [];
+    let m;
+    re.lastIndex = 0;
+    while (re.lastIndex < src.length) {
+      const at = re.lastIndex;
+      m = re.exec(src);
+      if (!m) {
+        if (/^\s*$/.test(src.slice(at))) break;
+        throw new Error("表达式无法识别: " + src.slice(at, at + 12));
+      }
+      if (m[1] != null) out.push({ k: "n", v: parseFloat(m[1]) });
+      else if (m[2] != null) out.push({ k: "id", v: m[2] });
+      else out.push({ k: "op", v: m[3] });
+    }
+    return out;
+  }
+  function compile(src) {
+    if (typeof src === "number") { const f = () => src; f.vars = new Set(); return f; }
+    if (src == null || src === "") throw new Error("缺少表达式");
+    const toks = tokenize(String(src));
+    let i = 0;
+    const vars = new Set();
+    const peek = () => toks[i], eat = (v) => { const t = toks[i]; if (!t || (v && t.v !== v)) throw new Error("表达式语法错误: " + src); i++; return t; };
+    const isOp = (v) => toks[i] && toks[i].k === "op" && toks[i].v === v;
+    function bin(next, ops, mk) {
+      return function () {
+        let l = next();
+        while (toks[i] && toks[i].k === "op" && ops.includes(toks[i].v)) { const op = eat().v; const r = next(); l = mk(op, l, r); }
+        return l;
+      };
+    }
+    function primary() {
+      const t = peek();
+      if (!t) throw new Error("表达式不完整: " + src);
+      if (t.k === "n") { i++; const v = t.v; return () => v; }
+      if (t.k === "id") {
+        i++;
+        if (isOp("(")) {
+          eat("(");
+          const args = [];
+          if (!isOp(")")) { args.push(or()); while (isOp(",")) { eat(","); args.push(or()); } }
+          eat(")");
+          if (t.v === "if") { const [c, a, b] = args; return (e) => (c(e) ? a(e) : b(e)); }
+          const f = FN[t.v];
+          if (!f) throw new Error("不支持的函数: " + t.v);
+          return (e) => f.apply(null, args.map((g) => g(e)));
+        }
+        const name = t.v;
+        vars.add(name);
+        return (e) => { const v = e[name]; if (v === undefined) throw new Error("未知变量: " + name); return v; };
+      }
+      if (isOp("(")) { eat("("); const x = or(); eat(")"); return x; }
+      throw new Error("表达式语法错误: " + src);
+    }
+    function pow() { const b = primary(); if (isOp("^")) { eat("^"); const x = unary(); return (e) => Math.pow(b(e), x(e)); } return b; }
+    function unary() {
+      if (isOp("-")) { eat("-"); const x = unary(); return (e) => -x(e); }
+      if (isOp("!")) { eat("!"); const x = unary(); return (e) => (x(e) ? 0 : 1); }
+      return pow();
+    }
+    const mul = bin(unary, ["*", "/"], (op, l, r) => (op === "*" ? (e) => l(e) * r(e) : (e) => l(e) / r(e)));
+    const add = bin(mul, ["+", "-"], (op, l, r) => (op === "+" ? (e) => l(e) + r(e) : (e) => l(e) - r(e)));
+    const cmp = bin(add, ["<", ">", "<=", ">=", "==", "!="], (op, l, r) => ({
+      "<": (e) => +(l(e) < r(e)), ">": (e) => +(l(e) > r(e)), "<=": (e) => +(l(e) <= r(e)),
+      ">=": (e) => +(l(e) >= r(e)), "==": (e) => +(l(e) === r(e)), "!=": (e) => +(l(e) !== r(e)),
+    })[op]);
+    const and = bin(cmp, ["&&"], (op, l, r) => (e) => +(l(e) && r(e)));
+    const or = bin(and, ["||"], (op, l, r) => (e) => +(l(e) || r(e)));
+    const f = or();
+    if (i < toks.length) throw new Error("表达式多余内容: " + src);
+    f.vars = vars;
+    return f;
+  }
+
+  /* ---------- distributions ---------- */
+  function makeDist(d) {
+    if (typeof d === "number" || typeof d === "string") { const c = compile(d); return (e) => c(e); }
+    if (!d || !d.dist) throw new Error("分布格式错误: " + JSON.stringify(d));
+    const p = {};
+    for (const k of Object.keys(d)) if (k !== "dist") p[k] = compile(d[k]);
+    switch (d.dist) {
+      case "const": return (e) => p.value(e);
+      case "exp": return (e, r) => -p.mean(e) * Math.log(1 - r());
+      case "uniform": return (e, r) => { const a = p.min(e), b = p.max(e); return a + (b - a) * r(); };
+      case "tri": return (e, r) => {
+        const a = p.min(e), c = p.mode(e), b = p.max(e), u = r(), F = (c - a) / (b - a || 1);
+        return u < F ? a + Math.sqrt(u * (b - a) * (c - a)) : b - Math.sqrt((1 - u) * (b - a) * (b - c));
+      };
+      case "normal": return (e, r) => Math.max(0, p.mean(e) + p.sd(e) * Math.sqrt(-2 * Math.log(1 - r())) * Math.cos(2 * Math.PI * r()));
+      default: throw new Error("不支持的分布: " + d.dist);
+    }
+  }
+  function distMean(d, env) {
+    if (typeof d !== "object") return compile(d)(env);
+    const v = (k) => compile(d[k])(env);
+    return { const: () => v("value"), exp: () => v("mean"), uniform: () => (v("min") + v("max")) / 2,
+      tri: () => (v("min") + v("mode") + v("max")) / 3, normal: () => v("mean") }[d.dist]();
+  }
+
+  /* ---------- helpers ---------- */
+  function paramEnv(spec, overrides) {
+    const env = {};
+    for (const p of spec.params || []) env[p.id] = overrides && overrides[p.id] != null ? +overrides[p.id] : +p.value;
+    return env;
+  }
+  function grid(spec) {
+    const H = +spec.time.horizon, n = Math.max(2, Math.min(400, spec.time.points || 200));
+    const out = [];
+    for (let k = 0; k <= n; k++) out.push((H * k) / n);
+    return out;
+  }
+  class Heap {
+    constructor() { this.a = []; }
+    push(x) { const a = this.a; a.push(x); let i = a.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (lt(a[i], a[p])) { [a[i], a[p]] = [a[p], a[i]]; i = p; } else break; } }
+    pop() { const a = this.a, top = a[0], last = a.pop(); if (a.length) { a[0] = last; let i = 0; for (;;) { const l = 2 * i + 1, r = l + 1; let m = i; if (l < a.length && lt(a[l], a[m])) m = l; if (r < a.length && lt(a[r], a[m])) m = r; if (m === i) break; [a[i], a[m]] = [a[m], a[i]]; i = m; } } return top; }
+    get size() { return this.a.length; }
+  }
+  const lt = (x, y) => x.t < y.t || (x.t === y.t && x.s < y.s);
+
+  /* ---------- DES ---------- */
+  function runDES(spec, env, seed, record) {
+    const r = rng(seed), H = +spec.time.horizon, G = grid(spec);
+    const B = {}, order = spec.blocks.map((b) => b.id);
+    for (const b of spec.blocks) {
+      const x = { def: b, id: b.id, type: b.type, next: b.next };
+      if (b.type === "source") { x.ia = makeDist(b.interarrival); x.made = 0; x.limit = b.limit != null ? compile(b.limit)(env) : Infinity; }
+      if (b.type === "service") {
+        x.cap = Math.max(1, Math.round(compile(b.capacity ?? 1)(env)));
+        x.dur = makeDist(b.duration);
+        x.qmax = b.queueMax != null ? compile(b.queueMax)(env) : Infinity;
+        Object.assign(x, { q: [], busy: 0, qArea: 0, bArea: 0, last: 0, maxQ: 0, waits: 0, nWait: 0, balked: 0, served: 0 });
+      }
+      if (b.type === "delay") { x.dur = makeDist(b.duration); x.inside = 0; }
+      if (b.type === "select") x.br = b.branches.map((br) => ({ p: br.p === "rest" || br.p == null ? null : compile(br.p), next: br.next }));
+      if (b.type === "sink") { x.out = 0; x.tis = 0; }
+      B[b.id] = x;
+    }
+    const ev = new Heap();
+    let seq = 0, now = 0, inSys = 0, lost = 0, created = 0;
+    const at = (t, fn) => ev.push({ t, s: seq++, fn });
+    const svc = order.filter((id) => B[id].type === "service"), dly = order.filter((id) => B[id].type === "delay");
+    const series = { inSys: [] };
+    svc.forEach((id) => (series["q_" + id] = []));
+    const snaps = record ? [] : null;
+    let gi = 0;
+    function snapTo(t) {
+      while (gi < G.length && G[gi] <= t) {
+        series.inSys.push(inSys);
+        svc.forEach((id) => series["q_" + id].push(B[id].q.length));
+        if (snaps) snaps.push({ t: G[gi], q: svc.map((id) => B[id].q.length), b: svc.map((id) => B[id].busy), d: dly.map((id) => B[id].inside),
+          made: order.filter((id) => B[id].type === "source").map((id) => B[id].made), out: order.filter((id) => B[id].type === "sink").map((id) => B[id].out), lost });
+        gi++;
+      }
+    }
+    function acc(x, t) { x.qArea += x.q.length * (t - x.last); x.bArea += x.busy * (t - x.last); x.last = t; }
+    function route(e, id) {
+      const x = B[id];
+      if (!x) throw new Error("找不到下一个环节: " + id);
+      if (x.type === "service") {
+        acc(x, now);
+        if (x.busy < x.cap) start(x, e);
+        else if (x.q.length >= x.qmax) { x.balked++; lost++; inSys--; }
+        else { e.qs = now; x.q.push(e); if (x.q.length > x.maxQ) x.maxQ = x.q.length; }
+      } else if (x.type === "delay") {
+        x.inside++;
+        at(now + x.dur(env, r), () => { x.inside--; route(e, x.next); });
+      } else if (x.type === "select") {
+        let u = r(), acc2 = 0, target = null;
+        for (const br of x.br) { if (br.p) { acc2 += br.p(env); if (u < acc2) { target = br.next; break; } } }
+        if (!target) { const rest = x.br.find((b) => !b.p); target = rest ? rest.next : x.br[x.br.length - 1].next; }
+        route(e, target);
+      } else if (x.type === "sink") { x.out++; x.tis += now - e.born; inSys--; }
+      else throw new Error("实体不能进入环节: " + id);
+    }
+    function start(x, e) {
+      x.busy++; x.served++;
+      x.waits += now - (e.qs ?? now); x.nWait++; e.qs = undefined;
+      at(now + x.dur(env, r), () => {
+        acc(x, now); x.busy--;
+        route(e, x.next);
+        if (x.q.length) { acc(x, now); start(x, x.q.shift()); }
+      });
+    }
+    for (const id of order) {
+      const x = B[id];
+      if (x.type !== "source") continue;
+      const arrive = () => {
+        if (x.made >= x.limit) return;
+        x.made++; created++; inSys++;
+        route({ born: now }, x.next);
+        const nt = now + x.ia(env, r);
+        if (nt <= H) at(nt, arrive);
+      };
+      const first = x.ia(env, r);
+      if (first <= H) at(first, arrive);
+    }
+    while (ev.size) {
+      const e = ev.pop();
+      if (e.t > H) break;
+      snapTo(e.t - 1e-12);
+      now = e.t;
+      e.fn();
+    }
+    now = H; snapTo(H);
+    svc.forEach((id) => acc(B[id], H));
+    const k = {};
+    let outN = 0, tis = 0;
+    order.forEach((id) => { const x = B[id]; if (x.type === "sink") { outN += x.out; tis += x.tis; } });
+    k.throughput = outN; k.tis = outN ? tis / outN : 0; k.lost = lost; k.created = created;
+    for (const id of svc) {
+      const x = B[id];
+      k["wait_" + id] = x.nWait ? x.waits / x.nWait : 0;
+      k["util_" + id] = (x.bArea / (H * x.cap)) * 100;
+      k["maxq_" + id] = x.maxQ;
+      k["avgq_" + id] = x.qArea / H;
+      k["balk_" + id] = x.balked;
+    }
+    return { k, series, snaps, t: G };
+  }
+
+  /* ---------- SD ---------- */
+  function topo(items, known) {
+    const left = items.slice(), out = [], have = new Set(known);
+    while (left.length) {
+      const i = left.findIndex((a) => [...a.f.vars].every((v) => have.has(v) || !left.some((b) => b.id === v)));
+      if (i < 0) throw new Error("辅助变量之间有循环依赖: " + left.map((a) => a.id).join(", "));
+      const a = left.splice(i, 1)[0]; out.push(a); have.add(a.id);
+    }
+    return out;
+  }
+  function runSD(spec, env0) {
+    const H = +spec.time.horizon, dt = +(spec.time.dt || 1), G = grid(spec);
+    const env = Object.assign({ t: 0, dt }, env0);
+    const stocks = spec.stocks.map((s) => ({ id: s.id, init: compile(s.initial), min: s.min }));
+    stocks.forEach((s) => (env[s.id] = s.init(env)));
+    const flows = (spec.flows || []).map((f) => ({ id: f.id, from: f.from, to: f.to, f: compile(f.rate) }));
+    const aux = topo((spec.aux || []).map((a) => ({ id: a.id, f: compile(a.expr) })), Object.keys(env));
+    const names = stocks.map((s) => s.id).concat(flows.map((f) => f.id), aux.map((a) => a.id));
+    const series = {}; names.forEach((n) => (series[n] = []));
+    const evalAll = () => { aux.forEach((a) => (env[a.id] = a.f(env))); flows.forEach((f) => (env[f.id] = f.f(env))); aux.forEach((a) => (env[a.id] = a.f(env))); };
+    let gi = 0;
+    const steps = Math.round(H / dt);
+    for (let s = 0; s <= steps; s++) {
+      env.t = s * dt;
+      evalAll();
+      while (gi < G.length && G[gi] <= env.t + dt / 2) { names.forEach((n) => series[n].push(env[n])); gi++; }
+      if (s === steps) break;
+      const d = {};
+      flows.forEach((f) => { const v = env[f.id] * dt; if (f.from) d[f.from] = (d[f.from] || 0) - v; if (f.to) d[f.to] = (d[f.to] || 0) + v; });
+      stocks.forEach((st) => { env[st.id] += d[st.id] || 0; if (st.min != null && env[st.id] < st.min) env[st.id] = st.min; });
+    }
+    while (series[names[0]].length < G.length) names.forEach((n) => series[n].push(series[n][series[n].length - 1]));
+    return { k: {}, series, snaps: null, t: G };
+  }
+
+  /* ---------- ABM ---------- */
+  function runABM(spec, env0, seed, record) {
+    const r = rng(seed), H = +spec.time.horizon, dt = +(spec.time.dt || 1), G = grid(spec);
+    const env = Object.assign({ t: 0 }, env0);
+    const N = Math.max(1, Math.round(compile(spec.population)(env)));
+    env.N = N;
+    const S = spec.states.map((s) => s.id), idx = Object.fromEntries(S.map((s, i) => [s, i]));
+    const st = new Uint8Array(N);
+    let pos = 0;
+    for (const [sid, ex] of Object.entries(spec.initial || {})) {
+      const n = Math.min(N - pos, Math.max(0, Math.round(compile(ex)(env))));
+      for (let j = 0; j < n; j++) st[pos++] = idx[sid];
+    }
+    for (let i = N - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [st[i], st[j]] = [st[j], st[i]]; }
+    const tr = spec.transitions.map((x) => ({ from: idx[x.from], to: idx[x.to], type: x.type || "rate",
+      rate: x.rate != null ? compile(x.rate) : null, contacts: x.contacts != null ? compile(x.contacts) : null,
+      prob: x.prob != null ? compile(x.prob) : null, withS: x.with != null ? idx[x.with] : null }));
+    tr.forEach((x, i) => { if (x.from == null || x.to == null) throw new Error("状态转换引用了不存在的状态: " + JSON.stringify(spec.transitions[i])); });
+    const series = {}; S.forEach((s) => (series[s] = []));
+    const snaps = record ? [] : null;
+    const counts = () => { const c = new Array(S.length).fill(0); for (let i = 0; i < N; i++) c[st[i]]++; return c; };
+    let gi = 0;
+    const steps = Math.round(H / dt);
+    for (let s = 0; s <= steps; s++) {
+      env.t = s * dt;
+      const c = counts();
+      S.forEach((sid, i) => (env[sid] = c[i]));
+      while (gi < G.length && G[gi] <= env.t + dt / 2) { S.forEach((sid, i) => series[sid].push(c[i])); if (snaps) snaps.push({ t: G[gi], s: st.slice() }); gi++; }
+      if (s === steps) break;
+      const pre = tr.map((x) => ({ p: x.rate ? 1 - Math.exp(-Math.max(0, x.rate(env)) * dt) : 0,
+        k: x.contacts ? Math.max(0, x.contacts(env)) * dt : 0, q: x.prob ? x.prob(env) : 1 }));
+      const old = st.slice();
+      for (let i = 0; i < N; i++) {
+        for (let j = 0; j < tr.length; j++) {
+          const x = tr[j];
+          if (x.from !== old[i]) continue;
+          const p = pre[j];
+          let fire = false;
+          if (x.type === "rate") fire = r() < p.p;
+          else {
+            let n = Math.floor(p.k); if (r() < p.k - n) n++;
+            for (let m = 0; m < n && !fire; m++) { const o = old[Math.floor(r() * N)]; if (o === x.withS && r() < p.q) fire = true; }
+          }
+          if (fire) { st[i] = x.to; break; }
+        }
+      }
+    }
+    return { k: {}, series, snaps, t: G, N };
+  }
+
+  /* ---------- KPIs, replications ---------- */
+  function seriesKpi(def, run, env) {
+    const s = run.series[def.var];
+    if (!s) throw new Error("指标引用了不存在的序列: " + def.var);
+    const t = run.t;
+    switch (def.type || "final") {
+      case "final": return s[s.length - 1];
+      case "max": return Math.max(...s);
+      case "min": return Math.min(...s);
+      case "mean": return s.reduce((a, b) => a + b, 0) / s.length;
+      case "timeOfMax": return t[s.indexOf(Math.max(...s))];
+      case "firstTime": {
+        const v = def.valueParam != null && env && env[def.valueParam] != null ? +env[def.valueParam] : +def.value, op = def.op || ">=";
+        const ok = (x) => (op === ">=" ? x >= v : op === "<=" ? x <= v : op === ">" ? x > v : x < v);
+        const i = s.findIndex(ok);
+        return i < 0 ? null : t[i];
+      }
+      default: throw new Error("不支持的指标类型: " + def.type);
+    }
+  }
+  /* text fields may be plain strings or {zh, en} */
+  function pick(v, lang) {
+    if (v && typeof v === "object" && !Array.isArray(v) && ("zh" in v || "en" in v)) return v[lang] ?? v.zh ?? v.en;
+    return v;
+  }
+  function builtinKpis(spec) {
+    if (spec.method !== "des") return [];
+    const u = spec.time.unit || { zh: "分钟", en: "min" }, ppl = { zh: "人", en: "people" }, out = [];
+    const L2 = (b, zh, en) => ({ zh: (pick(b.label, "zh") || b.id) + "：" + zh, en: (pick(b.label, "en") || b.id) + ": " + en });
+    for (const b of spec.blocks) {
+      if (b.type !== "service") continue;
+      out.push({ id: "wait_" + b.id, label: L2(b, "平均排队", "average wait"), unit: u, good: "low" });
+      out.push({ id: "maxq_" + b.id, label: L2(b, "最长队伍", "longest queue"), unit: ppl, good: "low", digits: 0 });
+      out.push({ id: "util_" + b.id, label: L2(b, "忙碌程度", "how busy"), unit: "%", good: "mid", digits: 0 });
+      if (b.queueMax != null) out.push({ id: "balk_" + b.id, label: L2(b, "嫌队长离开", "left because of the line"), unit: ppl, good: "low", digits: 0 });
+    }
+    out.push({ id: "throughput", label: { zh: "完成服务", en: "Served" }, unit: ppl, good: "high", digits: 0 });
+    out.push({ id: "tis", label: { zh: "平均总停留", en: "Average total time" }, unit: u, good: "low" });
+    return out;
+  }
+  function pct(a, p) { if (!a.length) return null; const s = a.slice().sort((x, y) => x - y), i = (s.length - 1) * p, lo = Math.floor(i); return s[lo] + (s[Math.ceil(i)] - s[lo]) * (i - lo); }
+
+  function run(spec, overrides, opts) {
+    opts = opts || {};
+    const env = paramEnv(spec, overrides);
+    const reps = spec.method === "sd" ? 1 : Math.max(1, opts.reps || spec.replications || 20);
+    const seed0 = opts.seed ?? 12345;
+    const runs = [];
+    for (let k = 0; k < reps; k++) {
+      const rec = k === 0 && opts.record !== false;
+      const e = Object.assign({}, env);
+      runs.push(spec.method === "des" ? runDES(spec, e, seed0 + k * 7919, rec)
+        : spec.method === "sd" ? runSD(spec, e) : runABM(spec, e, seed0 + k * 7919, rec));
+    }
+    const defs = builtinKpis(spec).concat(spec.kpis || []);
+    const kpis = defs.map((d) => {
+      const vals = runs.map((rn) => (d.var ? seriesKpi(d, rn, env) : rn.k[d.id])).filter((v) => v != null && isFinite(v));
+      return Object.assign({}, d, { mean: vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null,
+        lo: pct(vals, 0.05), hi: pct(vals, 0.95), hit: vals.length, n: runs.length });
+    });
+    const series = {};
+    for (const name of Object.keys(runs[0].series)) {
+      const cols = runs[0].series[name].map((_, i) => runs.map((rn) => rn.series[name][i]));
+      series[name] = { mean: cols.map((c) => c.reduce((a, b) => a + b, 0) / c.length), lo: cols.map((c) => pct(c, 0.05)), hi: cols.map((c) => pct(c, 0.95)) };
+    }
+    return { kpis, series, t: runs[0].t, anim: runs[0].snaps, N: runs[0].N, reps, env };
+  }
+
+  /* ---------- validation ---------- */
+  function validate(spec) {
+    const errs = [];
+    const need = (c, m) => { if (!c) errs.push(m); };
+    need(spec && spec.title, "缺少 title");
+    need(["des", "sd", "abm"].includes(spec && spec.method), "method 必须是 des / sd / abm");
+    need(spec && spec.time && +spec.time.horizon > 0, "time.horizon 必须大于 0");
+    if (errs.length) return errs;
+    const ids = new Set((spec.params || []).map((p) => p.id));
+    (spec.params || []).forEach((p) => {
+      need(/^[A-Za-z_]\w*$/.test(p.id || ""), "参数 id 只能用英文字母、数字、下划线: " + p.id);
+      need(p.label, "参数缺少 label: " + p.id);
+      if (p.min != null && p.max != null) need(+p.min <= +p.value && +p.value <= +p.max, "参数默认值不在 min~max 内: " + p.id);
+    });
+    if (spec.method === "des") {
+      const bid = new Set(spec.blocks.map((b) => b.id));
+      need(spec.blocks.some((b) => b.type === "source"), "流程模型至少需要一个 source");
+      need(spec.blocks.some((b) => b.type === "sink"), "流程模型至少需要一个 sink");
+      spec.blocks.forEach((b) => {
+        need(["source", "service", "delay", "select", "sink"].includes(b.type), "未知环节类型: " + b.type);
+        if (b.type !== "sink" && b.type !== "select") need(bid.has(b.next), b.id + " 的 next 指向不存在的环节: " + b.next);
+        if (b.type === "select") (b.branches || []).forEach((br) => need(bid.has(br.next), b.id + " 的分支指向不存在的环节: " + br.next));
+      });
+    }
+    if (!errs.length) {
+      try { run(spec, null, { reps: 1, record: false }); } catch (e) { errs.push("试运行失败: " + e.message); }
+    }
+    void ids;
+    return errs;
+  }
+
+  const api = { run, validate, compile, distMean, builtinKpis, paramEnv, pick, version: "0.2.0" };
+  root.SimEngine = api;
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+})(typeof window !== "undefined" ? window : globalThis);
+</script>
+<div class="shell">
+<aside id="side" data-ia="modelDir">
+  <p class="brand" id="brand"></p>
+  <p class="sub" id="sub"></p>
+  <ul class="tree" id="tree"></ul>
+</aside>
+<main>
+  <div class="top">
+    <nav class="tabs" id="tabs"><button class="menu" id="menu" data-ia="openMenu">☰</button></nav>
+    <button class="lang" id="lang" aria-label="切换语言 / Switch language"><span data-l="zh">中</span><span data-l="en">EN</span></button>
+  </div>
+
+  <section class="pane" data-tab="anim">
+    <h1 class="mt"></h1><p class="q"></p>
+    <div class="note pchg" data-i="paramsChanged" hidden></div>
+    <div class="ctrl">
+      <button class="btn" id="play"></button>
+      <input type="range" id="scrub" min="0" value="0" data-ia="progress">
+      <span class="clock" id="clock"></span>
+      <label class="status"><span data-i="speed"></span> <select id="speed"><option value="0.5" data-i="slow"></option><option value="1" data-i="normal" selected></option><option value="3" data-i="fast"></option></select></label>
+    </div>
+    <div class="fig" id="stage"></div>
+    <div class="fig" id="stageChart"></div>
+  </section>
+
+  <section class="pane" data-tab="result" hidden>
+    <h1 class="mt"></h1><p class="q"></p>
+    <div class="ins" id="ins"></div>
+    <div class="note pchg" data-i="resChanged" hidden></div>
+    <div class="kpis" id="kpis"></div>
+    <div id="charts"></div>
+  </section>
+
+  <section class="pane" data-tab="whatif" hidden>
+    <h1 data-i="whatif"></h1>
+    <p class="q" style="margin-bottom:6px"></p>
+    <p class="status" data-i="whatifHint"></p>
+    <div class="wi">
+      <div class="sliders"><div id="sliders"></div><div class="ctrl"><button class="btn ghost" id="reset" data-i="reset"></button><span class="status" id="runInfo"></span></div></div>
+      <div style="min-width:0"><div class="tbl" id="cmp"></div><div class="fig" id="cmpChart"></div></div>
+    </div>
+  </section>
+
+  <section class="pane" data-tab="struct" hidden>
+    <h1 class="mt"></h1><p class="q"></p>
+    <div class="method" id="method"></div>
+    <div class="fig" id="diagram"></div>
+    <h2 data-i="params"></h2><div class="tbl" id="ptable"></div>
+    <h2 data-i="assumeH"></h2><div class="cols" id="assume"></div>
+  </section>
+
+  <section class="pane" data-tab="about" hidden><div class="about" id="about"></div></section>
+
+  <section class="pane" data-tab="feedback" hidden>
+    <h1 data-i="feedback"></h1>
+    <p class="status" data-i="fbHint"></p>
+    <textarea id="fbText" data-ip="fbPh"></textarea>
+    <div class="ctrl"><button class="btn" id="fbSend" data-i="fbSave"></button><button class="btn ghost" id="fbCopy" data-i="fbCopy"></button><span class="status" id="fbStatus"></span></div>
+    <ul class="fb" id="fbList"></ul>
+  </section>
+</main>
+</div>
+
+<script>
+(function(){
+const D=JSON.parse(document.getElementById("sim-data").textContent),E=window.SimEngine;
+const M=D.models||[];const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),NS="http://www.w3.org/2000/svg";
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function el(t,a,p,tx){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(tx!=null)e.textContent=tx;if(p)p.appendChild(e);return e}
+const V=n=>`var(--${n})`,PAL=["p1","p2","p3","p4","p5","p6"];
+
+/* ---------- language ---------- */
+const I={
+ modelDir:["模型目录","Models"],openMenu:["打开目录","Open menu"],question:["问题：","Question: "],
+ paramsChanged:["正在使用「假如…」里调整过的参数。","Using the parameters you changed under What if."],
+ play:["▶ 播放","▶ Play"],pause:["❚❚ 暂停","❚❚ Pause"],progress:["时间进度","Time"],speed:["速度","Speed"],slow:["慢","Slow"],normal:["正常","Normal"],fast:["快","Fast"],
+ resChanged:["下面的数字按「假如…」里调整过的参数计算。上面的结论是按默认参数写的。","The numbers below use the parameters changed under What if. The conclusions above were written for the defaults."],
+ whatif:["假如…","What if…"],whatifHint:["拖动滑块，模型会马上重新模拟，并和默认方案对比。","Drag a slider and the model re-runs right away, compared with the default."],reset:["恢复默认","Reset"],
+ params:["参数","Parameters"],assumeH:["假设与边界","Assumptions and limits"],feedback:["修正意见","Feedback"],
+ fbHint:["模型哪里不像真实情况、数字不对、想加什么参数，写在这里。","Tell us where the model doesn't match reality, which numbers look wrong, or what parameter you want to add."],
+ fbPh:["例如：中午 12 点到 12 点半客人特别多，平时没那么多；或者：店员还要接外卖单","For example: it gets much busier between 12:00 and 12:30; or: staff also handle delivery orders"],
+ fbSave:["保存意见","Save"],fbCopy:["复制文字","Copy text"],
+ tabAnim:["动画","Animation"],tabResult:["结果","Results"],tabStruct:["模型结构","Model"],tabAbout:["说明","About"],
+ nModels:["{0} 个模型","{0} models"],chart:["图表","Chart"],timeAxis:["时间（{0}）","Time ({0})"],band:["阴影 = 多数情况（90%）的范围","Shaded = range in most runs (90%)"],
+ inSys:["店内总人数","In the system"],queueOf:["{0}排队人数","{0} queue"],queueChart:["排队人数","Queue length"],sysChart:["店内总人数","In the system"],stockChart:["存量变化","Stocks"],stateChart:["各状态人数","People by state"],
+ range:["多数情况 {0} ~ {1}","Usually {0} – {1}"],missed:["{0}/{1} 次在时间范围内没达到","{0} of {1} runs never got there"],
+ basedOn:["以上结论基于默认参数；","These conclusions use the default parameters. "],avgOf:["每个数字是 {0} 次随机模拟的平均值。","Each number is the average of {0} random runs."],determ:["这是确定性计算。","This model has no randomness."],noIns:["（还没有写结论）","(No conclusions yet)"],
+ reran:["已重新模拟 {0} 次，用时 {1} ms","Re-ran {0} times in {1} ms"],simErr:["模拟出错：","Simulation error: "],
+ kpi:["指标","Measure"],def:["默认方案","Default"],now:["现在","Now"],change:["变化","Change"],defTag:["（默认）"," (default)"],nowTag:["（现在）"," (now)"],
+ flowchart:["流程图","Flow chart"],source:["来源","Arrivals"],service:["服务 · {0} 个位置","Service · {0} slots"],delay:["等待/耗时","Delay"],select:["分流","Split"],sink:["离开","Exit"],
+ every:["平均每 {0} {1} 来一个","One every {0} {1} on average"],avgTime:["平均用时 {0} {1}","Takes {0} {1} on average"],qFull:[" · 队满 {0} 人"," · max queue {0}"],
+ sfd:["存量流量图","Stock and flow diagram"],stock:["存量","Stock"],auxLbl:["○ 另外计算：","○ Also computed: "],statechart:["状态图","State chart"],contact:["（接触传播）"," (by contact)"],
+ modelSuffix:["{0}模型","{0} model"],anyl:["（AnyLogic 里叫「{0}」）","(in AnyLogic: {0})"],dflt:["默认","Default"],rangeH:["可调范围","Range"],assume:["模型假设","Assumptions"],notIn:["没有考虑的","Not included"],none:["（未写）","(none)"],
+ clock:["第 {0} {1} / {2}","{0} / {2} {1}"],busyQ:["忙 {0}/{1} · 排队 {2} 人","Busy {0}/{1} · queue {2}"],only14:["（图中只画 14 个）"," (14 shown)"],
+ ppl:["{0} 人","{0}"],arrived:["已来 {0}","Arrived {0}"],done:["已走 {0}","Done {0}"],lost:[" · 流失 {0}"," · lost {0}"],
+ writeFirst:["先写点内容。","Write something first."],savedCloud:["已保存，Claude 可以直接读到。","Saved. Claude can read it."],cloudFail:["云端保存失败，已改存到本机浏览器。","Couldn't save online, so it was saved in this browser."],
+ savedLocal:["已存在本机浏览器。要让 agent 看到，请点「复制文字」发给它。","Saved in this browser. To share it with the agent, use Copy text and send it."],selected:["已选中，请手动复制。","Selected. Copy it manually."],copied:["已复制。","Copied."],noData:["没有模型数据。","No model data."],
+ mDes:["流程","Flow"],mDesA:["离散事件","Discrete event"],mDesD:["把客人、订单这类东西看成一个个在环节之间流动的个体，模拟排队、忙闲和流失。","Treats customers or orders as individual items moving between steps, to simulate queues, busy staff and people who give up."],
+ mSd:["存量","Stock"],mSdA:["系统动力学","System dynamics"],mSdD:["关注一个总量（钱、库存、人数）怎么随时间累积，像水池的进水和出水。","Follows how a total (money, stock, people) builds up or drains over time, like water flowing into and out of a tank."],
+ mAbm:["个体","People"],mAbmA:["智能体","Agent-based"],mAbmD:["模拟很多个体各自的状态，以及他们之间的互相影响，看整体会出现什么变化。","Simulates many individuals, each with their own state, influencing each other, to see what happens overall."],
+};
+let LANG="zh";try{LANG=localStorage.getItem("sim-lang")||D.lang||(/^zh/i.test(navigator.language||"zh")?"zh":"en")}catch(e){LANG=D.lang||"zh"}if(LANG!=="en")LANG="zh";
+const t=(k,...a)=>{const v=I[k];let s=v?v[LANG==="en"?1:0]:k;a.forEach((x,i)=>s=s.split("{"+i+"}").join(x));return s};
+const tx=v=>E.pick(v,LANG);
+const txl=v=>{const x=tx(v);return Array.isArray(x)?x.map(tx):[]};
+const METHOD={des:["mDes","mDesA","mDesD"],sd:["mSd","mSdA","mSdD"],abm:["mAbm","mAbmA","mAbmD"]};
+function fmt(v,dg){if(v==null||!isFinite(v))return"—";const a=Math.abs(v),loc=LANG==="en"?"en-US":"zh-CN";if(a>=10000)return Math.round(v).toLocaleString(loc);const d=dg!=null?dg:a>=100?0:a>=10?1:2;return(+v.toFixed(d)).toLocaleString(loc,{maximumFractionDigits:d})}
+const withUnit=(n,u)=>{u=tx(u)||"";if(u==="people"&&n==="1")u="person";return u===""?n:(u==="%"?n+"%":n+" "+u)};
+
+let cur=0,tab="anim",P={},base=null,res=null,frame=0,playing=false,raf=0,lastTs=0,acc=0;
+const model=()=>M[cur],unit=()=>tx(model().time.unit)||"";
+
+/* ---------- tabs + tree ---------- */
+const TABS=[["anim","tabAnim"],["result","tabResult"],["whatif","whatif"],["struct","tabStruct"]].concat(D.about?[["about","tabAbout"]]:[]).concat([["feedback","feedback"]]);
+const tabs=$("#tabs");TABS.forEach(([id,k])=>{const b=document.createElement("button");b.dataset.tab=id;b.dataset.i=k;b.onclick=()=>show(id);tabs.appendChild(b)});
+function show(id){tab=id;$$(".pane").forEach(p=>p.hidden=p.dataset.tab!==id);tabs.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("on",b.dataset.tab===id));
+  $$(".tree button[data-m]").forEach(b=>b.classList.toggle("on",+b.dataset.m===cur&&b.dataset.t===id));if(id!=="anim")pause();if(id==="anim")drawFrame()}
+$("#menu").onclick=()=>$("#side").classList.toggle("open");
+const tree=$("#tree");
+function buildTree(){const closed=[...tree.children].map(li=>li.classList.contains("closed"));tree.innerHTML="";
+  M.forEach((m,i)=>{const li=document.createElement("li");const b=document.createElement("button");b.innerHTML=`<span class="car">▼</span><span class="mtag">${esc(t(METHOD[m.method][0]))}</span><span></span>`;b.lastChild.textContent=tx(m.title);
+    b.onclick=e=>{if(e.target.classList.contains("car")){li.classList.toggle("closed");return}pick(i,"anim")};li.appendChild(b);
+    const ul=document.createElement("ul");TABS.filter(x=>!["about","feedback"].includes(x[0])).forEach(([id,k])=>{const l=document.createElement("li");const c=document.createElement("button");c.dataset.m=i;c.dataset.t=id;c.innerHTML=`<span class="car" style="visibility:hidden">•</span><span></span>`;c.lastChild.textContent=t(k);c.onclick=()=>pick(i,id);l.appendChild(c);ul.appendChild(l)});
+    li.appendChild(ul);if(closed.length?closed[i]:(i>0&&M.length>2))li.classList.add("closed");tree.appendChild(li)});
+  TABS.filter(x=>["about","feedback"].includes(x[0])).forEach(([id,k])=>{const li=document.createElement("li");const b=document.createElement("button");b.innerHTML=`<span class="car" style="visibility:hidden">•</span><span></span>`;b.lastChild.textContent=t(k);b.onclick=()=>{show(id);$("#side").classList.remove("open")};li.appendChild(b);tree.appendChild(li)});
+  $$(".tree button[data-m]").forEach(b=>b.classList.toggle("on",+b.dataset.m===cur&&b.dataset.t===tab))}
+
+function applyLang(){document.documentElement.lang=LANG==="en"?"en":"zh-CN";
+  $$("[data-i]").forEach(e=>e.textContent=t(e.dataset.i));$$("[data-ia]").forEach(e=>e.setAttribute("aria-label",t(e.dataset.ia)));$$("[data-ip]").forEach(e=>e.setAttribute("placeholder",t(e.dataset.ip)));
+  $$("#lang span").forEach(s=>s.classList.toggle("on",s.dataset.l===LANG));
+  const title=tx(D.title)||t("tabAnim");$("#brand").textContent=title;document.title=title;
+  $("#sub").textContent=t("nModels",M.length)+(D.generated_at?" · "+D.generated_at.slice(0,10):"");
+  $$(".q").forEach(e=>e.setAttribute("data-q",t("question")));
+  if(D.about)$("#about").innerHTML=tx(D.about)||"";
+  $("#play").textContent=playing?t("pause"):t("play");$("#runInfo").textContent="";$("#fbStatus").textContent="";
+  buildTree();if(!M.length)return;
+  $$(".mt").forEach(e=>e.textContent=tx(model().title));$$(".q").forEach(e=>e.textContent=tx(model().question)||"");
+  if(res){renderAll();buildSliders()}}
+$("#lang").onclick=()=>{LANG=LANG==="zh"?"en":"zh";try{localStorage.setItem("sim-lang",LANG)}catch(e){}applyLang()};
+
+function pick(i,id){$("#side").classList.remove("open");if(i!==cur||!base){cur=i;load()}show(id||tab)}
+function defaults(){const o={};(model().params||[]).forEach(p=>o[p.id]=+p.value);return o}
+function changed(){return(model().params||[]).some(p=>+P[p.id]!==+p.value)}
+function load(){pause();P=defaults();base=E.run(model(),P);res=base;frame=0;$$(".mt").forEach(e=>e.textContent=tx(model().title));$$(".q").forEach(e=>e.textContent=tx(model().question)||"");
+  renderAll();buildSliders()}
+function renderAll(){$$(".pchg").forEach(e=>e.hidden=!changed());buildStage();renderResult();renderCompare();renderStruct()}
+
+/* ---------- charts ---------- */
+function chart(host,o){host.innerHTML="";const W=760,L=64,R=16,B=40,LW=o.lines.map(l=>l.label.length*(LANG==="en"?7:12)+34);let lr=1,acc0=L+(o.title?o.title.length*(LANG==="en"?8:14)+20:0);LW.forEach(w=>{if(acc0+w>W-R){lr++;acc0=L}acc0+=w});const T=16+lr*18,H=(o.h||250)+lr*18-18,
+  svg=el("svg",{viewBox:`0 0 ${W} ${H}`,width:"100%",role:"img","aria-label":o.title||t("chart")},host);
+  const tt=o.t,xs=v=>L+(v-tt[0])/(tt[tt.length-1]-tt[0]||1)*(W-L-R);let lo=0,hi=-Infinity;o.lines.forEach(l=>{(l.hi||l.mean).forEach(v=>{if(v>hi)hi=v});(l.lo||l.mean).forEach(v=>{if(v<lo)lo=v})});if(hi<=lo)hi=lo+1;
+  const step=nice((hi-lo)/4);hi=Math.ceil(hi/step)*step;lo=Math.floor(lo/step)*step;const ys=v=>T+(1-(v-lo)/(hi-lo))*(H-T-B);
+  if(o.title)el("text",{x:L,y:16,"font-size":13,"font-weight":700,fill:V("ink")},svg,o.title);
+  for(let v=lo;v<=hi+1e-9;v+=step){el("line",{x1:L,x2:W-R,y1:ys(v),y2:ys(v),stroke:V("line")},svg);el("text",{x:L-8,y:ys(v)+4,"text-anchor":"end","font-size":11,fill:V("muted")},svg,fmt(v))}
+  const xt=nice((tt[tt.length-1]-tt[0])/6);for(let v=Math.ceil(tt[0]/xt)*xt;v<=tt[tt.length-1]+1e-9;v+=xt)el("text",{x:xs(v),y:H-B+18,"text-anchor":"middle","font-size":11,fill:V("muted")},svg,fmt(v));
+  el("text",{x:W-R,y:H-6,"text-anchor":"end","font-size":11,fill:V("muted")},svg,t("timeAxis",unit()));
+  let lx=L+(o.title?o.title.length*(LANG==="en"?8:14)+20:0),ly=0;
+  o.lines.forEach((l,i)=>{const c=l.color||V(PAL[i%6]);
+    if(l.lo&&l.hi&&l.lo.some((v,k)=>v!==l.hi[k])){el("path",{d:"M"+tt.map((x,k)=>xs(x)+","+ys(l.hi[k])).join("L")+"L"+tt.map((x,k)=>xs(x)+","+ys(l.lo[k])).reverse().join("L")+"Z",fill:c,opacity:.14},svg)}
+    el("path",{d:"M"+tt.map((x,k)=>xs(x)+","+ys(l.mean[k])).join("L"),fill:"none",stroke:c,"stroke-width":l.dash?1.6:2.2,"stroke-dasharray":l.dash?"5 4":""},svg);
+    if(lx+LW[i]>W-R){ly+=18;lx=L}el("rect",{x:lx,y:7+ly,width:14,height:4,rx:2,fill:c},svg);el("text",{x:lx+18,y:13+ly,"font-size":12,fill:V("muted")},svg,l.label);lx+=LW[i]});
+  if(o.cursor!=null){const cl=el("line",{x1:xs(o.cursor),x2:xs(o.cursor),y1:T,y2:H-B,stroke:V("live"),"stroke-width":1.5},svg);host._cursor=v=>{cl.setAttribute("x1",xs(v));cl.setAttribute("x2",xs(v))}}
+  if(o.bandNote)el("text",{x:L,y:H-6,"font-size":11,fill:V("muted")},svg,t("band"));
+  return svg}
+function nice(x){if(!(x>0))return 1;const p=Math.pow(10,Math.floor(Math.log10(x))),f=x/p;return(f<=1?1:f<=2?2:f<=5?5:10)*p}
+const label=id=>{const m=model();const all=[].concat(m.stocks||[],m.flows||[],m.aux||[],m.states||[]);const x=all.find(a=>a.id===id);if(x)return tx(x.label)||id;if(id==="inSys")return t("inSys");if(id.startsWith("q_")){const b=(m.blocks||[]).find(b=>"q_"+b.id===id);return t("queueOf",b?tx(b.label):id)}return id};
+const color=id=>{const s=(model().states||[]).find(s=>s.id===id);return s&&s.color};
+function chartDefs(){const m=model();if(m.charts)return m.charts.map(c=>({title:tx(c.title),vars:c.vars}));if(m.method==="des")return[{title:t("queueChart"),vars:Object.keys(res.series).filter(k=>k.startsWith("q_"))},{title:t("sysChart"),vars:["inSys"]}];if(m.method==="sd")return[{title:t("stockChart"),vars:(m.stocks||[]).map(s=>s.id)}];return[{title:t("stateChart"),vars:(m.states||[]).map(s=>s.id)}]}
+
+/* ---------- result ---------- */
+function kpiCard(k){const rng=res.reps>1&&k.lo!=null&&Math.abs(k.hi-k.lo)>1e-9?t("range",fmt(k.lo,k.digits),fmt(k.hi,k.digits)):"";const miss=k.hit<k.n?t("missed",k.n-k.hit,k.n):"";
+  const u=tx(k.unit)||"";return `<div class="kpi"><span>${esc(tx(k.label))}</span><b>${fmt(k.mean,k.digits)}<small>${esc(u)}</small></b><i>${esc([rng,miss].filter(Boolean).join(" · "))||"&nbsp;"}</i></div>`}
+function renderResult(){const m=model(),ins=txl(m.insights);$("#ins").innerHTML=(ins.length?`<ul>${ins.map(s=>`<li>${esc(s)}</li>`).join("")}</ul><p>${esc(t("basedOn")+(res.reps>1?t("avgOf",res.reps):t("determ")))}</p>`:`<p>${esc(t("noIns"))}</p>`);
+  $("#kpis").innerHTML=res.kpis.map(kpiCard).join("");const ch=$("#charts");ch.innerHTML="";
+  chartDefs().forEach(c=>{const f=document.createElement("div");f.className="fig";ch.appendChild(f);chart(f,{title:c.title,t:res.t,bandNote:res.reps>1,lines:c.vars.filter(v=>res.series[v]).map(v=>Object.assign({label:label(v),color:color(v)},res.series[v]))})})}
+
+/* ---------- what-if ---------- */
+let tmr=0;
+function buildSliders(){const box=$("#sliders");box.innerHTML="";(model().params||[]).forEach(p=>{const d=document.createElement("div");d.className="sl";const id="sl-"+model().id+"-"+p.id;
+  const mn=p.min??0,mx=p.max??(+p.value*3||10),st=p.step??((mx-mn)/50);
+  d.innerHTML=`<label for="${id}"><span>${esc(tx(p.label))}</span><b></b></label><input type="range" id="${id}" min="${mn}" max="${mx}" step="${st}" value="${P[p.id]}">`;
+  const out=d.querySelector("b"),inp=d.querySelector("input");const upd=()=>{out.textContent=withUnit(fmt(+inp.value,(String(st).split(".")[1]||"").length),p.unit);out.classList.toggle("chg",+inp.value!==+p.value)};upd();
+  inp.oninput=()=>{P[p.id]=+inp.value;upd();clearTimeout(tmr);tmr=setTimeout(rerun,120)};box.appendChild(d)})}
+function rerun(){const t0=performance.now();try{res=E.run(model(),P);$("#runInfo").textContent=t("reran",res.reps,Math.round(performance.now()-t0))}catch(e){$("#runInfo").textContent=t("simErr")+e.message;return}frame=0;renderAll()}
+$("#reset").onclick=()=>{P=defaults();buildSliders();rerun()};
+function renderCompare(){const rows=res.kpis.map((k,i)=>{const b=base.kpis[i],d=(k.mean??NaN)-(b.mean??NaN);let cls="flat",arr="—";
+  if(isFinite(d)&&Math.abs(d)>1e-9*(Math.abs(b.mean)||1)){const better=k.good==="high"?d>0:k.good==="low"?d<0:null;cls=better==null?"flat":better?"up":"down";arr=(d>0?"▲ +":"▼ ")+fmt(d,k.digits)}
+  return `<tr><td>${esc(tx(k.label))}</td><td class="n">${esc(withUnit(fmt(b.mean,k.digits),k.unit))}</td><td class="n"><b>${esc(withUnit(fmt(k.mean,k.digits),k.unit))}</b></td><td class="n ${cls}">${arr}</td></tr>`}).join("");
+  $("#cmp").innerHTML=`<table><thead><tr><th>${t("kpi")}</th><th>${t("def")}</th><th>${t("now")}</th><th>${t("change")}</th></tr></thead><tbody>${rows}</tbody></table>`;
+  const c=chartDefs()[0],lines=[];c.vars.filter(v=>res.series[v]).forEach((v,i)=>{const col=color(v)||V(PAL[i%6]);lines.push({label:label(v)+t("defTag"),mean:base.series[v].mean,color:col,dash:1});lines.push(Object.assign({label:label(v)+t("nowTag"),color:col},res.series[v]))});
+  chart($("#cmpChart"),{title:c.title,t:res.t,lines,bandNote:res.reps>1})}
+
+/* ---------- structure diagrams ---------- */
+function desLayout(m){const B=m.blocks,col={},nexts=b=>b.type==="select"?(b.branches||[]).map(x=>x.next):b.next?[b.next]:[];
+  B.filter(b=>b.type==="source").forEach(b=>col[b.id]=0);for(let k=0;k<B.length;k++)B.forEach(b=>{if(col[b.id]==null)return;nexts(b).forEach(n=>{if(col[n]==null||col[n]<col[b.id]+1&&col[n]<B.length)col[n]=Math.min(col[b.id]+1,B.length)})});
+  B.forEach(b=>{if(col[b.id]==null)col[b.id]=0});const rows={},pos={};B.forEach(b=>{const c=col[b.id];rows[c]=(rows[c]||0);pos[b.id]={c,r:rows[c]++}});
+  const maxR=Math.max(...Object.values(rows));return{pos,nexts,maxR,maxC:Math.max(...Object.values(col))}}
+const BW=176,BH=104,GX=64,GY=26;let MK=0;
+function arrowDef(svg,fill){const defs=el("defs",{},svg),mid="mk"+(++MK),mk=el("marker",{id:mid,viewBox:"0 0 10 10",refX:9,refY:5,markerWidth:7,markerHeight:7,orient:"auto"},defs);el("path",{d:"M0,0L10,5L0,10z",fill},mk);return`url(#${mid})`}
+function desSvg(host,m,live){host.innerHTML="";const L=desLayout(m),W=(L.maxC+1)*(BW+GX)+20,H=Math.max(L.maxR,1)*(BH+GY)+76;
+  const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,width:"100%",style:`min-width:620px;max-width:${W}px`,role:"img","aria-label":t("flowchart")},host);const AR=arrowDef(svg,V("muted"));
+  const xy=id=>{const p=L.pos[id];const n=Object.values(L.pos).filter(q=>q.c===p.c).length;const off=(Math.max(L.maxR,1)-n)*(BH+GY)/2;return[10+p.c*(BW+GX),56+off+p.r*(BH+GY)]};
+  const env=E.paramEnv(m,P),u=unit();
+  m.blocks.forEach(b=>L.nexts(b).forEach((n,i)=>{if(!L.pos[n])return;const[x1,y1]=xy(b.id),[x2,y2]=xy(n);
+    const skip=L.pos[n].c-L.pos[b.id].c>1||L.pos[n].c<=L.pos[b.id].c;let sx=x1+BW,sy=y1+BH/2,tx2=x2,ty=y2+BH/2,lx2,ly2;
+    if(skip){sx=x1+BW/2;sy=y1;tx2=x2+BW/2;ty=y2;const top=Math.min(y1,y2)-40;el("path",{d:`M${sx},${sy} C${sx},${top} ${tx2},${top} ${tx2},${ty-2}`,fill:"none",stroke:V("muted"),"stroke-width":1.4,"marker-end":AR},svg);lx2=(sx+tx2)/2;ly2=top+24}
+    else{el("path",{d:`M${sx},${sy} C${sx+GX/2},${sy} ${tx2-GX/2},${ty} ${tx2-2},${ty}`,fill:"none",stroke:V("muted"),"stroke-width":1.4,"marker-end":AR},svg);lx2=(sx+tx2)/2;ly2=(sy+ty)/2-6}
+    if(b.type==="select"){const br=b.branches[i];let p;if(br.p==="rest"||br.p==null){p=1-b.branches.filter(x=>x.p!=="rest"&&x.p!=null).reduce((a,x)=>a+E.compile(x.p)(env),0)}else p=E.compile(br.p)(env);el("text",{x:lx2,y:ly2,"text-anchor":"middle","font-size":11,fill:V("muted")},svg,Math.round(p*100)+"%")}}));
+  const refs={};
+  m.blocks.forEach(b=>{const[x,y]=xy(b.id),g=el("g",{},svg);const isSel=b.type==="select";
+    el("rect",{x,y,width:BW,height:BH,rx:isSel?40:8,fill:V("panel"),stroke:b.type==="service"?V("accent"):V("line"),"stroke-width":b.type==="service"?1.8:1.2},g);
+    el("text",{x:x+10,y:y+20,"font-size":13,"font-weight":700,fill:V("ink")},g,tx(b.label)||b.id);
+    const sub=b.type==="service"?t("service",Math.round(E.compile(b.capacity??1)(env))):t(b.type);
+    el("text",{x:x+10,y:y+37,"font-size":11,fill:V("muted")},g,sub);
+    if(!live){let d="";if(b.type==="source")d=t("every",fmt(E.distMean(b.interarrival,env)),u);if(b.type==="service"||b.type==="delay")d=t("avgTime",fmt(E.distMean(b.duration,env)),u);if(b.queueMax!=null)d+=t("qFull",fmt(E.compile(b.queueMax)(env),0));el("text",{x:x+10,y:y+60,"font-size":11,fill:V("ink")},g,d);return}
+    const r={};if(b.type==="service"){const cap=Math.round(E.compile(b.capacity??1)(env)),n=Math.min(cap,12);r.slots=[];for(let k=0;k<n;k++)r.slots.push(el("rect",{x:x+10+k*13,y:y+46,width:10,height:10,rx:2,fill:V("soft"),stroke:V("accent")},g));r.cap=cap;
+      r.dots=[];for(let k=0;k<14;k++)r.dots.push(el("circle",{cx:x+15+k*11,cy:y+74,r:4,fill:V("live"),opacity:0},g));r.qt=el("text",{x:x+10,y:y+96,"font-size":11,fill:V("muted")},g,"")}
+    else r.t=el("text",{x:x+10,y:y+68,"font-size":20,"font-weight":700,fill:V("ink")},g,"");refs[b.id]=r});
+  return refs}
+function sdSvg(host,m,live){host.innerHTML="";const S=m.stocks,F=m.flows||[],TW=150,W=Math.max(560,S.length*320+60),H=300;
+  const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,width:"100%",style:`min-width:480px;max-width:${W}px`,role:"img","aria-label":t("sfd")},host);const AR=arrowDef(svg,V("accent"));
+  const sx=i=>W/2-(S.length*320)/2+i*320+85,refs={stocks:{},flows:{}};
+  S.forEach((s,i)=>{const x=sx(i);el("rect",{x,y:70,width:TW,height:170,rx:6,fill:V("soft"),stroke:V("ink"),"stroke-width":1.5},svg);
+    refs.stocks[s.id]={fill:el("rect",{x:x+2,y:238,width:TW-4,height:0,rx:4,fill:V("accent"),opacity:.75},svg),x};
+    el("text",{x:x+TW/2,y:60,"text-anchor":"middle","font-size":14,"font-weight":700,fill:V("ink")},svg,tx(s.label)||s.id);
+    refs.stocks[s.id].t=el("text",{x:x+TW/2,y:160,"text-anchor":"middle","font-size":17,"font-weight":700,fill:V("ink")},svg,live?"":t("stock"))});
+  const idx=Object.fromEntries(S.map((s,i)=>[s.id,i]));let inN={},outN={};
+  F.forEach(f=>{const ti=f.to!=null?idx[f.to]:null,fi=f.from!=null?idx[f.from]:null;let x1,y1,x2,y2,ly;
+    if(fi!=null&&ti!=null){x1=sx(fi)+TW;x2=sx(ti);y1=y2=150;ly=140}else if(ti!=null){const k=inN[ti]=(inN[ti]||0)+1;x1=sx(ti)-80;x2=sx(ti);y1=y2=90+k*48;ly=y1-8;el("circle",{cx:x1-8,cy:y1,r:8,fill:"none",stroke:V("muted"),"stroke-dasharray":"2 2"},svg)}
+    else{const k=outN[fi]=(outN[fi]||0)+1;x1=sx(fi)+TW;x2=x1+80;y1=y2=90+k*48;ly=y1-8;el("circle",{cx:x2+8,cy:y2,r:8,fill:"none",stroke:V("muted"),"stroke-dasharray":"2 2"},svg)}
+    el("line",{x1,y1,x2:x2-2,y2,stroke:V("accent"),"stroke-width":3,"marker-end":AR},svg);el("polygon",{points:`${(x1+x2)/2-6},${y1-6} ${(x1+x2)/2+6},${y1-6} ${(x1+x2)/2},${y1}`,fill:V("accent")},svg);
+    el("text",{x:(x1+x2)/2,y:ly-6,"text-anchor":"middle","font-size":12,fill:V("ink")},svg,tx(f.label)||f.id);refs.flows[f.id]=el("text",{x:(x1+x2)/2,y:y1+18,"text-anchor":"middle","font-size":11,fill:V("muted")},svg,"")});
+  (m.aux||[]).forEach((a,i)=>el("text",{x:20,y:H-12-i*16,"font-size":11,fill:V("muted")},svg,t("auxLbl")+(tx(a.label)||a.id)));
+  return refs}
+function abmSvg(host,m){host.innerHTML="";const S=m.states,W=Math.max(600,S.length*220),H=230;
+  const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,width:"100%",style:`min-width:520px;max-width:${W}px`,role:"img","aria-label":t("statechart")},host);const AR=arrowDef(svg,V("muted"));
+  const x=i=>40+i*((W-80)/S.length)+((W-80)/S.length-150)/2,idx=Object.fromEntries(S.map((s,i)=>[s.id,i]));
+  S.forEach((s,i)=>{el("rect",{x:x(i),y:95,width:150,height:50,rx:25,fill:s.color||V("soft"),opacity:.9},svg);el("text",{x:x(i)+75,y:125,"text-anchor":"middle","font-size":14,"font-weight":700,fill:"#fff"},svg,tx(s.label)||s.id)});
+  const used={};m.transitions.forEach(tr=>{const a=idx[tr.from],b=idx[tr.to],k=used[a+"-"+b]=(used[a+"-"+b]||0)+1,up=k%2===1,lvl=Math.ceil(k/2);const x1=x(a)+(b>a?150:0),x2=x(b)+(b>a?0:150),y=up?95:145,dy=(up?-1:1)*(28+lvl*20);
+    el("path",{d:`M${x1-(b>a?30:-30)},${y} C${x1},${y+dy} ${x2},${y+dy} ${x2+(b>a?30:-30)},${y+(up?-2:2)}`,fill:"none",stroke:V("muted"),"stroke-width":1.4,"marker-end":AR},svg);
+    el("text",{x:(x1+x2)/2,y:y+dy+(up?-4:12),"text-anchor":"middle","font-size":12,fill:V("ink")},svg,(tx(tr.label)||"")+(tr.type==="contact"?t("contact"):""))});
+  return{}}
+function renderStruct(){const m=model(),mt=METHOD[m.method];$("#method").innerHTML=`<b>${esc(t("modelSuffix",t(mt[0])))}</b><span>${esc(t(mt[2]))} <span class="status">${esc(t("anyl",t(mt[1])))}</span></span>`;
+  const d=$("#diagram");if(m.method==="des")desSvg(d,m,false);else if(m.method==="sd")sdSvg(d,m,false);else abmSvg(d,m);
+  $("#ptable").innerHTML=`<table><thead><tr><th>${t("params")}</th><th>${t("dflt")}</th><th>${t("rangeH")}</th></tr></thead><tbody>${(m.params||[]).map(p=>`<tr><td>${esc(tx(p.label))}</td><td class="n">${esc(withUnit(fmt(+p.value),p.unit))}</td><td class="n">${p.min!=null?fmt(+p.min)+" ~ "+fmt(+p.max):"—"}</td></tr>`).join("")}</tbody></table>`;
+  const li=a=>(a.length?a:[t("none")]).map(s=>`<li>${esc(s)}</li>`).join("");
+  $("#assume").innerHTML=`<div><h3>${t("assume")}</h3><ul>${li(txl(m.assumptions))}</ul></div><div><h3>${t("notIn")}</h3><ul>${li(txl(m.limits))}</ul></div>`}
+
+/* ---------- animation ---------- */
+let refs=null,canvas=null,pts=null;
+function buildStage(){const m=model(),st=$("#stage");const n=(res.anim||res.t).length;$("#scrub").max=n-1;frame=Math.min(frame,n-1);
+  if(m.method==="des")refs=desSvg(st,m,true);else if(m.method==="sd")refs=sdSvg(st,m,true);
+  else{st.innerHTML="";canvas=document.createElement("canvas");const N=res.N,cols=Math.ceil(Math.sqrt(N*2.2)),rows=Math.ceil(N/cols),sz=Math.max(5,Math.min(14,Math.floor(760/cols)));canvas.width=cols*sz*2;canvas.height=(rows*sz+46)*2;canvas.style.width=cols*sz+"px";st.appendChild(canvas);
+    pts={cols,sz,N};const r=(i=>{let a=i*2654435761>>>0;return()=>((a=Math.imul(a^a>>>13,1274126177)>>>0)/4294967296)});pts.j=[];for(let i=0;i<N;i++){const q=r(i+1);pts.j.push([(q()-.5)*sz*.5,(q()-.5)*sz*.5])}}
+  const c=chartDefs()[0];chart($("#stageChart"),{title:c.title,t:res.t,h:200,cursor:0,lines:c.vars.filter(v=>res.series[v]).map(v=>Object.assign({label:label(v),color:color(v)},{mean:m.method==="sd"?res.series[v].mean:(res.anim&&m.method==="abm"?res.anim.map(s=>s.s.reduce((a,x)=>a+(m.states[x].id===v),0)):runOne(v))}))});
+  drawFrame()}
+function runOne(v){if(!res.anim)return res.series[v].mean;const m=model();if(v==="inSys"||!v.startsWith("q_"))return res.series[v].mean;const svc=m.blocks.filter(b=>b.type==="service").map(b=>"q_"+b.id),i=svc.indexOf(v);return res.anim.map(s=>s.q[i])}
+function drawFrame(){if(!res)return;const m=model(),n=(res.anim||res.t).length;frame=Math.max(0,Math.min(frame,n-1));const tm=res.t[frame];$("#scrub").value=frame;
+  $("#clock").textContent=t("clock",fmt(tm,tm<10?1:0),unit(),fmt(res.t[n-1],0));const ch=$("#stageChart");if(ch._cursor)ch._cursor(tm);
+  if(m.method==="des"){const s=res.anim[frame],svc=m.blocks.filter(b=>b.type==="service"),dl=m.blocks.filter(b=>b.type==="delay"),src=m.blocks.filter(b=>b.type==="source"),snk=m.blocks.filter(b=>b.type==="sink");
+    svc.forEach((b,i)=>{const r=refs[b.id];r.slots.forEach((e,k)=>e.setAttribute("fill",k<s.b[i]?V("accent"):V("soft")));const q=s.q[i];r.dots.forEach((e,k)=>e.setAttribute("opacity",k<q?1:0));r.qt.textContent=t("busyQ",s.b[i],r.cap,q)+(q>14?t("only14"):"")});
+    dl.forEach((b,i)=>refs[b.id].t.textContent=t("ppl",s.d[i]));src.forEach((b,i)=>refs[b.id].t.textContent=t("arrived",s.made[i]));snk.forEach((b,i)=>refs[b.id].t.textContent=t("done",s.out[i])+(i===0&&s.lost?t("lost",s.lost):""));
+    m.blocks.filter(b=>b.type==="select").forEach(b=>refs[b.id].t.textContent="")}
+  else if(m.method==="sd"){(m.stocks).forEach(s=>{const ser=res.series[s.id].mean,mx=Math.max(...ser.map(Math.abs))||1,v=ser[frame],h=Math.max(0,v/mx*166),r=refs.stocks[s.id];r.fill.setAttribute("y",238-h);r.fill.setAttribute("height",h);r.t.textContent=withUnit(fmt(v),s.unit)});
+    (m.flows||[]).forEach(f=>{refs.flows[f.id].textContent=fmt(res.series[f.id].mean[frame])+" / "+unit()})}
+  else{const ctx=canvas.getContext("2d"),s=res.anim[frame].s,{cols,sz}=pts,cs=getComputedStyle(document.documentElement);ctx.setTransform(2,0,0,2,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(let i=0;i<s.length;i++){const x=(i%cols)*sz+sz/2+pts.j[i][0],y=Math.floor(i/cols)*sz+sz/2+pts.j[i][1];ctx.fillStyle=m.states[s[i]].color||"#888";ctx.beginPath();ctx.arc(x,y,sz*.36,0,6.283);ctx.fill()}
+    const cnt=m.states.map((_,k)=>s.reduce((a,x)=>a+(x===k),0)),y0=Math.ceil(s.length/cols)*sz+30;let x=4;ctx.font="13px "+cs.getPropertyValue("--f-body");ctx.textBaseline="alphabetic";
+    m.states.forEach((st,k)=>{ctx.fillStyle=st.color||"#888";ctx.beginPath();ctx.arc(x+6,y0-4,6,0,6.283);ctx.fill();ctx.fillStyle=cs.getPropertyValue("--ink");const lb=`${tx(st.label)} ${cnt[k]}`;ctx.fillText(lb,x+16,y0);x+=ctx.measureText(lb).width+36})}}
+function tick(ts){if(!playing)return;const dtp=(ts-(lastTs||ts))/1000;lastTs=ts;const n=(res.anim||res.t).length;acc+=dtp*(+$("#speed").value)*(n/15);while(acc>=1){frame++;acc--}if(frame>=n-1){frame=n-1;drawFrame();pause();return}drawFrame();raf=requestAnimationFrame(tick)}
+function play(){const n=(res.anim||res.t).length;if(frame>=n-1)frame=0;playing=true;lastTs=0;acc=0;$("#play").textContent=t("pause");raf=requestAnimationFrame(tick)}
+function pause(){playing=false;cancelAnimationFrame(raf);const b=$("#play");if(b)b.textContent=t("play")}
+$("#play").onclick=()=>playing?pause():play();$("#scrub").oninput=e=>{pause();frame=+e.target.value;drawFrame()};
+
+/* ---------- feedback ---------- */
+(function(){const ta=$("#fbText"),st=$("#fbStatus"),list=$("#fbList");let db=null;const KEY="sim-feedback";
+  const local=()=>{try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){return[]}};
+  const draw=items=>{list.innerHTML=items.map(i=>`<li><small>${esc(new Date(i.at).toLocaleString(LANG==="en"?"en-US":"zh-CN",{hour12:false}))} · ${esc(i.model||"")}</small><div>${esc(i.text)}</div></li>`).join("")};draw(local());
+  if(window.claude&&window.claude.use)window.claude.use("db").then(d=>{if(!d)return;db=d;db.collection("feedback").orderBy("at","desc").limit(50).onSnapshot(s=>draw(s.docs.map(x=>x.data()||{})),()=>{})}).catch(()=>{});
+  $("#fbSend").onclick=async()=>{const text=ta.value.trim();if(!text){st.textContent=t("writeFirst");return}const item={text,at:Date.now(),model:tx(model().title),lang:LANG,params:Object.assign({},P)};
+    if(db){try{await db.collection("feedback").add(item);ta.value="";st.textContent=t("savedCloud");return}catch(e){st.textContent=t("cloudFail")}}
+    const xs=[item,...local()];try{localStorage.setItem(KEY,JSON.stringify(xs))}catch(e){}draw(xs);ta.value="";if(!db)st.textContent=t("savedLocal")};
+  $("#fbCopy").onclick=()=>{const tt=ta.value.trim()||local().map(i=>i.model+": "+i.text).join("\n---\n");const no=()=>{ta.value=tt;ta.select();st.textContent=t("selected")};if(navigator.clipboard)navigator.clipboard.writeText(tt).then(()=>st.textContent=t("copied"),no);else no()};
+})();
+
+applyLang();
+if(!M.length){document.querySelector("main").innerHTML=`<p style="padding:40px">${esc(t("noData"))}</p>`;return}
+load();show("anim");
+})();
+</script>
+</body>
+</html>

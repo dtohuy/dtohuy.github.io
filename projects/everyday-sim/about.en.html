@@ -1,0 +1,27 @@
+<h1>AnyLogic for everyone: everyday-sim</h1>
+<p>Turn a question from daily life or a small business into a simulation you can play and adjust.</p>
+<p>You don't need to know modeling. Tell the agent your question, such as "how many staff at lunch?", "how long to save a down payment?" or "how fast will word of mouth spread?". It picks a modeling method, asks you for at most 3 key numbers, and builds a page like this one:</p>
+<ul>
+  <li><b>Animation</b>: watch how things unfold, for example when the line starts to build.</li>
+  <li><b>Results</b>: the key numbers plus the range you'd see in most runs, because real life involves luck.</li>
+  <li><b>What if…</b>: drag a slider, the model re-runs right away and is compared with the default.</li>
+  <li><b>Model</b>: what the model assumes and what it leaves out, so you can judge how far to trust it.</li>
+</ul>
+<h2>How it maps to AnyLogic</h2>
+<div class="tbl"><table>
+<thead><tr><th>AnyLogic</th><th>Here</th><th>Good for</th><th>Examples</th></tr></thead>
+<tbody>
+<tr><td>Discrete event (Process Modeling Library: Source, Queue, Service, Delay, SelectOutput, Sink)</td><td>Flow model</td><td>Queues, staffing, bottlenecks</td><td>Coffee shop, clinic, service desk, warehouse</td></tr>
+<tr><td>System dynamics (Stock, Flow, Dynamic Variable)</td><td>Stock model</td><td>Totals that build up over time</td><td>Savings, loans, inventory, weight, habits</td></tr>
+<tr><td>Agent-based (Agent, Statechart)</td><td>People model</td><td>People influencing each other</td><td>Word of mouth, flu, rumors, job changes</td></tr>
+<tr><td>Parameter variation / optimization experiments</td><td>What if… sliders</td><td>What happens if one thing changes</td><td>One more barista, save 2,000 more</td></tr>
+<tr><td>Monte Carlo runs</td><td>"Usually" ranges</td><td>How much luck matters</td><td>Random models run 20–30 times by default</td></tr>
+</tbody></table></div>
+<h2>Left out on purpose</h2>
+<ul>
+  <li>No drag-and-drop modeling canvas. Most people can't draw a correct model, so you describe it in conversation and the agent writes the model file.</li>
+  <li>No 3D or maps. They cost a lot and help little with answering the question.</li>
+  <li>No claim of exact prediction. The goal is to compare options and see trends, so every page states its assumptions and limits.</li>
+</ul>
+
+<h2>Use and download</h2><p><a href="everyday-sim.zip" download>Download the everyday-sim skill (ZIP)</a> and unpack it for an AI agent that supports skills. Building pages requires Python 3.8+ and Node 16+, with no extra packages.</p><p>These numbers are illustrative assumptions, not forecasts. Change the inputs in What if, and review the model assumptions and limitations.</p><p><a href="../../index.html">Back to projects</a></p>

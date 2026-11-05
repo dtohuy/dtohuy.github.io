@@ -1,0 +1,27 @@
+<h1>平民版 AnyLogic：everyday-sim</h1>
+<p class="q" style="display:block">把一句生活或小生意里的问题，变成可以播放、可以调参数的模拟。</p>
+<p>你不用会建模。告诉 agent 你的问题，比如「中午要几个店员」「多久能存够首付」「新店靠口碑多久能火」，它会选一种建模方法、问你最多 3 个关键数字，然后生成这样一个页面：</p>
+<ul>
+  <li><b>动画</b>：看过程怎么发生，比如队伍什么时候排起来。</li>
+  <li><b>结果</b>：关键数字和「多数情况下」的范围，因为现实有运气成分。</li>
+  <li><b>假如…</b>：拖滑块马上重算，和原方案对比。</li>
+  <li><b>模型结构</b>：模型假设了什么、没考虑什么，方便你判断能不能信。</li>
+</ul>
+<h2>和 AnyLogic 的对应</h2>
+<div class="tbl"><table>
+<thead><tr><th>AnyLogic</th><th>这里叫</th><th>适合的问题</th><th>示例</th></tr></thead>
+<tbody>
+<tr><td>离散事件（Process Modeling Library：Source、Queue、Service、Delay、SelectOutput、Sink）</td><td>流程模型</td><td>排队、人手够不够、流程卡在哪</td><td>咖啡店、诊所、办证窗口、仓库出货</td></tr>
+<tr><td>系统动力学（Stock、Flow、Dynamic Variable）</td><td>存量模型</td><td>总量随时间怎么累积</td><td>存钱、还贷、库存、体重、习惯</td></tr>
+<tr><td>智能体（Agent、Statechart）</td><td>个体模型</td><td>人和人互相影响</td><td>口碑传播、流感、谣言、换工作</td></tr>
+<tr><td>Parameter Variation / Optimization 实验</td><td>假如…滑块</td><td>改一个条件会怎样</td><td>多一个店员、多存 2000</td></tr>
+<tr><td>Monte Carlo 多次运行</td><td>「多数情况」范围</td><td>运气好坏差多少</td><td>每个随机模型默认跑 20~30 次</td></tr>
+</tbody></table></div>
+<h2>刻意不做的</h2>
+<ul>
+  <li>不做拖拽式建模画布：一般人画不对，改成用对话描述，由 agent 写模型文件。</li>
+  <li>不做 3D 和地图：成本高，对回答问题帮助小。</li>
+  <li>不追求精确预测：目标是比较方案、看清趋势，所以每个页面都写明假设和边界。</li>
+</ul>
+
+<h2>使用与下载</h2><p><a href="everyday-sim.zip" download>下载 everyday-sim skill（ZIP）</a>，解压后交给支持技能的 AI agent 使用。生成页面需要 Python 3.8+ 和 Node 16+，无需安装额外软件包。</p><p>这里的数字只是示例假设，并非对真实情况的预测；请在「假如…」中修改参数，并查看模型假设和限制。</p><p><a href="../../index.html">返回个人项目</a></p>

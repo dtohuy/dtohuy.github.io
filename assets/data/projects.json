@@ -1,5 +1,31 @@
 [
   {
+    "id": "everyday-sim",
+    "category": "tool",
+    "date": "2026-11-05",
+    "featured": false,
+    "version": "1.0.0",
+    "title": {
+      "zh-Hant": "生活模擬實驗室",
+      "zh-Hans": "生活模拟实验室",
+      "en": "Everyday Simulation Lab"
+    },
+    "meta": {
+      "zh-Hant": "個人專案",
+      "zh-Hans": "个人项目",
+      "en": "Side project"
+    },
+    "description": {
+      "zh-Hant": "用可調整的模擬探索排隊、存錢與口碑傳播，並下載 skill 讓 AI 協助建立自己的模型。",
+      "zh-Hans": "用可调整的模拟探索排队、存钱与口碑传播，并下载 skill 让 AI 协助建立自己的模型。",
+      "en": "Explore queues, savings and word of mouth through interactive simulations, and download the skill to build your own with an AI agent."
+    },
+    "tags": [
+      "Simulation",
+      "AI"
+    ]
+  },
+  {
     "id": "prompt-builder",
     "category": "tool",
     "date": "2026-09-15",
