@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>文字朗讀</title>
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0e1b13"><meta name="apple-mobile-web-app-capable" content="yes"><title>文字朗讀</title>
 <style>
 /* Layout: one column. Drop a text file, it starts reading at once; the sentence list below follows along and any sentence can be tapped to jump there. */
 :root{
@@ -48,6 +48,9 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
 .paste label{font-size:14px;color:var(--gold-soft)}
 .paste textarea{width:100%;min-height:130px;margin-top:8px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px;resize:vertical}
 .note{font-size:12.5px;color:var(--faint);margin:10px 0 0}
+.sents li mark{background:var(--gold);color:var(--on-gold);border-radius:3px;padding:0 1px}
+.chk{display:flex;gap:6px;align-items:center;font-size:13.5px;color:var(--muted)}
+.chk input{accent-color:var(--gold)}
 .hq{display:inline-block;font-size:11px;font-weight:600;color:var(--on-gold);background:var(--gold);border-radius:4px;padding:0 5px;margin-left:6px;vertical-align:1px}
 .note.warn{color:var(--gold-soft)}
 .title{margin:22px 0 8px;font-family:var(--f-display);font-size:19px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
@@ -81,12 +84,24 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
   <div class="row">
     <label class="field">英文語音<select id="voice"></select></label>
     <label class="field">中文語音<select id="voiceZh"></select></label>
-    <label class="field">速度 <b id="rateV">1.0×</b><input type="range" id="rate" min="0.6" max="1.6" step="0.05" value="1"></label>
   </div>
+  <div class="row">
+    <label class="field">英文速度 <b id="rateV">1×</b><input type="range" id="rate" min="0.6" max="1.6" step="0.05" value="1"></label>
+    <label class="field">中文速度 <b id="rateZhV">1×</b><input type="range" id="rateZh" min="0.6" max="1.6" step="0.05" value="1"></label>
+    <label class="field">音調 <b id="pitchV">1×</b><input type="range" id="pitch" min="0.5" max="1.5" step="0.05" value="1"></label>
+    <label class="field">音量 <b id="volV">1×</b><input type="range" id="vol" min="0.2" max="1" step="0.05" value="1"></label>
+  </div>
+  <div class="row">
+    <label class="chk"><input type="checkbox" id="auto">載入檔案後自動朗讀</label>
+    <label class="chk"><input type="checkbox" id="loop">循環播放</label>
+    <label class="field">單句重複<select id="repeat"><option value="1">1 次</option><option value="2">2 次</option><option value="3">3 次</option><option value="5">5 次</option></select></label>
+  </div>
+  <p class="note warn" id="msg" hidden></p>
   <p class="note" id="vnote"></p>
   <p class="note" id="vnoteZh"></p>
   <p class="note" id="vcount"></p>
-  <p class="note">文字朗讀 v1.5.1</p>
+  <p class="note">快捷鍵：空白鍵 播放／暫停，← → 上一句／下一句。輸入的文字與朗讀進度會記在這個瀏覽器裡。</p>
+  <p class="note">文字朗讀 v1.6.0</p>
 
   <div id="doc" hidden>
     <div class="title"><b id="docName"></b><span id="docInfo"></span></div>
@@ -95,7 +110,7 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
 </div>
 
 <div class="dock" id="dock" hidden><div class="dock-in">
-  <div class="prog"><input type="range" id="seek" min="0" max="0" step="1" value="0" aria-label="朗讀位置"><span id="pos">0 / 0</span></div>
+  <div class="prog"><input type="range" id="seek" min="0" max="0" step="1" value="0" aria-label="朗讀位置"><span id="pos" aria-live="polite">0 / 0</span></div>
   <div class="ctl">
     <button type="button" class="btn" id="prev" aria-label="上一句">⏮</button>
     <button type="button" class="btn go" id="play">播放</button>
@@ -108,13 +123,18 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
 (function(){
   const $ = id => document.getElementById(id);
   const synth = window.speechSynthesis;
-  const KEY = "tts-prefs-v1";
-  let prefs = {}; try{ prefs = JSON.parse(localStorage.getItem(KEY) || "{}"); }catch(e){}
-  const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(prefs)); }catch(e){} };
+  const KEY = "tts-prefs-v1", DRAFT = "tts-draft-v1", POS = "tts-pos-v1";
+  const rd = k => { try{ return JSON.parse(localStorage.getItem(k) || "{}"); }catch(e){ return {}; } };
+  const wr = (k, v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} };
+  let prefs = rd(KEY), draft = rd(DRAFT);
+  const save = () => wr(KEY, prefs);
+  const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
 
-  let sents = [], idx = 0, state = "idle", token = 0, voices = [], voicesZh = [];
+  let sents = [], idx = 0, state = "idle", token = 0, voices = [], voicesZh = [], liEls = [], onEl = null, hlEl = null, hlIdx = -1;
+  let repeatLeft = 1, nativePaused = false, wd = 0, rearm = null, rtoken = 0, docName = "";
 
   if(!synth){ $("vnote").textContent = "這個瀏覽器不支援語音朗讀。"; $("vnote").classList.add("warn"); }
+  function notice(t){ $("msg").textContent = t || ""; $("msg").hidden = !t; }
 
   /* Rank voices: neural/premium/enhanced ones sound far better than the default compact voice, so they go first. */
   function score(v){
@@ -162,63 +182,141 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
   }
   $("voice").addEventListener("change", ()=>{ const v = voices[+$("voice").value]; if(v){ prefs.voice = v.voiceURI; save(); } lastN = -1; loadVoices(); if(state === "playing") speakFrom(idx); });
   $("voiceZh").addEventListener("change", ()=>{ const v = voicesZh[+$("voiceZh").value]; if(v){ prefs.voiceZh = v.voiceURI; save(); } lastN = -1; loadVoices(); if(state === "playing") speakFrom(idx); });
-  $("rate").value = prefs.rate || 1; $("rateV").textContent = (+$("rate").value).toFixed(2).replace(/0$/,"") + "×";
-  $("rate").addEventListener("input", ()=>{ $("rateV").textContent = (+$("rate").value).toFixed(2).replace(/0$/,"") + "×"; prefs.rate = +$("rate").value; save(); });
-  $("rate").addEventListener("change", ()=>{ if(state === "playing") speakFrom(idx); });
 
+  /* speed (English / Chinese separately), pitch and volume sliders, all remembered */
+  const fmt = v => (+v).toFixed(2).replace(/0$/,"") + "×";
+  [["rate","rateV",1],["rateZh","rateZhV",1],["pitch","pitchV",1],["vol","volV",1]].forEach(([id, vid, def])=>{
+    const el = $(id); el.value = prefs[id] != null ? prefs[id] : def; $(vid).textContent = fmt(el.value);
+    el.addEventListener("input", ()=>{ $(vid).textContent = fmt(el.value); prefs[id] = +el.value; save(); });
+    el.addEventListener("change", ()=>{ if(state === "playing") speakFrom(idx); });
+  });
+  [["auto",true],["loop",false]].forEach(([id, def])=>{
+    const el = $(id); el.checked = prefs[id] != null ? !!prefs[id] : def;
+    el.addEventListener("change", ()=>{ prefs[id] = el.checked; save(); });
+  });
+  $("repeat").value = prefs.repeat || 1;
+  $("repeat").addEventListener("change", ()=>{ prefs.repeat = +$("repeat").value; save(); });
+
+  /* markdown marks (bold, links, code...) would be read aloud as symbols, so they are stripped */
+  function clean(line){
+    return line.replace(/!\[[^\]]*\]\([^)]*\)/g,"").replace(/\[([^\]]+)\]\([^)]*\)/g,"$1").replace(/https?:\/\/\S+/g," ")
+      .replace(/(\*\*|__)(.+?)\1/g,"$2").replace(/(^|[\s(])[*_]([^*_\s][^*_]*?)[*_](?=[\s).,!?;:]|$)/g,"$1$2")
+      .replace(/`([^`]*)`/g,"$1").replace(/~~(.+?)~~/g,"$1").replace(/\|/g," ");
+  }
+  /* very long sentences stall some engines, so they are cut at commas (or spaces) into pieces of about 160 characters */
+  function cut(s, max, out){
+    while(s.length > max){
+      const win = s.slice(0, max); let at = -1;
+      for(let i = win.length - 1; i >= 40; i--){ if(/[,，;；、:：]/.test(win[i])){ at = i + 1; break; } }
+      if(at < 0){ const sp = win.lastIndexOf(" "); at = sp >= 40 ? sp + 1 : max; }
+      out.push(s.slice(0, at).trim()); s = s.slice(at);
+    }
+    if(s.trim()) out.push(s.trim());
+  }
   function split(text){
-    const out = [];
+    const out = []; let fence = false;
     text.replace(/\r/g,"").split(/\n+/).forEach(line=>{
-      line = line.replace(/^\s*(#{1,6}|[-*>]|\d+[.)])\s+/, "").replace(/\s+/g," ").trim();
+      if(/^\s*(```|~~~)/.test(line)){ fence = !fence; return; }
+      if(fence || /^\s*[-*_=|:\s]{3,}$/.test(line)) return;
+      line = clean(line.replace(/^\s*(#{1,6}|[-*>]|\d+[.)])\s+/, "")).replace(/\s+/g," ").trim();
       if(!line) return;
       const parts = line.match(/[^.!?。！？]+(?:[.!?。！？]+["')\]”’]*|$)/g) || [line];
       let buf = "";
       parts.forEach(p=>{
         buf += p;
-        if(buf.trim().length >= 12 || /[。！？]$/.test(buf)){ out.push(buf.trim()); buf = ""; }
+        if(buf.trim().length >= 12 || /[。！？]$/.test(buf)){ cut(buf.trim(), 160, out); buf = ""; }
       });
-      if(buf.trim()) out.push(buf.trim());
+      if(buf.trim()) cut(buf.trim(), 160, out);
     });
     return out;
   }
 
+  /* the list is built in chunks so a long article does not freeze a phone */
   function render(){
-    $("sents").innerHTML = sents.map((s,i)=>`<li data-i="${i}">${s.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</li>`).join("");
+    const my = ++rtoken, ul = $("sents");
+    ul.textContent = ""; liEls = []; onEl = null; hlEl = null;
     $("seek").max = Math.max(0, sents.length - 1);
     $("doc").hidden = $("dock").hidden = !sents.length;
-    mark();
+    const build = from => {
+      if(my !== rtoken) return;
+      const to = Math.min(sents.length, from + 200), fr = document.createDocumentFragment();
+      for(let i = from; i < to; i++){
+        const li = document.createElement("li");
+        li.dataset.i = i; li.textContent = sents[i]; li.tabIndex = 0; li.setAttribute("role", "button");
+        liEls[i] = li; fr.appendChild(li);
+      }
+      ul.appendChild(fr);
+      if(!onEl) applyOn(false);
+      if(to < sents.length) setTimeout(()=>build(to), 0);
+    };
+    build(0); mark();
   }
+  function applyOn(scroll){
+    if(onEl){ onEl.classList.remove("on"); onEl = null; }
+    const el = liEls[idx];
+    if(el){ el.classList.add("on"); onEl = el; if(scroll) el.scrollIntoView({block:"center", behavior:"smooth"}); }
+  }
+  function clearHl(){ if(hlEl){ hlEl.textContent = sents[hlIdx] || ""; hlEl = null; } }
   function mark(){
-    document.querySelectorAll("#sents li.on").forEach(e=>e.classList.remove("on"));
-    const el = document.querySelector(`#sents li[data-i="${idx}"]`);
-    if(el){ el.classList.add("on"); if(state === "playing") el.scrollIntoView({block:"center", behavior:"smooth"}); }
+    clearHl(); applyOn(state === "playing");
     $("seek").value = idx; $("pos").textContent = sents.length ? `${idx+1} / ${sents.length}` : "0 / 0";
     $("play").textContent = state === "playing" ? "暫停" : (state === "paused" ? "繼續" : "播放");
+    document.title = (state === "playing" ? "▶ " : state === "paused" ? "⏸ " : "") + "文字朗讀";
+    if(sents.length) wr(POS, {idx});
+    media();
   }
 
-  /* Split one sentence into Chinese and non-Chinese runs so each is read by a matching voice. Runs with no letters (digits, punctuation) stay with the run before them. */
-  const CJK = /[\u3400-\u9fff\u3000-\u303f\uff00-\uffef]/;
+  /* lock-screen / headset controls where the browser supports them */
+  function media(){
+    if(!("mediaSession" in navigator)) return;
+    try{
+      if(typeof MediaMetadata !== "undefined" && sents[idx]) navigator.mediaSession.metadata = new MediaMetadata({title: sents[idx], artist: "文字朗讀", album: docName});
+      navigator.mediaSession.playbackState = state === "playing" ? "playing" : (state === "paused" ? "paused" : "none");
+    }catch(e){}
+  }
+  if("mediaSession" in navigator){
+    const h = (a, f) => { try{ navigator.mediaSession.setActionHandler(a, f); }catch(e){} };
+    h("play", ()=>toggle()); h("pause", ()=>toggle()); h("previoustrack", ()=>speakFrom(idx - 1)); h("nexttrack", ()=>speakFrom(idx + 1)); h("stop", ()=>stop());
+  }
+
+  /* Split one sentence into Chinese and non-Chinese runs so each is read by a matching voice. Runs with no letters (digits, punctuation) stay with the run before them,
+     and so do Chinese runs made only of punctuation, which avoids a voice switch (and a pause) for a lone comma. off = where the run starts in the sentence. */
+  const CJK = /[㐀-鿿　-〿＀-￯]/, HAN = /[㐀-鿿]/;
   function toRuns(text){
-    const runs = [];
-    (text.match(/[\u3400-\u9fff\u3000-\u303f\uff00-\uffef]+|[^\u3400-\u9fff\u3000-\u303f\uff00-\uffef]+/g) || []).forEach(t=>{
-      const zh = CJK.test(t[0]);
-      if(!zh && !/[A-Za-z]/.test(t) && runs.length){ runs[runs.length-1].text += t; return; }
-      if(runs.length && runs[runs.length-1].zh === zh) runs[runs.length-1].text += t; else runs.push({zh, text:t});
+    const runs = []; let pos = 0;
+    (text.match(/[㐀-鿿　-〿＀-￯]+|[^㐀-鿿　-〿＀-￯]+/g) || []).forEach(t=>{
+      const zh = CJK.test(t[0]), at = pos; pos += t.length;
+      if(runs.length && ((!zh && !/[A-Za-z]/.test(t)) || (zh && !HAN.test(t)))){ runs[runs.length-1].text += t; return; }
+      if(runs.length && runs[runs.length-1].zh === zh) runs[runs.length-1].text += t; else runs.push({zh, text:t, off:at});
     });
     return runs.filter(r=>r.text.trim());
   }
-  function speakFrom(i){
+  function halt(msg){ token++; clearTimeout(wd); if(synth) synth.cancel(); nativePaused = false; state = "idle"; mark(); notice(msg); }
+  function highlight(abs, len){
+    const s = sents[idx], li = liEls[idx];
+    if(!li || abs < 0 || abs >= s.length) return;
+    let end = len ? abs + len : abs + Math.max(1, s.slice(abs).search(/[\s,.;:!?，。；：！？]/));
+    if(end <= abs) end = s.length;
+    clearHl(); hlEl = li; hlIdx = idx;
+    li.innerHTML = esc(s.slice(0, abs)) + "<mark>" + esc(s.slice(abs, end)) + "</mark>" + esc(s.slice(end));
+  }
+  function speakFrom(i, again){
     if(!synth || !sents.length) return;
     const my = ++token;
-    synth.cancel();
+    clearTimeout(wd); notice("");
+    synth.cancel(); if(synth.paused) synth.resume();
+    nativePaused = false;
     idx = Math.max(0, Math.min(sents.length - 1, i));
+    if(!again) repeatLeft = +$("repeat").value || 1;
     state = "playing"; mark();
     const runs = toRuns(sents[idx]);
     let k = 0;
     const next = ()=>{
       if(my !== token) return;
       if(k >= runs.length){
-        if(idx + 1 < sents.length) speakFrom(idx + 1);
+        if(repeatLeft > 1){ repeatLeft--; speakFrom(idx, true); }
+        else if(idx + 1 < sents.length) speakFrom(idx + 1);
+        else if($("loop").checked) speakFrom(0);
         else { state = "idle"; idx = 0; mark(); }
         return;
       }
@@ -226,28 +324,55 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
       const v = r.zh ? voicesZh[+$("voiceZh").value] : voices[+$("voice").value];
       const u = new SpeechSynthesisUtterance(r.text);
       if(v){ u.voice = v; u.lang = v.lang; } else u.lang = r.zh ? "zh-CN" : "en-US";
-      u.rate = +$("rate").value;
-      u.onend = next;
-      u.onerror = e=>{ if(my === token && e.error !== "interrupted" && e.error !== "canceled") next(); };
-      synth.speak(u);
+      const rate = +(r.zh ? $("rateZh") : $("rate")).value;
+      u.rate = rate; u.pitch = +$("pitch").value; u.volume = +$("vol").value;
+      let done = false;
+      const fin = ()=>{ if(done) return; done = true; clearTimeout(wd); next(); };
+      /* watchdog: if the engine never reports the end of this piece, move on instead of hanging */
+      rearm = ()=>{ clearTimeout(wd); wd = setTimeout(()=>{ if(my === token && !done){ synth.cancel(); setTimeout(fin, 50); } }, (r.zh ? 450 : 160) * r.text.length / rate + 6000); };
+      u.onend = fin;
+      u.onerror = e=>{
+        if(my !== token) return;
+        if(e.error === "not-allowed"){ halt("瀏覽器擋住了自動朗讀，請再點一下「播放」。"); return; }
+        if(e.error !== "interrupted" && e.error !== "canceled") fin();
+      };
+      u.onboundary = e=>{ if(my === token && (!e.name || e.name === "word")) highlight(r.off + e.charIndex, e.charLength); };
+      rearm(); synth.speak(u);
     };
     /* a short delay after cancel() avoids Chrome dropping the next utterance */
     setTimeout(next, 30);
   }
-  function pause(){ if(!synth) return; token++; synth.cancel(); state = "paused"; mark(); }
-  function stop(){ token++; if(synth) synth.cancel(); state = "idle"; idx = 0; mark(); }
+  /* pause really pauses (resumes mid-sentence); if the engine ignores it, fall back to cancel and replay the sentence */
+  function pause(){
+    if(!synth) return;
+    clearTimeout(wd);
+    if(synth.speaking){ synth.pause(); nativePaused = true; }
+    else { token++; synth.cancel(); nativePaused = false; }
+    state = "paused"; mark();
+  }
+  function resume(){
+    if(nativePaused && synth){
+      nativePaused = false; state = "playing"; mark(); synth.resume(); if(rearm) rearm();
+      setTimeout(()=>{ if(state === "playing" && !synth.speaking && !synth.pending) speakFrom(idx); }, 600);
+    } else speakFrom(idx);
+  }
+  function toggle(){ if(!sents.length) return; if(state === "playing") pause(); else if(state === "paused") resume(); else speakFrom(idx); }
+  function stop(){ token++; clearTimeout(wd); nativePaused = false; if(synth){ synth.cancel(); if(synth.paused) synth.resume(); } state = "idle"; idx = 0; mark(); }
 
-  function load(text, name){
+  function load(text, name, o){
+    o = o || {};
     text = text.replace(/^﻿/, "");
     const list = split(text);
-    stop();
-    sents = list; idx = 0;
-    $("docName").textContent = name || "貼上的文字";
-    const words = (text.match(/[A-Za-z']+/g) || []).length, han = (text.match(/[\u3400-\u9fff]/g) || []).length;
+    stop(); notice("");
+    sents = list; idx = Math.min(o.idx || 0, Math.max(0, list.length - 1));
+    docName = name || "貼上的文字";
+    $("docName").textContent = docName;
+    const words = (text.match(/[A-Za-z']+/g) || []).length, han = (text.match(/[㐀-鿿]/g) || []).length;
     $("docInfo").textContent = `${list.length} 句 · ${words} 個英文單字${han ? ` · ${han} 個中文字` : ""}`;
     render();
     if(!list.length){ $("vnote").textContent = "檔案裡沒有可朗讀的文字。"; $("vnote").classList.add("warn"); return; }
-    speakFrom(0); /* start right away: the file pick counts as the user gesture */
+    if(!o.restore){ draft.doc = text.length < 400000 ? {text, name: docName} : null; wr(DRAFT, draft); wr(POS, {idx}); }
+    if(o.play !== false) speakFrom(idx); /* start right away: the file pick / button tap counts as the user gesture */
   }
 
   async function readFile(f){
@@ -257,7 +382,7 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
     let text;
     try{ text = new TextDecoder("utf-8", {fatal:true}).decode(buf); }
     catch(e){ try{ text = new TextDecoder("big5").decode(buf); }catch(e2){ text = new TextDecoder().decode(buf); } }
-    load(text, f.name);
+    load(text, f.name, {play: $("auto").checked});
   }
   $("file").addEventListener("change", e=>{ readFile(e.target.files[0]); e.target.value = ""; });
   const drop = $("drop");
@@ -265,19 +390,33 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
   ["dragleave","drop"].forEach(t=>drop.addEventListener(t, e=>{ e.preventDefault(); drop.classList.remove("over"); }));
   drop.addEventListener("drop", e=>readFile(e.dataTransfer.files[0]));
   const syncPaste = ()=>{ const n = $("paste").value.trim().length; $("pasteGo").disabled = $("pasteClear").disabled = !n; $("pasteCount").textContent = n ? `${n} 字` : ""; };
-  $("paste").addEventListener("input", syncPaste);
+  $("paste").value = draft.text || ""; syncPaste();
+  $("paste").addEventListener("input", ()=>{ syncPaste(); draft.text = $("paste").value; wr(DRAFT, draft); });
   $("paste").addEventListener("keydown", e=>{ if((e.ctrlKey || e.metaKey) && e.key === "Enter"){ e.preventDefault(); $("pasteGo").click(); } });
   $("pasteGo").addEventListener("click", ()=>{ const t = $("paste").value.trim(); if(t) load(t, "手動輸入的文字"); });
-  $("pasteClear").addEventListener("click", ()=>{ $("paste").value = ""; syncPaste(); $("paste").focus(); });
+  $("pasteClear").addEventListener("click", ()=>{ $("paste").value = ""; draft.text = ""; wr(DRAFT, draft); syncPaste(); $("paste").focus(); });
 
-  $("play").addEventListener("click", ()=>{ if(state === "playing") pause(); else speakFrom(idx); });
+  $("play").addEventListener("click", toggle);
   $("stop").addEventListener("click", stop);
   $("prev").addEventListener("click", ()=>speakFrom(idx - 1));
   $("next").addEventListener("click", ()=>speakFrom(idx + 1));
   $("seek").addEventListener("input", ()=>{ idx = +$("seek").value; mark(); });
   $("seek").addEventListener("change", ()=>speakFrom(+$("seek").value));
   $("sents").addEventListener("click", e=>{ const li = e.target.closest("li"); if(li) speakFrom(+li.dataset.i); });
+  $("sents").addEventListener("keydown", e=>{ const li = e.target.closest("li"); if(li && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); speakFrom(+li.dataset.i); } });
+  /* shortcuts: Space play/pause, ← / → previous / next sentence (ignored while typing or on a focused control) */
+  document.addEventListener("keydown", e=>{
+    if(e.ctrlKey || e.metaKey || e.altKey || !sents.length) return;
+    const t = e.target, tag = t && t.tagName;
+    if(tag === "TEXTAREA" || tag === "INPUT" || tag === "SELECT") return;
+    if(e.key === " " && tag !== "BUTTON" && tag !== "LI"){ e.preventDefault(); toggle(); }
+    else if(e.key === "ArrowRight"){ e.preventDefault(); speakFrom(idx + 1); }
+    else if(e.key === "ArrowLeft"){ e.preventDefault(); speakFrom(idx - 1); }
+  });
   window.addEventListener("pagehide", ()=>{ if(synth) synth.cancel(); });
+
+  /* bring back the last document (not auto-played) at the sentence where it stopped */
+  if(draft.doc && draft.doc.text) load(draft.doc.text, draft.doc.name, {restore: true, play: false, idx: (rd(POS).idx || 0)});
 })();
 </script>
 </body></html>
