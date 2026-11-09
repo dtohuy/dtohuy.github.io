@@ -52,6 +52,10 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
 .chk{display:flex;gap:6px;align-items:center;font-size:13.5px;color:var(--muted)}
 .chk input{accent-color:var(--gold)}
 .hq{display:inline-block;font-size:11px;font-weight:600;color:var(--on-gold);background:var(--gold);border-radius:4px;padding:0 5px;margin-left:6px;vertical-align:1px}
+.cfg{margin-top:14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:0 12px 12px}
+.cfg summary{cursor:pointer;padding:10px 0 2px;font-weight:600;font-size:14px;color:var(--gold-soft)}
+.spin{display:inline-block;width:12px;height:12px;margin-right:6px;border:2px solid var(--gold);border-right-color:transparent;border-radius:50%;vertical-align:-1px;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
 .note.warn{color:var(--gold-soft)}
 .title{margin:22px 0 8px;font-family:var(--f-display);font-size:19px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
 .title span{font-family:var(--f-body);font-size:13px;color:var(--muted);font-weight:400}
@@ -81,6 +85,8 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
     <div class="row"><button type="button" class="btn go" id="pasteGo" disabled>朗讀這段文字</button><button type="button" class="btn" id="pasteClear" disabled>清除</button><span class="note" id="pasteCount" style="margin:0"></span></div>
   </section>
 
+  <p class="note warn" id="msg" hidden></p>
+  <details class="cfg" id="cfg"><summary>語音設定與說明</summary>
   <div class="row">
     <label class="field">英文語音<select id="voice"></select></label>
     <label class="field">中文語音<select id="voiceZh"></select></label>
@@ -96,12 +102,12 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
     <label class="chk"><input type="checkbox" id="loop">循環播放</label>
     <label class="field">單句重複<select id="repeat"><option value="1">1 次</option><option value="2">2 次</option><option value="3">3 次</option><option value="5">5 次</option></select></label>
   </div>
-  <p class="note warn" id="msg" hidden></p>
   <p class="note" id="vnote"></p>
   <p class="note" id="vnoteZh"></p>
   <p class="note" id="vcount"></p>
   <p class="note">快捷鍵：空白鍵 播放／暫停，← → 上一句／下一句。輸入的文字與朗讀進度會記在這個瀏覽器裡。</p>
-  <p class="note">文字朗讀 v1.6.0</p>
+  <p class="note">文字朗讀 v1.7.0</p>
+  </details>
 
   <div id="doc" hidden>
     <div class="title"><b id="docName"></b><span id="docInfo"></span></div>
@@ -134,7 +140,7 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
   let repeatLeft = 1, nativePaused = false, wd = 0, rearm = null, rtoken = 0, docName = "";
 
   if(!synth){ $("vnote").textContent = "這個瀏覽器不支援語音朗讀。"; $("vnote").classList.add("warn"); }
-  function notice(t){ $("msg").textContent = t || ""; $("msg").hidden = !t; }
+  function notice(t, busy){ const m = $("msg"); m.textContent = ""; if(busy && t){ const sp = document.createElement("span"); sp.className = "spin"; m.appendChild(sp); } m.appendChild(document.createTextNode(t || "")); m.hidden = !t; }
 
   /* Rank voices: neural/premium/enhanced ones sound far better than the default compact voice, so they go first. */
   function score(v){
@@ -326,8 +332,24 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
       if(v){ u.voice = v; u.lang = v.lang; } else u.lang = r.zh ? "zh-CN" : "en-US";
       const rate = +(r.zh ? $("rateZh") : $("rate")).value;
       u.rate = rate; u.pitch = +$("pitch").value; u.volume = +$("vol").value;
-      let done = false;
-      const fin = ()=>{ if(done) return; done = true; clearTimeout(wd); next(); };
+      let done = false, bounded = false, est = 0;
+      const t0 = Date.now();
+      /* cloud voices are slow to start: show a spinner until audio actually begins */
+      if(v && !v.localService) notice("高品質語音生成中，請稍候…", true);
+      const started = ()=>{ if(my === token) notice(""); };
+      const fin = ()=>{ if(done) return; done = true; clearTimeout(wd); clearInterval(est); started(); next(); };
+      /* cloud voices often send no word boundaries, so the highlight is estimated from elapsed time instead */
+      const startEst = ()=>{
+        if(bounded || est) return;
+        const t1 = Date.now(), total = Math.max(600, r.text.length * (r.zh ? 260 : 75) / rate);
+        est = setInterval(()=>{
+          if(my !== token || done || bounded || state !== "playing") return;
+          const at = Math.min(r.text.length - 1, Math.floor(r.text.length * (Date.now() - t1) / total));
+          let a = at; while(a > 0 && !/\s/.test(r.text[a-1]) && !r.zh) a--;
+          highlight(r.off + a, r.zh ? 1 : 0);
+        }, 150);
+      };
+      u.onstart = ()=>{ started(); setTimeout(()=>{ if(!bounded && !done) startEst(); }, 400); };
       /* watchdog: if the engine never reports the end of this piece, move on instead of hanging */
       rearm = ()=>{ clearTimeout(wd); wd = setTimeout(()=>{ if(my === token && !done){ synth.cancel(); setTimeout(fin, 50); } }, (r.zh ? 450 : 160) * r.text.length / rate + 6000); };
       u.onend = fin;
@@ -336,7 +358,7 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
         if(e.error === "not-allowed"){ halt("瀏覽器擋住了自動朗讀，請再點一下「播放」。"); return; }
         if(e.error !== "interrupted" && e.error !== "canceled") fin();
       };
-      u.onboundary = e=>{ if(my === token && (!e.name || e.name === "word")) highlight(r.off + e.charIndex, e.charLength); };
+      u.onboundary = e=>{ if(my === token && (!e.name || e.name === "word")) bounded = true, clearInterval(est), highlight(r.off + e.charIndex, e.charLength); };
       rearm(); synth.speak(u);
     };
     /* a short delay after cancel() avoids Chrome dropping the next utterance */
@@ -345,7 +367,7 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
   /* pause really pauses (resumes mid-sentence); if the engine ignores it, fall back to cancel and replay the sentence */
   function pause(){
     if(!synth) return;
-    clearTimeout(wd);
+    clearTimeout(wd); notice("");
     if(synth.speaking){ synth.pause(); nativePaused = true; }
     else { token++; synth.cancel(); nativePaused = false; }
     state = "paused"; mark();
@@ -357,7 +379,7 @@ h1{font-family:var(--f-display);font-size:clamp(26px,5vw,34px);margin:0 0 4px}
     } else speakFrom(idx);
   }
   function toggle(){ if(!sents.length) return; if(state === "playing") pause(); else if(state === "paused") resume(); else speakFrom(idx); }
-  function stop(){ token++; clearTimeout(wd); nativePaused = false; if(synth){ synth.cancel(); if(synth.paused) synth.resume(); } state = "idle"; idx = 0; mark(); }
+  function stop(){ notice(""); token++; clearTimeout(wd); nativePaused = false; if(synth){ synth.cancel(); if(synth.paused) synth.resume(); } state = "idle"; idx = 0; mark(); }
 
   function load(text, name, o){
     o = o || {};
